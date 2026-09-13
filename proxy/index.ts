@@ -54,20 +54,11 @@ app.post('/lookup', async (req, res) => {
    * against exactly what ships. */
   if (MOCK) {
     const base = mockFor(category)
-    /* Re-rank the fixture against the requested context so mock mode
-     * demonstrates the pivot rather than serving one frozen ordering. */
-    const ranked = rank(base.options, ctx, base.guidance)
-    res.json({
-      ...base,
-      ...ranked,
-      context: ctx,
-      savingsUsd: savingsFor(base.product, ranked.options, ranked.reason),
-      /* Recompute, don't inherit: the fixture's co2 assumes a usable option. */
-      co2AvoidedKg:
-        ranked.options.length && ranked.reason !== 'nothing-arrives-in-time'
-          ? base.guidance.embodiedCo2Kg
-          : null,
-    })
+    /* Built through assemble() like every other response. A second path here
+     * meant mock mode skipped the currency guard and happily reported a CAD
+     * saving against USD fixtures — the exact bug assemble() exists to stop.
+     * One place builds a VerteResult. Keep it that way. */
+    res.json(assemble({ ...product, category }, base.guidance, base.options, ctx))
     return
   }
 
@@ -84,7 +75,7 @@ app.post('/lookup', async (req, res) => {
         ? []
         : [
             ...(await getCampusListings(category)),
-            ...(await searchEbay(product.title).catch((e) => {
+            ...(await searchEbay(product.title, product.currency).catch((e) => {
               console.warn('[verte] eBay search failed, continuing:', e.message)
               return []
             })),
@@ -99,6 +90,23 @@ app.post('/lookup', async (req, res) => {
 })
 
 /** The only place a VerteResult is built. Keep it that way. */
+/**
+ * Listings we can legitimately compare against this product.
+ *
+ * eBay is asked for the product's own marketplace, so a mismatch should be
+ * rare — but "rare" is not "never", and a CAD price minus a USD price is not
+ * a saving, it is a wrong number rendered with total confidence. We would
+ * rather show fewer listings than invent arithmetic.
+ */
+function sameCurrency(options: VerteResult['options'], currency: string): VerteResult['options'] {
+  const kept = options.filter((option) => option.currency === currency)
+  const dropped = options.length - kept.length
+  if (dropped) {
+    console.warn(`[verte] dropped ${dropped} listing(s) not priced in ${currency}`)
+  }
+  return kept
+}
+
 function savingsFor(
   product: ProductContext,
   options: VerteResult['options'],
@@ -124,7 +132,8 @@ function assemble(
   options: VerteResult['options'],
   ctx: BuyerContext,
 ): VerteResult {
-  const ranked = rank(options, ctx, guidance!)
+  const comparable = sameCurrency(options, product.currency)
+  const ranked = rank(comparable, ctx, guidance!)
   const savingsUsd = savingsFor(product, ranked.options, ranked.reason)
 
   return {

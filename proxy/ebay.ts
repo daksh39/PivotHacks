@@ -14,6 +14,48 @@
 
 import type { UsedOption } from '../src/types'
 
+/**
+ * Which eBay site to ask. A CAD product wants CAD listings; querying the US
+ * marketplace for it returns prices we cannot legitimately compare.
+ */
+const MARKETPLACES: Record<string, string> = {
+  USD: 'EBAY_US',
+  CAD: 'EBAY_CA',
+  GBP: 'EBAY_GB',
+  AUD: 'EBAY_AU',
+  EUR: 'EBAY_DE',
+  JPY: 'EBAY_JP',
+}
+
+export function marketplaceForCurrency(currency: string): string {
+  return MARKETPLACES[currency?.toUpperCase()] ?? 'EBAY_US'
+}
+
+/** Conservative default when eBay returns no delivery estimate at all. */
+export const ASSUMED_SHIPPING_DAYS = 7
+
+type ShippingOption = { maxEstimatedDeliveryDate?: string }
+
+/**
+ * Days until the buyer actually has it — the field the whole deadline ranking
+ * turns on, so it is read from eBay rather than guessed.
+ *
+ * Rounds up: telling someone "2 days" for something landing late on day three
+ * is how they miss a move-in date.
+ */
+export function deliveryDays(
+  item: { shippingOptions?: ShippingOption[] },
+  now: Date = new Date(),
+): number {
+  const estimates = (item.shippingOptions ?? [])
+    .map((option) => option.maxEstimatedDeliveryDate)
+    .filter((value): value is string => Boolean(value))
+    .map((value) => Math.ceil((new Date(value).getTime() - now.getTime()) / 86_400_000))
+    .filter((days) => Number.isFinite(days) && days > 0)
+
+  return estimates.length ? Math.min(...estimates) : ASSUMED_SHIPPING_DAYS
+}
+
 const HOSTS = {
   production: { auth: 'https://api.ebay.com', api: 'https://api.ebay.com' },
   sandbox: { auth: 'https://api.sandbox.ebay.com', api: 'https://api.sandbox.ebay.com' },
@@ -69,8 +111,13 @@ const TTL_MS = 15 * 60 * 1000
 /** Used conditions only — that is the entire point of the product. */
 const USED_CONDITIONS = '{USED_EXCELLENT|USED_VERY_GOOD|USED_GOOD|USED_ACCEPTABLE}'
 
-export async function searchEbay(query: string, limit = 3): Promise<UsedOption[]> {
-  const key = `${query}:${limit}`
+export async function searchEbay(
+  query: string,
+  currency = 'USD',
+  limit = 3,
+): Promise<UsedOption[]> {
+  const marketplace = marketplaceForCurrency(currency)
+  const key = `${marketplace}:${query}:${limit}`
   const hit = cache.get(key)
   if (hit && Date.now() - hit.at < TTL_MS) return hit.options
 
@@ -79,12 +126,15 @@ export async function searchEbay(query: string, limit = 3): Promise<UsedOption[]
     limit: String(limit),
     filter: `conditions:${USED_CONDITIONS}`,
     sort: 'price',
+    /* Asks eBay to include shippingOptions, which is where the delivery
+     * estimate deliveryDays() needs actually lives. */
+    fieldgroups: 'EXTENDED',
   })
 
   const response = await fetch(`${hosts().api}/buy/browse/v1/item_summary/search?${params}`, {
     headers: {
       Authorization: `Bearer ${await getToken()}`,
-      'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US',
+      'X-EBAY-C-MARKETPLACE-ID': marketplace,
     },
   })
 
@@ -94,35 +144,33 @@ export async function searchEbay(query: string, limit = 3): Promise<UsedOption[]
 
   const data = (await response.json()) as { itemSummaries?: EbayItem[] }
   const options: UsedOption[] = (data.itemSummaries ?? [])
-    .map(toUsedOption)
+    .map((item) => toUsedOption(item))
     .filter((o): o is UsedOption => o !== null)
 
   cache.set(key, { at: Date.now(), options })
   return options
 }
 
-type EbayItem = {
+export type EbayItem = {
   title?: string
   itemWebUrl?: string
   condition?: string
   price?: { value?: string; currency?: string }
   image?: { imageUrl?: string }
+  shippingOptions?: ShippingOption[]
 }
 
-function toUsedOption(item: EbayItem): UsedOption | null {
+export function toUsedOption(item: EbayItem, now?: Date): UsedOption | null {
   const price = Number.parseFloat(item.price?.value ?? '')
   if (!item.title || !item.itemWebUrl || !Number.isFinite(price)) return null
   return {
     source: 'ebay',
     title: item.title,
     price,
+    currency: item.price?.currency ?? 'USD',
     url: item.itemWebUrl,
     imageUrl: item.image?.imageUrl ?? null,
     condition: item.condition ?? 'Pre-owned',
-    /* eBay's Browse summaries don't reliably carry a delivery estimate, so we
-     * assume a shipped week. Conservative on purpose: it is better to tell
-     * someone an item might miss their deadline than to promise it won't.
-     * If a real estimate is available later, read it here. */
-    daysToHand: 7,
+    daysToHand: deliveryDays(item, now),
   }
 }

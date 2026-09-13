@@ -85,6 +85,7 @@ export async function getCampusListings(slug: string): Promise<UsedOption[]> {
       source: 'campus',
       title: 'Mini fridge, used one year, works perfectly',
       price: 34,
+      currency: 'USD',
       url: 'https://example.edu/listings/1',
       imageUrl: null,
       condition: 'Used — good',

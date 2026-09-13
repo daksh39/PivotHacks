@@ -78,7 +78,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
           <Leaf />
           {recommended && savingsUsd && !unusable ? (
             <span>
-              <strong>{formatUsd(recommended.price, product.currency)}</strong> used
+              <strong>{formatUsd(recommended.price, recommended.currency)}</strong> used
               {recommended.source === 'campus' ? ' nearby' : ''} — save{' '}
               <strong>{formatUsd(savingsUsd, product.currency)}</strong>
             </span>
@@ -121,7 +121,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
                 </>
               )}
               <span className="verte__price-now">
-                {formatUsd(recommended.price, product.currency)}
+                {formatUsd(recommended.price, recommended.currency)}
               </span>
               {savingsUsd != null && (
                 <span className="verte__save">
@@ -140,7 +140,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
               * keep cards uniform. It wraps instead. */}
             {passedOver && (
               <p className="verte__passed">
-                Skipped {formatUsd(passedOver.option.price, product.currency)}
+                Skipped {formatUsd(passedOver.option.price, passedOver.option.currency)}
                 {passedOver.option.source === 'campus' ? ' nearby' : ' on eBay'} — {passedOver.why}
               </p>
             )}
@@ -209,7 +209,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
                         rel="noreferrer noopener"
                       >
                         <span className="verte__listing-price">
-                          {formatUsd(o.price, product.currency)}
+                          {formatUsd(o.price, o.currency)}
                         </span>
                         <span className="verte__listing-title">{o.title}</span>
                         <span className="verte__listing-meta">

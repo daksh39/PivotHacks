@@ -94,6 +94,8 @@ export function rank(
   const why = blockedByCar
     ? `it's a ${cheapest.distanceMi} mile pickup and this is too big to carry`
     : `it takes ${cheapest.daysToHand} days to arrive and you need it in ${ctx.needInDays}`
+  /* Deliberately no price in this string: the card prints the figure itself,
+   * in the listing's own currency, immediately before this clause. */
 
   const reason: RecommendationReason = blockedByCar
     ? 'cheaper-option-needs-car'

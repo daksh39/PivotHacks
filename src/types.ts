@@ -26,6 +26,12 @@ export type UsedOption = {
   source: 'ebay' | 'campus'
   title: string
   price: number
+  /**
+   * ISO code for `price`. Carried explicitly because a browser in Canada gets
+   * CAD off amazon.ca while eBay may quote USD — subtracting one from the
+   * other produces a confidently wrong "saving".
+   */
+  currency: string
   url: string
   imageUrl: string | null
   condition: string
