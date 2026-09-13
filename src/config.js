@@ -1,0 +1,35 @@
+/*
+ * Verte configuration.
+ *
+ * Every outbound URL lives here so swapping the data layer is a one-file
+ * change. Values come from `.env` (see `.env.example`); the fallbacks keep the
+ * popup working before anyone has filled one in.
+ *
+ * Only REACT_APP_* variables reach this file — and everything here is compiled
+ * into the bundle, so nothing secret belongs in it. The eBay and Snowflake
+ * credentials are read by the proxy, server-side, and never travel to the
+ * extension.
+ */
+
+export const BRAND = {
+  name: 'Verte',
+  thesis: 'The greenest product is the one that already exists.',
+  tagline: 'Shows you the secondhand option before you buy new.',
+};
+
+// Our own proxy. The original Bubble backend is gone — its API returns 401
+// ("this application does not expose an API"), so nothing points at it.
+export const API_BASE = process.env.REACT_APP_VERTE_API_BASE || 'http://localhost:8787';
+
+export const ENDPOINTS = {
+  health: `${API_BASE}/health`,
+  lookup: `${API_BASE}/lookup`,
+};
+
+export const LINKS = {
+  // How we decide what is safe to buy used, and where the carbon figures
+  // come from. Both are documented in the repo README.
+  methodology:
+    process.env.REACT_APP_METHODOLOGY_URL ||
+    'https://github.com/verte-extension/verte#methodology',
+};

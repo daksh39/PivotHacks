@@ -1,140 +1,123 @@
+<div align="center">
+
 # Verte
 
-A Chrome extension that shows you the secondhand option right when you are about to buy something new.
+**The greenest product is the one that already exists.**
 
-## The idea
+</div>
 
-Most sustainable shopping tools point you at a greener version of whatever you were already going to buy. That still means manufacturing a new product, and for durable goods manufacturing is where the majority of lifetime emissions come from. So the greener recommendation is often not that much greener.
+Verte is a Chrome extension that surfaces the secondhand option at the moment a
+student is about to buy new. Manufacturing dominates the lifetime emissions of
+most durable goods, so buying used avoids nearly all of a product's footprint —
+something no amount of eco-branding on a newly manufactured item can match. It
+is also the cheap option, which is what actually moves a first-year living
+independently for the first time.
 
-Verte takes a different angle. The lowest impact option is usually something that already exists. Buying it used avoids the manufacturing footprint almost entirely.
+## Who it's for
 
-It is also the cheaper option, which honestly matters more if you are a student furnishing a room for the first time. We built this for that person specifically: limited budget, no experience buying furniture or appliances, not much time, and no idea what is available nearby.
+A university student setting up independent living for the first time.
 
-## What it does
+- **Limited budget.** Money leads. The environmental win rides along — we never
+  ask anyone to spend more to be virtuous.
+- **Limited experience.** A used desk is a great idea; a used mattress is a
+  terrible one. Nobody has ever told them that.
+- **Busy schedule.** The answer lands in one line, with no comparison-shopping
+  session.
+- **Unfamiliar environment.** They don't know what already exists near campus.
 
-When you land on a product page, Verte looks for the same item secondhand. If it finds something, a small card appears near the buy button showing three things:
+## Why this isn't another green-shopping extension
 
-1. The used price and what you would save
-2. Whether that category is actually safe to buy secondhand, and what to check before you buy
-3. The manufacturing emissions avoided by not buying new
+The category norm is to recommend an eco-branded *new* product, which still
+incurs the full manufacturing footprint. Verte's answer is to not manufacture
+anything.
 
-The third one is the reason the project exists. The first one is why anyone would actually keep it installed.
-
-## Not everything should be bought used
-
-This is the part we think is genuinely useful and the part that took the most thought.
-
-A used desk is a great idea. A used mattress is not. A used bike helmet is a bad idea for reasons that are not obvious unless someone has told you, which for a lot of first year students nobody has. Non-stick pans lose their coating. Smoke detectors have sensors that expire. Surge protectors quietly stop protecting anything after they have absorbed enough surges.
-
-So Verte keeps a small knowledge base of product categories, each with a verdict (safe, check first, or buy new) and a short list of things to inspect. If you are on a mattress listing, Verte will tell you to buy it new. An app that only ever says yes is not worth trusting.
-
-## How it works
-
-```
-Product page
-    |
-    | content script extracts title, price, category
-    v
-Proxy service
-    |
-    +---> Amazon used buybox   (read from the page DOM)
-    +---> Best Buy open box    (their own storefront search API)
-    |
-    v
-Card injected back into the page
-```
-
-The content script reads the product off the page. Amazon and Best Buy publish
-no JSON-LD and no og: tags, so each gets a small adapter; structured data is the
-fallback for other retailers.
-
-It then reads the secondhand listings from the retailer itself. On Amazon that
-is the used buybox already sitting in the page. On Best Buy it is the open-box
-search their own storefront calls. Both are same-origin requests made from the
-page, which is why no API key and no approval process is involved.
-
-Product and listings go to a small local service that adds the category
-guidance, ranks the options, and returns a single object. The card renders from
-that object and nothing else, which keeps the UI independent of where the data
-came from.
-
-Everything is injected into a shadow root so the host page's stylesheet cannot reach it.
-
-## Stack
-
-- React 18 and Vite, with CRXJS for the extension build
-- Manifest V3
-- Snowflake for the category knowledge base (optional; falls back to a built-in table)
-- No third-party listings API, and no credentials
-- A thin proxy service for credentials and data access
-
-## Running it locally
-
-No credentials are needed to run it.
-
-```bash
-git clone https://github.com/daksh39/PivotHacks.git
-cd PivotHacks
-npm install
-```
-
-Then run the local service and build the extension:
-
-```bash
-npm run proxy
-npm run dev
-```
-
-To load it in Chrome, open `chrome://extensions`, turn on Developer mode, choose Load unpacked, and select the `dist` folder. Open any supported product page and the card should appear near the buy button.
-
-## Project structure
+## What's here
 
 ```
-src/
-  types.ts              shared types, everything is built against these
-  tokens.ts             design system
-  carbon.ts             CO2 formatting and the miles-driven equivalence
-  contentScript/        page detection, product extraction, shadow root
-  background/           service worker, the only thing that calls the proxy
-  components/           the card and its states
-  popup/                extension popup
-  dev/preview.html      the card alone, every state, in a plain page
 proxy/
-  index.ts              the one endpoint, POST /lookup
-  rank.ts               context-aware ranking
-  snowflake.ts          the category knowledge base
-  categories.ts         title to category classification
-  smoke.sh              proves the proxy returns a well-formed VerteResult
-data/
-  category-guidance.sql knowledge base seed
-site/                   landing page
+  index.js               POST /lookup, GET /health — the only endpoint
+  lookup.js              assembles the VerteResult
+  categories.js          title → category slug (keyword rules, optional model fallback)
+  guidance.js            the knowledge base, from Snowflake, cached
+  carbon.js              tilde formatting and the EPA miles equivalence
+  smoke.sh               npm run smoke
+src/
+  types.js               the contract — ProductContext, UsedOption,
+                         CategoryGuidance, VerteResult
+  config.js              brand strings, proxy base, outbound links
+  styles/tokens.css      the design system
+  contentScript/
+    index.js             detect, extract, inject into a shadow root
+    extract.js           JSON-LD → og: → retailer adapters
+    listings.js          reads used offers off the retailer's own page
+    card.js              the inline card, plain DOM
+  background/index.js    service worker — the only thing that calls the proxy
+  popup / screens / components
+public/manifest.json     Manifest V3
 ```
 
-## A note on the data
+## Running it
 
-Every listing shown comes from the retailer whose page you are on: Amazon's own
-used offer, or Best Buy's own open-box listings. There is no seeded or invented
-listing data anywhere in the product.
+```sh
+npm install
+npm run proxy      # localhost:8787, reads the knowledge base from Snowflake
+npm run smoke      # proves the endpoint returns a well-formed VerteResult
+npm run build      # then load build/ at chrome://extensions (Developer mode)
+```
 
-Carbon figures appear only where we have a citation. Monitors use Dell's
-published product carbon footprint datasheet, laptops use Apple's Product
-Environmental Report, and the miles-driven conversion uses the US EPA's figure
-for a typical passenger vehicle. Categories we could not source show no carbon
-figure at all rather than a number we cannot defend.
+Open an Amazon or Best Buy product page. The card injects near the buy button.
+The proxy must be running — with it down, the card stays hidden rather than
+showing something it can't stand behind.
 
-## Team
+`npm test` runs the extraction, listings and card tests in jsdom.
 
-Aaryan, Siddharth, Shaurya, and Daksh.
+## Where the data comes from
 
-## Status
+The card shows two tiers of information, kept visibly separate because they
+are not equally trustworthy:
 
-Built during a 12 hour hackathon, so treat it accordingly. It currently works on a limited set of retailers and the category knowledge base covers around twenty product types, weighted toward the things you buy when you move into student accommodation.
+- **Sourced.** The manufacturing footprint for a category comes from the
+  Snowflake knowledge base and always shows its citation. Categories without a
+  published figure show no number at all.
+- **Estimated.** Lower-carbon alternatives are generated by an OpenAI model
+  (`proxy/alternatives.js`) and labelled as AI estimates on the card. Their
+  links are retailer searches built from the suggested name, never product URLs
+  the model made up.
 
-Things we would do next, roughly in order:
+Without an `OPENAI_API_KEY` the proxy still runs: classification falls back to
+keyword rules and the alternatives list is simply empty.
 
-- Real delivery estimates. Both sources currently report the same placeholder
-  number of days, which means the deadline-aware ranking cannot yet tell two
-  listings apart.
-- More retailers, since right now coverage is Amazon and Best Buy
-- Carbon citations for more categories
-- Better category classification, currently keyword rules
+## Methodology
+
+Two things we say plainly rather than hand-wave, because they're the first
+things a good reader asks about:
+
+- **Carbon figures are published embodied-carbon estimates per category, and
+  each one is stored with its source.** We display them with a tilde — "~46 kg
+  CO₂e" is honest, "46.2 kg" is a claim we can't support. The miles-driven
+  equivalence carries a per-mile source too.
+- **Campus listings are seeded, not live.** Those groups have no API, so the
+  table is hand-seeded. Seeded data described accurately is fine; seeded data
+  implied to be live is not.
+
+## Design system
+
+Full tokens live in `src/styles/tokens.css`.
+
+| Token | Hex | Use |
+|---|---|---|
+| Base | `#FAF6ED` | Card and panel grounds |
+| Moss | `#D0E2B8` | Button fills, pills, active states |
+| Accent tint | `#E8F0DA` | Hover, soft fills, callout grounds |
+| Accent shade | `#9FB87E` | Borders, rules, active edges |
+| Ink | `#42473C` | Headings and body text |
+| Ink soft | `#868C7C` | Secondary text, captions, meta |
+| Accent text | `#3C4A2C` | Links, accent type, button labels |
+
+`#D0E2B8` and `#9FB87E` are fills and borders only — both fail as text on cream.
+All accent text is `#3C4A2C` (~9:1). Type is Newsreader (wordmark), Domine
+(headings), Instrument Sans (body), IBM Plex Mono (code).
+
+---
+
+Verte began as GreenBeans, a TreeHacks 2022 project.

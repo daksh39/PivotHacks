@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Verte",
+  "version": "1.0.0",
+  "description": "The greenest product is the one that already exists. Verte shows you the secondhand option before you buy new.",
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "background": {
+    "service_worker": "background.bundle.js"
+  },
+  "permissions": ["storage", "tabs", "activeTab"],
+  "host_permissions": ["http://localhost:8787/*"],
+  "options_page": "options.html",
+  "action": {
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    },
+    "default_title": "Verte — buy it used instead",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.amazon.com/*",
+        "https://www.amazon.ca/*",
+        "https://www.amazon.co.uk/*",
+        "https://www.bestbuy.com/*"
+      ],
+      "js": ["contentScript.bundle.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+.alt-container {
+  background-color: var(--verte-base);
+  color: var(--verte-ink);
+  font-family: var(--verte-font-body);
+  padding: 0 24px 22px;
+  width: 400px;
+}
+
+.alt-product {
+  color: var(--verte-ink-soft);
+  font-size: 12px;
+  margin-top: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alt-baseline {
+  margin-top: 6px;
+}
+
+.alt-figure {
+  color: var(--verte-ink);
+  font-family: var(--verte-font-heading);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.alt-cite {
+  color: var(--verte-ink-soft);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.alt-list {
+  list-style: none;
+  margin-top: 14px;
+}
+
+.alt-item {
+  border-top: 1px solid var(--verte-moss-shade);
+  padding: 11px 0;
+}
+
+.alt-item a {
+  color: var(--verte-accent-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.alt-item a:hover {
+  text-decoration: underline;
+}
+
+.alt-why {
+  color: var(--verte-ink-soft);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.alt-delta {
+  color: var(--verte-accent-text);
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+.alt-foot {
+  color: var(--verte-ink-soft);
+  font-size: 11px;
+  margin-top: 12px;
+}
+
+.alt-action {
+  margin-top: 16px;
+}

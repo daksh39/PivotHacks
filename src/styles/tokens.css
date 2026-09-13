@@ -1,0 +1,44 @@
+/*
+ * Verte design tokens.
+ * Single source of truth for colour, type, and geometry. Nothing in the
+ * extension should hardcode a hex value — pull from here.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:wght@400;500;600&family=Domine:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  /* --- Colour ------------------------------------------------------- */
+  --verte-base: #FAF6ED;        /* card and panel grounds */
+  --verte-moss: #D0E2B8;        /* button fills, pills, active states */
+  --verte-moss-tint: #E8F0DA;   /* hover, soft fills, callout grounds */
+  --verte-moss-shade: #9FB87E;  /* borders, rules, active edges */
+  --verte-ink: #42473C;         /* headings and body text */
+  --verte-ink-soft: #868C7C;    /* secondary text, captions, meta labels */
+  --verte-accent-text: #3C4A2C; /* links, accent type, button labels */
+  --verte-wordmark: #5C8A6B;    /* the wordmark only — large display type */
+
+  /* Fills and borders only. #D0E2B8 and #9FB87E never carry text on cream:
+     they measure ~2.3:1. Accent text is always --verte-accent-text (~9:1). */
+
+  /* --- Verdict semantics -------------------------------------------- */
+  --verte-safe-text: #3C4A2C;
+  --verte-safe-bg: #D0E2B8;
+  --verte-check-text: #8A6E2F;
+  --verte-check-bg: #F3EBD6;
+  --verte-new-text: #9A4B37;
+  --verte-new-bg: #F4E2DC;
+
+  /* --- Type --------------------------------------------------------- */
+  --verte-font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --verte-font-heading: 'Domine', Georgia, 'Times New Roman', serif;
+  --verte-font-body: 'Instrument Sans', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --verte-font-mono: 'IBM Plex Mono', Menlo, Monaco, Consolas, monospace;
+
+  /* --- Geometry ----------------------------------------------------- */
+  --verte-radius-panel: 28px;
+  --verte-radius-block: 18px;
+  --verte-radius-pill: 100px;
+  --verte-shadow: 0 8px 24px rgba(92, 138, 107, 0.10);
+  --verte-page-ground: linear-gradient(160deg, #FDF6EC 0%, #F2ECDD 45%, #E8F0E6 100%);
+}

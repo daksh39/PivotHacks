@@ -1,0 +1,24 @@
+.verte-header {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    padding-top: 24px;
+}
+
+.verte-header--large {
+    gap: 14px;
+    padding-top: 32px;
+}
+
+.verte-wordmark {
+    color: var(--verte-wordmark);
+    font-family: var(--verte-font-display);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1;
+}
+
+.verte-header--large .verte-wordmark {
+    font-size: 30px;
+}
