@@ -9,6 +9,7 @@
  * ------------------------------------------------------------------------- */
 
 import type { LookupRequest, LookupResponse, VerteResult } from '../types'
+import { resolveLocally } from '../offline'
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL ?? 'http://localhost:8787'
 
@@ -58,6 +59,9 @@ chrome.runtime.onMessage.addListener((message: LookupRequest, _sender, sendRespo
       })
 
       if (!response.ok) {
+        /* A 404 is the proxy telling us it has no guidance for this category —
+         * a real answer, not a failure. Falling back locally would only
+         * substitute our own ignorance for its. */
         sendResponse({
           ok: false,
           error: `proxy returned ${response.status}`,
@@ -69,11 +73,18 @@ chrome.runtime.onMessage.addListener((message: LookupRequest, _sender, sendRespo
       cache.set(key, { at: Date.now(), result })
       void recordImpact(result)
       sendResponse({ ok: true, result } satisfies LookupResponse)
-    } catch (error) {
-      sendResponse({
-        ok: false,
-        error: error instanceof Error ? error.message : 'proxy unreachable',
-      } satisfies LookupResponse)
+    } catch {
+      /* The proxy is not running. Everything /lookup does today is pure — no
+       * credential, no database — so do it here rather than showing nothing.
+       * See src/offline.ts for why this is a fallback and not the plan. */
+      const local = resolveLocally(message.product, message.context, message.options ?? [])
+      if (!local) {
+        sendResponse({ ok: false, error: 'proxy returned 404' } satisfies LookupResponse)
+        return
+      }
+      cache.set(key, { at: Date.now(), result: local })
+      void recordImpact(local)
+      sendResponse({ ok: true, result: local } satisfies LookupResponse)
     }
   })()
 

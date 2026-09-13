@@ -125,10 +125,35 @@ describe('service worker lookup', () => {
     expect(response.ok).toBe(false)
   })
 
-  it('reports an unreachable proxy instead of throwing', async () => {
+  it('answers locally when the proxy is not running', async () => {
+    /* Everything /lookup does today is pure, so an unreachable proxy is not a
+     * reason to show nothing. Loading dist/ has to work on its own. */
     fetchMock.mockRejectedValue(new Error('Failed to fetch'))
     const response = await send(request())
-    expect(response).toEqual({ ok: false, error: 'Failed to fetch' })
+    expect(response.ok).toBe(true)
+    if (!response.ok) throw new Error('expected a local result')
+    expect(response.result.guidance.category).toBe('mini-fridge')
+    expect(response.result.options).toHaveLength(1)
+    expect(response.result.savingsUsd).toBe(37)
+  })
+
+  it('still says nothing when it has no guidance for the category offline', async () => {
+    fetchMock.mockRejectedValue(new Error('Failed to fetch'))
+    const response = await send(
+      request({
+        product: { ...request().product, title: 'Artisanal Sourdough Starter' },
+      }),
+    )
+    expect(response).toEqual({ ok: false, error: 'proxy returned 404' })
+  })
+
+  it('does not fall back when the proxy answered with a 404', async () => {
+    /* That is the proxy saying it has no guidance — a real answer. Falling
+     * back would substitute our ignorance for its. */
+    respondWith(null, false)
+    const response = await send(request())
+    expect(response.ok).toBe(false)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   it('ignores messages that are not ours', async () => {
