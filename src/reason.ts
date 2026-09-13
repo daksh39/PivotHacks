@@ -23,6 +23,13 @@ export function explainReason(reason: RecommendationReason, ctx: BuyerContext): 
     case 'cheaper-option-needs-car':
       return 'A cheaper one is nearby, but it needs a car to collect'
     case 'nothing-arrives-in-time':
-      return 'Nothing secondhand reaches you in time'
+      /* Scope the claim. With a budget set, the honest sentence is about what
+       * they can afford — there may well be something faster they cannot pay
+       * for, and saying "nothing reaches you in time" would overclaim. */
+      return ctx.budgetCap !== null
+        ? 'Nothing you can afford arrives in time'
+        : 'Nothing secondhand reaches you in time'
+    case 'nothing-in-budget':
+      return 'Nothing secondhand is within your budget'
   }
 }

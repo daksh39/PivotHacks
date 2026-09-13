@@ -52,7 +52,7 @@ export const FIXTURE_TEXTBOOK: VerteResult = {
       daysToHand: 7,
     },
   ],
-  context: { needInDays: null, hasCar: false },
+  context: { needInDays: null, hasCar: false, budgetCap: null },
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: 174,
@@ -100,7 +100,7 @@ export const FIXTURE_HEADPHONES: VerteResult = {
       daysToHand: 7,
     },
   ],
-  context: { needInDays: null, hasCar: false },
+  context: { needInDays: null, hasCar: false, budgetCap: null },
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: 70,
@@ -141,7 +141,7 @@ export const FIXTURE_MONITOR: VerteResult = {
       daysToHand: 7,
     },
   ],
-  context: { needInDays: null, hasCar: false },
+  context: { needInDays: null, hasCar: false, budgetCap: null },
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: 97,
@@ -168,7 +168,7 @@ export const FIXTURE_MATTRESS: VerteResult = {
     bulky: true,
   },
   options: [],
-  context: { needInDays: null, hasCar: false },
+  context: { needInDays: null, hasCar: false, budgetCap: null },
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: null,
@@ -179,6 +179,23 @@ export const FIXTURE_MATTRESS: VerteResult = {
 export const FIXTURE_EMPTY: VerteResult = {
   ...FIXTURE_TEXTBOOK,
   options: [],
+  savingsUsd: null,
+  co2AvoidedKg: null,
+}
+
+/**
+ * The budget rule firing. Same Best Buy listings, a $150 ceiling, and the
+ * recommendation changes from "buy this open-box one" to "nothing here fits".
+ * This is the pivot-03 state that runs on real prices.
+ */
+export const FIXTURE_OVER_BUDGET: VerteResult = {
+  ...FIXTURE_HEADPHONES,
+  context: { needInDays: null, hasCar: false, budgetCap: 150 },
+  reason: 'nothing-in-budget',
+  passedOver: {
+    option: FIXTURE_HEADPHONES.options[1],
+    why: 'the cheapest one is CA$24 over your budget',
+  },
   savingsUsd: null,
   co2AvoidedKg: null,
 }

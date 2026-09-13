@@ -5,9 +5,9 @@
  *    guidance; no row means 404 and no card. A slug the classifier can emit
  *    with no guidance behind it is a product page that silently does nothing.
  *
- * 2. PARITY. data/category-guidance.sql is the source of truth and SEED is the
- *    no-credentials mirror of it. Drift means the demo shows one verdict and
- *    the warehouse holds another.
+ * 2. PARITY. SEED is authored and data/category-guidance.sql is generated
+ *    from it. Drift means the demo shows one verdict and the warehouse holds
+ *    another — so the checked-in file must match what the generator emits.
  *
  * Tip wording is allowed to differ (the SQL avoids apostrophes so it does not
  * have to escape them inside a JSON literal); everything that drives behaviour
@@ -20,6 +20,7 @@ import { describe, expect, it } from 'vitest'
 import { KNOWN_CATEGORIES } from './categories'
 import { getCategoryGuidance, __SEED } from './snowflake'
 import { isSourced } from '../src/carbon'
+import { generate } from './snowflake.gen'
 
 type SqlRow = {
   verdict: string
@@ -103,5 +104,14 @@ describe('no citation, no claim (§09)', () => {
   it('still cites the two categories we have sources for', () => {
     const cited = Object.keys(__SEED).filter((s) => isSourced(__SEED[s].co2Source))
     expect(cited.sort()).toEqual(['laptop', 'monitor'])
+  })
+})
+
+describe('data/category-guidance.sql is generated, not hand-edited', () => {
+  it('matches what proxy/snowflake.gen.ts emits', () => {
+    const onDisk = readFileSync(resolve(process.cwd(), 'data/category-guidance.sql'), 'utf8')
+    expect(onDisk, 'SEED changed without regenerating — run: npx tsx proxy/snowflake.gen.ts').toBe(
+      generate(),
+    )
   })
 })

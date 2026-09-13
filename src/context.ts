@@ -11,7 +11,11 @@
 
 import type { BuyerContext } from './types'
 
-export const DEFAULT_CONTEXT: BuyerContext = { needInDays: null, hasCar: false }
+export const DEFAULT_CONTEXT: BuyerContext = {
+  needInDays: null,
+  hasCar: false,
+  budgetCap: null,
+}
 
 const KEY = 'verte:context'
 
@@ -38,6 +42,14 @@ export const DEADLINE_CHOICES: { label: string; value: number | null }[] = [
   { label: 'No rush', value: null },
   { label: 'Within 3 days', value: 3 },
   { label: 'By tomorrow', value: 1 },
+]
+
+/** Round numbers a student actually thinks in, plus "no limit". */
+export const BUDGET_CHOICES: { label: string; value: number | null }[] = [
+  { label: 'Any', value: null },
+  { label: '$50', value: 50 },
+  { label: '$100', value: 100 },
+  { label: '$200', value: 200 },
 ]
 
 export function deadlineLabel(needInDays: number | null): string {

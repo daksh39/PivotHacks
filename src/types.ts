@@ -62,6 +62,11 @@ export type BuyerContext = {
   needInDays: number | null
   /** Without a car, a bulky item four miles away is not really available. */
   hasCar: boolean
+  /**
+   * The most they can spend, in the product's own currency. null = no ceiling.
+   * The one context rule backed by data we actually measure today.
+   */
+  budgetCap: number | null
 }
 
 /** Why options[0] won. The card says this in words. */
@@ -71,6 +76,7 @@ export type RecommendationReason =
   | 'only-option-in-time'
   | 'cheaper-option-needs-car'
   | 'nothing-arrives-in-time'
+  | 'nothing-in-budget'
 
 /** What we know about buying this category used. */
 export type CategoryGuidance = {

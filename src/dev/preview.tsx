@@ -19,6 +19,7 @@ import {
   FIXTURE_HEADPHONES,
   FIXTURE_MATTRESS,
   FIXTURE_MONITOR,
+  FIXTURE_OVER_BUDGET,
   FIXTURE_TEXTBOOK,
 } from './fixtures'
 import { pageGround } from '../tokens'
@@ -89,6 +90,10 @@ function Preview() {
       </Panel>
       <Panel label="expanded — Best Buy open box">
         <Card result={FIXTURE_HEADPHONES} defaultExpanded onDismiss={() => {}} />
+      </Panel>
+
+      <Panel label="BUDGET CHANGED THE ANSWER">
+        <Card result={FIXTURE_OVER_BUDGET} defaultExpanded onDismiss={() => {}} />
       </Panel>
 
       <Panel label="expanded — nothing usable">

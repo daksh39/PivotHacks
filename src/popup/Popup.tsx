@@ -4,7 +4,13 @@
 
 import { useEffect, useState } from 'react'
 import type { BuyerContext } from '../types'
-import { DEADLINE_CHOICES, DEFAULT_CONTEXT, loadContext, saveContext } from '../context'
+import {
+  BUDGET_CHOICES,
+  DEADLINE_CHOICES,
+  DEFAULT_CONTEXT,
+  loadContext,
+  saveContext,
+} from '../context'
 import { formatCo2, formatUsd, milesDrivenEquivalent } from '../carbon'
 import { Leaf } from '../components/Skeleton'
 
@@ -61,18 +67,31 @@ export function Popup() {
             ))}
           </div>
 
-          <label className="verte__ctx-check">
-            <input
-              type="checkbox"
-              checked={context.hasCar}
-              onChange={(e) => update({ hasCar: e.target.checked })}
-            />
-            <span>I can collect bulky things by car</span>
-          </label>
+          <div className="verte__ctx-legend verte__ctx-legend--spaced">What can you spend?</div>
+          <div className="verte__ctx-row" role="radiogroup" aria-label="What can you spend?">
+            {BUDGET_CHOICES.map((choice) => (
+              <button
+                key={String(choice.value)}
+                type="button"
+                role="radio"
+                aria-checked={context.budgetCap === choice.value}
+                className="verte__chip"
+                onClick={() => update({ budgetCap: choice.value })}
+              >
+                {choice.label}
+              </button>
+            ))}
+          </div>
+
 
           <p className="verte__ctx-help">
             These change which listing Verte recommends, not just what it shows.
           </p>
+          {/* There is no "can you collect it by car" control here on purpose.
+            * The ranking rule for it exists and is correct, but no source
+            * reports local pickup yet — so the control could not change
+            * anything, and a switch that provably does nothing is worse than
+            * no switch. It comes back with real pickup data. */}
         </fieldset>
 
         {impact.seen > 0 ? (
