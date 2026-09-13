@@ -7,11 +7,11 @@
 
 import { StrictMode } from 'react'
 import type { LookupRequest, LookupResponse, VerteResult } from '../types'
-import { mockFor } from '../mocks'
 import { loadContext } from '../context'
 import { Card } from '../components/Card'
 import { Skeleton } from '../components/Skeleton'
 import { extractProduct, looksLikeProductPage } from './extract'
+import { findUsedListings } from './listings'
 import { mountCard, unmountCard } from './mount'
 
 /** Dismissed stays dismissed for that product (§06). */
@@ -62,11 +62,18 @@ async function lookup(product: LookupRequest['product']): Promise<VerteResult | 
    * decides which option comes back first. */
   const context = await loadContext()
 
+  /* Read the retailer's own secondhand listings here, in the page. Both
+   * sources are same-origin — Amazon's used buybox is in this DOM, and Best
+   * Buy's search API only answers requests from its own origin. The service
+   * worker could not fetch either. */
+  const options = await findUsedListings(product.title, product.sourceUrl)
+
   try {
     const response: LookupResponse = await chrome.runtime.sendMessage({
       type: 'VERTE_LOOKUP',
       product,
       context,
+      options,
     } satisfies LookupRequest)
 
     if (response?.ok) return response.result
@@ -75,13 +82,6 @@ async function lookup(product: LookupRequest['product']): Promise<VerteResult | 
     console.warn('[verte] service worker unreachable:', error)
   }
 
-  /* The proxy is down or not built yet. Render mock data so lane/ui and
-   * lane/extension are never blocked on lane/proxy. Flip VITE_ALLOW_MOCK off
-   * for anything you would demo. */
-  if (import.meta.env.VITE_ALLOW_MOCK !== 'false') {
-    console.info('[verte] falling back to src/mocks.ts')
-    return mockFor(product.category || 'mini-fridge')
-  }
   return null
 }
 

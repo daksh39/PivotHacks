@@ -15,13 +15,12 @@ import { Card } from '../components/Card'
 import { Skeleton } from '../components/Skeleton'
 import { cardStyles } from '../components/styles'
 import {
-  MOCK_EMPTY,
-  MOCK_MATTRESS,
-  MOCK_MINI_FRIDGE,
-  MOCK_MINI_FRIDGE_BLOCKED,
-  MOCK_MINI_FRIDGE_DEADLINE,
-  MOCK_MONITOR,
-} from '../mocks'
+  FIXTURE_EMPTY,
+  FIXTURE_HEADPHONES,
+  FIXTURE_MATTRESS,
+  FIXTURE_MONITOR,
+  FIXTURE_TEXTBOOK,
+} from './fixtures'
 import { pageGround } from '../tokens'
 
 /** Renders children into a real shadow root, exactly like the content script. */
@@ -79,28 +78,28 @@ function Preview() {
       }}
     >
       <Panel label="THE DEMO — every figure cited">
-        <Card result={MOCK_MONITOR} defaultExpanded onDismiss={() => {}} />
+        <Card result={FIXTURE_MONITOR} defaultExpanded onDismiss={() => {}} />
       </Panel>
 
       <Panel label="collapsed">
-        <Card result={MOCK_MINI_FRIDGE} />
+        <Card result={FIXTURE_TEXTBOOK} />
       </Panel>
       <Panel label="expanded — safe">
-        <Card result={MOCK_MINI_FRIDGE} defaultExpanded onDismiss={() => {}} />
+        <Card result={FIXTURE_TEXTBOOK} defaultExpanded onDismiss={() => {}} />
       </Panel>
-      <Panel label="expanded — deadline changed the winner">
-        <Card result={MOCK_MINI_FRIDGE_DEADLINE} defaultExpanded onDismiss={() => {}} />
+      <Panel label="expanded — Best Buy open box">
+        <Card result={FIXTURE_HEADPHONES} defaultExpanded onDismiss={() => {}} />
       </Panel>
 
-      <Panel label="expanded — context blocks everything">
-        <Card result={MOCK_MINI_FRIDGE_BLOCKED} defaultExpanded onDismiss={() => {}} />
+      <Panel label="expanded — nothing usable">
+        <Card result={FIXTURE_EMPTY} defaultExpanded onDismiss={() => {}} />
       </Panel>
 
       <Panel label="expanded — buy new">
-        <Card result={MOCK_MATTRESS} defaultExpanded onDismiss={() => {}} />
+        <Card result={FIXTURE_MATTRESS} defaultExpanded onDismiss={() => {}} />
       </Panel>
       <Panel label="nothing found">
-        <Card result={MOCK_EMPTY} defaultExpanded onDismiss={() => {}} />
+        <Card result={FIXTURE_EMPTY} defaultExpanded onDismiss={() => {}} />
       </Panel>
       <Panel label="loading">
         <Skeleton />

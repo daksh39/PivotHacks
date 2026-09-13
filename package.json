@@ -9,12 +9,11 @@
     "build": "tsc --noEmit && vite build",
     "preview:card": "vite --open /src/dev/preview.html",
     "proxy": "tsx watch proxy/index.ts",
-    "proxy:mock": "VERTE_MOCK=1 tsx watch proxy/index.ts",
     "site": "vite --config site/vite.config.ts",
     "site:build": "vite build --config site/vite.config.ts",
     "smoke": "bash proxy/smoke.sh",
     "typecheck": "tsc --noEmit",
-    "all": "concurrently -n proxy,ext -c green,cyan \"npm:proxy:mock\" \"npm:dev\"",
+    "all": "concurrently -n proxy,ext -c green,cyan \"npm:proxy\" \"npm:dev\"",
     "test": "vitest run",
     "test:watch": "vitest"
   },

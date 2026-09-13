@@ -16,14 +16,11 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
-import type { BuyerContext, ProductContext, VerteResult } from '../src/types'
-import { mockFor } from '../src/mocks'
+import type { BuyerContext, ProductContext, UsedOption, VerteResult } from '../src/types'
 import { classify } from './categories'
-import { searchEbay } from './ebay'
-import { getCampusListings, getCategoryGuidance, logImpact } from './snowflake'
+import { getCategoryGuidance, logImpact } from './snowflake'
 import { DEFAULT_CONTEXT, rank } from './rank'
 
-const MOCK = process.env.VERTE_MOCK === '1'
 const PORT = Number(process.env.PORT ?? 8787)
 
 const app = express()
@@ -31,12 +28,21 @@ app.use(cors())
 app.use(express.json({ limit: '256kb' }))
 
 app.get('/health', (_req, res) => {
-  res.json({ ok: true, mock: MOCK, service: 'verte-proxy' })
+  res.json({ ok: true, service: 'verte-proxy' })
 })
 
 app.post('/lookup', async (req, res) => {
-  const { product, context } = req.body as { product: ProductContext; context?: BuyerContext }
+  const { product, context, options } = req.body as {
+    product: ProductContext
+    context?: BuyerContext
+    options?: UsedOption[]
+  }
   const ctx: BuyerContext = context ?? DEFAULT_CONTEXT
+
+  /* Listings arrive with the request. Both sources are same-origin reads of
+   * the retailer's own page or frontend API, so only the content script can
+   * perform them — this process could not fetch them if it tried. */
+  const found: UsedOption[] = options ?? []
 
   if (!product?.title) {
     res.status(400).json({ error: 'ProductContext.title is required' })
@@ -49,24 +55,6 @@ app.post('/lookup', async (req, res) => {
     return
   }
 
-  /* Mock mode: serve the shared fixtures. Same bytes the extension falls back
-   * to and the same bytes the preview page renders, so every lane is building
-   * against exactly what ships. */
-  if (MOCK) {
-    const base = mockFor(category)
-
-    /* The fixtures are synthetic, so quote them in whatever currency the page
-     * is in. Without this, a demo on amazon.ca (CAD) drops every USD fixture
-     * through the currency guard and shows an empty card — the guard doing
-     * its job, on data that was never real to begin with. */
-    const fixtures = base.options.map((option) => ({ ...option, currency: product.currency }))
-    /* Built through assemble() like every other response. A second path here
-     * meant mock mode skipped the currency guard and happily reported a CAD
-     * saving against USD fixtures — the exact bug assemble() exists to stop.
-     * One place builds a VerteResult. Keep it that way. */
-    res.json(assemble({ ...product, category }, base.guidance, fixtures, ctx))
-    return
-  }
 
   try {
     const guidance = await getCategoryGuidance(category)
@@ -75,19 +63,10 @@ app.post('/lookup', async (req, res) => {
       return
     }
 
-    /* Nothing to search for if we are telling them to buy it new. */
-    const options =
-      guidance.verdict === 'avoid'
-        ? []
-        : [
-            ...(await getCampusListings(category)),
-            ...(await searchEbay(product.title, product.currency).catch((e) => {
-              console.warn('[verte] eBay search failed, continuing:', e.message)
-              return []
-            })),
-          ]
+    /* Show nothing secondhand when we are telling them to buy it new. */
+    const usable = guidance.verdict === 'avoid' ? [] : found
 
-    res.json(assemble(product, guidance, options, ctx))
+    res.json(assemble(product, guidance, usable, ctx))
     if (guidance.verdict !== 'avoid') void logImpact(category, guidance.embodiedCo2Kg)
   } catch (error) {
     console.error('[verte] lookup failed:', error)
@@ -162,5 +141,5 @@ function assemble(
 }
 
 app.listen(PORT, () => {
-  console.log(`[verte] proxy on http://localhost:${PORT}  ${MOCK ? '(MOCK DATA)' : '(live)'}`)
+  console.log(`[verte] proxy on http://localhost:${PORT}`)
 })

@@ -45,7 +45,11 @@ export const DEFAULT_CONTEXT: BuyerContext = { needInDays: null, hasCar: false }
 
 /** Can they physically collect it? Only bulky local pickups are ever a problem. */
 function reachable(o: UsedOption, ctx: BuyerContext, g: CategoryGuidance): boolean {
-  if (o.source !== 'campus') return true
+  /* Only collection-in-person can be blocked by not having a car. `pickup` is
+   * set only when a source actually says so, never inferred — so today this
+   * returns true for everything and the rule sits dormant rather than firing
+   * on a guess. */
+  if (!o.pickup) return true
   if (!g.bulky) return true
   return ctx.hasCar
 }

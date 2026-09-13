@@ -27,16 +27,10 @@ function arrival(days: number): string {
   return `${days} days`
 }
 
-/**
- * Why this particular listing doesn't work for them, or null if it does.
- *
- * Both constraints have to be represented. Marking only the slow ones left
- * campus pickups reading "Tomorrow" on a card that said nothing was reachable,
- * which is worse than not marking anything.
- */
+/** Why this particular listing doesn't work for them, or null if it does. */
 function blockedReason(o: UsedOption, result: VerteResult): string | null {
   const { context, guidance } = result
-  if (o.source === 'campus' && guidance.bulky && !context.hasCar) return 'Needs a car'
+  if (o.pickup && guidance.bulky && !context.hasCar) return 'Needs a car'
   if (context.needInDays != null && o.daysToHand > context.needInDays) {
     return `${arrival(o.daysToHand)} · too late`
   }
@@ -63,13 +57,10 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
   const recommended: UsedOption | null = options[0] ?? null
   const unusable = reason === 'nothing-arrives-in-time'
 
-  /* Open on the tab that actually contains the recommendation. Defaulting to
-   * eBay put the headline price ($45 campus) on a tab showing $28 and $33 —
-   * the card appeared to contradict itself. */
-  const [tab, setTab] = useState<UsedOption['source']>(options[0]?.source ?? 'ebay')
-  const ebay = options.filter((o) => o.source === 'ebay')
-  const campus = options.filter((o) => o.source === 'campus')
-  const shown = tab === 'ebay' ? ebay : campus
+  /* One source per page now — you are on Amazon or you are on Best Buy, and
+   * the listings are that retailer's own. There is nothing to switch between,
+   * so the two-tab control is gone and the list stands on its own. */
+  const sourceLabel = recommended?.source === 'bestbuy' ? 'Best Buy open box' : 'used on Amazon'
 
   if (!expanded) {
     return (
@@ -79,7 +70,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
           {recommended && savingsUsd && !unusable ? (
             <span>
               <strong>{formatUsd(recommended.price, recommended.currency)}</strong> used
-              {recommended.source === 'campus' ? ' nearby' : ''} — save{' '}
+              {' '}— save{' '}
               <strong>{formatUsd(savingsUsd, product.currency)}</strong>
             </span>
           ) : guidance.verdict === 'avoid' ? (
@@ -140,8 +131,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
               * keep cards uniform. It wraps instead. */}
             {passedOver && (
               <p className="verte__passed">
-                Skipped {formatUsd(passedOver.option.price, passedOver.option.currency)}
-                {passedOver.option.source === 'campus' ? ' nearby' : ' on eBay'} — {passedOver.why}
+                Skipped {formatUsd(passedOver.option.price, passedOver.option.currency)} — {passedOver.why}
               </p>
             )}
           </>
@@ -183,27 +173,14 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
               </>
             )}
 
-            {/* 4 — the two routes */}
+            {/* 4 — where to actually get it */}
             {options.length > 0 && (
               <>
-                <div className="verte__routes">
-                  <button
-                    className="verte__route verte__route--fill"
-                    aria-pressed={tab === 'ebay'}
-                    onClick={() => setTab('ebay')}
-                  >
-                    {ebay.length} on eBay
-                  </button>
-                  <button
-                    className="verte__route verte__route--outline"
-                    aria-pressed={tab === 'campus'}
-                    onClick={() => setTab('campus')}
-                  >
-                    {campus.length} near campus
-                  </button>
-                </div>
+                <p className="verte__routes-label">
+                  {options.length} {sourceLabel}
+                </p>
                 <ul className="verte__listings">
-                  {shown.map((o) => (
+                  {options.map((o) => (
                     <li key={o.url}>
                       <a
                         className="verte__listing"

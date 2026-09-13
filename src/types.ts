@@ -21,9 +21,13 @@ export type ProductContext = {
   sourceUrl: string
 }
 
+/** Where a secondhand listing came from. Both are read from the retailer's
+ * own page or its own frontend API, same-origin, with no credential. */
+export type ListingSource = 'amazon' | 'bestbuy'
+
 /** One secondhand option, from any source. */
 export type UsedOption = {
-  source: 'ebay' | 'campus'
+  source: ListingSource
   title: string
   price: number
   /**
@@ -35,7 +39,10 @@ export type UsedOption = {
   url: string
   imageUrl: string | null
   condition: string
-  /** campus listings only */
+  /** Collected in person rather than shipped. Set only when the source says
+   * so — never inferred. Drives the bulky/no-car demotion in proxy/rank.ts. */
+  pickup?: boolean
+  /** Distance to a pickup location, when the source reports one. */
   distanceMi?: number
   /**
    * Days until it is physically in their hands. Campus pickup is 0–1, eBay is
@@ -103,6 +110,13 @@ export type LookupRequest = {
   type: 'VERTE_LOOKUP'
   product: ProductContext
   context: BuyerContext
+  /**
+   * Listings the content script read off the retailer's own page or frontend
+   * API. They travel with the request because both sources are same-origin
+   * reads that only the content script can perform — the proxy could not
+   * fetch them if it wanted to.
+   */
+  options: UsedOption[]
 }
 
 export type LookupResponse =

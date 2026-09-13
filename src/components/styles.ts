@@ -228,6 +228,14 @@ export const cardStyles = /* css */ `
 
 .verte__listing-dist { font-size: 12px; color: ${color.inkSoft}; }
 
+.verte__routes-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: ${color.accentText};
+}
+
 .verte__carbon { font-size: 13.5px; color: ${color.ink}; }
 .verte__carbon-eq { color: ${color.inkSoft}; }
 
