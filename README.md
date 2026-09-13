@@ -131,5 +131,3 @@ All accent text is `#3C4A2C` (~9:1). Type is Newsreader (wordmark), Domine
 (headings), Instrument Sans (body), IBM Plex Mono (code).
 
 ---
-
-Verte began as GreenBeans, a TreeHacks 2022 project.
