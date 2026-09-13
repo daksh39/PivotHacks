@@ -1,0 +1,9 @@
+.close-btn {
+    color: var(--verte-ink-soft);
+    position: absolute;
+}
+
+.close-btn:hover {
+    color: var(--verte-ink);
+    cursor: pointer;
+}

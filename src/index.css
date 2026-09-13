@@ -1,0 +1,14 @@
+@import './styles/tokens.css';
+
+body {
+  background-color: var(--verte-base);
+  color: var(--verte-ink);
+  font-family: var(--verte-font-body);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: var(--verte-font-mono);
+}

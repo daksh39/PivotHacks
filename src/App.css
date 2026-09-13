@@ -1,0 +1,5 @@
+.verte-app {
+  background-color: var(--verte-base);
+  color: var(--verte-ink);
+  font-family: var(--verte-font-body);
+}

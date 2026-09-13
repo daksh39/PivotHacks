@@ -1,0 +1,57 @@
+@import '../styles/tokens.css';
+
+body {
+  margin: 0;
+}
+
+.verte-options {
+  align-items: center;
+  background: var(--verte-page-ground);
+  box-sizing: border-box;
+  color: var(--verte-ink);
+  display: flex;
+  font-family: var(--verte-font-body);
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px 16px;
+}
+
+.verte-options-header {
+  background-color: var(--verte-base);
+  border: 1px solid var(--verte-moss-shade);
+  border-radius: var(--verte-radius-panel);
+  box-shadow: var(--verte-shadow);
+  max-width: 520px;
+  padding: 40px;
+  text-align: center;
+  width: 100%;
+}
+
+.verte-options-wordmark {
+  color: var(--verte-wordmark);
+  font-family: var(--verte-font-display);
+  font-size: 40px;
+  font-weight: 600;
+  margin: 12px 0 16px;
+}
+
+.verte-options-thesis {
+  color: var(--verte-ink);
+  font-family: var(--verte-font-heading);
+  font-size: 18px;
+  line-height: 1.45;
+  margin: 0 0 8px;
+}
+
+.verte-options-tagline {
+  color: var(--verte-ink-soft);
+  font-size: 14px;
+  margin: 0 0 24px;
+}
+
+.verte-options-link {
+  color: var(--verte-accent-text);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

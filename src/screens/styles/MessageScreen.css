@@ -1,0 +1,29 @@
+.message-container {
+    background-color: var(--verte-base);
+    color: var(--verte-ink);
+    font-family: var(--verte-font-body);
+    height: 139px;
+    padding-left: 30px;
+    width: 392px;
+}
+
+.message-content {
+    align-items: center;
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.message-text div:first-child {
+    color: var(--verte-ink);
+    font-family: var(--verte-font-heading);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.message-text div:last-child {
+    color: var(--verte-ink-soft);
+    font-size: 13px;
+    max-width: 250px;
+}
