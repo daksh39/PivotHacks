@@ -5,7 +5,14 @@
  * thing a student moving out for the first time needs. One model call for the
  * set, so it's quick. Context ("under $200") applies to every item, and the
  * budget is enforced per item in code.
+ *
+ * The model gives up to three candidates per item. Each is looked up on
+ * Amazon.ca and the first with a real product page wins, so every pick shown
+ * links to an actual listing at its actual price.
  * ------------------------------------------------------------------------- */
+
+const { firstReal } = require('../src/lib/amazonLinks');
+const { amazonFetch } = require('./amazon');
 
 const ESSENTIALS = [
   'Laptop', 'Mattress topper', 'Monitor', 'Mini fridge',
@@ -21,21 +28,26 @@ function isEssentialsRequest(text) {
 const SYSTEM = `You help a university student in Canada living on their own for the first time:
 limited budget, limited experience, busy, in a small unfamiliar space.
 
-For EACH item in the list, recommend ONE specific, real, widely sold product that
-is the lower-carbon choice for that item: ENERGY STAR or efficient, durable,
-repairable, or right-sized. Favour affordable, simple, reliable picks.
+For EACH item in the list, give 3 candidate products, best first. Each is a
+specific, real, widely sold product that is a lower-carbon choice for that item:
+ENERGY STAR or efficient, durable, repairable, or right-sized. Favour affordable,
+simple, reliable picks. Use 3 DIFFERENT brands or models, all currently listed on
+Amazon.ca, so that if one isn't available another is.
 
 Rules:
-- Name a real product with brand and model family. Never invent a model number.
+- Name a real product. Never invent a model number.
+- Name each product the way Amazon.ca lists it TODAY: brand + current product
+  line + type (for example "Acer Aspire 3 15.6-inch Laptop"). No discontinued
+  models and no SKU codes like "A515-45-R3ZV" — those only turn up spare parts.
 - "why": ONE plain sentence naming the mechanism (kWh/year, certification, lifespan).
 - typicalPriceCad: usual Amazon.ca price in Canadian dollars, as a number.
 - Only products sold on Amazon.ca. All prices and budgets are CAD.
-- If no genuine product for an item exists within the context, set its title to null.
+- If no genuine product for an item exists within the context, give no candidates.
   Never lower a price to make something fit.
 - co2SavingKgPerYear: a number only if reasoned from energy use, otherwise null.
 
 Reply with JSON only:
-{"essentials":[{"item":"Laptop","title":"...","why":"...","typicalPriceCad":0,"co2SavingKgPerYear":null,"searchQuery":"...","fitsContext":null}]}`;
+{"essentials":[{"item":"Laptop","candidates":[{"title":"...","why":"...","typicalPriceCad":0,"co2SavingKgPerYear":null,"searchQuery":"...","fitsContext":null}]}]}`;
 
 function contextRules(context) {
   if (!context) return '';
@@ -76,64 +88,86 @@ function essentialsFor(context, searchUrlFor) {
   return answers.get(key);
 }
 
+function toAlternative(e, context, searchUrlFor) {
+  // The model sometimes writes the word "null" instead of null.
+  const title = String((e && e.title) || '').trim();
+  if (!title || /^(?:null|none|n\/a)$/i.test(title)) return null;
+  const price = Number(e.typicalPriceCad);
+  // Over budget by its own estimate: not worth looking up.
+  if (context && context.budget && Number.isFinite(price) && price > context.budget) return null;
+  const saving = Number(e.co2SavingKgPerYear);
+  const why = String(e.why || '').trim();
+  return {
+    source: 'ai',
+    title: title.slice(0, 90),
+    why: /^null$/i.test(why) ? '' : why.slice(0, 180),
+    typicalPriceCad: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
+    co2SavingKgPerYear: Number.isFinite(saving) && saving > 0 ? Math.round(saving) : null,
+    fitsContext: context && e.fitsContext ? String(e.fitsContext).trim().slice(0, 80) : null,
+    url: searchUrlFor(null, e.searchQuery || title),
+    estimated: true,
+  };
+}
+
 async function askModel(context, searchUrlFor) {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return ESSENTIALS.map((item) => ({ item, alternative: null }));
+  const empty = ESSENTIALS.map((item) => ({ item, alternative: null }));
+  if (!process.env.OPENAI_API_KEY) return empty;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-        temperature: 0,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: SYSTEM + contextRules(context) },
-          { role: 'user', content: `Items: ${ESSENTIALS.join(', ')}` },
-        ],
-      }),
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const budget = (context && context.budget) || null;
+    const verify = async (items, unavailable) => {
+      const byItem = await requestCandidates(items, context, unavailable);
+      return Promise.all(items.map(async (item) => {
+        const candidates = (byItem.get(item.toLowerCase()) || [])
+          .map((c) => toAlternative(c, context, searchUrlFor))
+          .filter(Boolean);
+        const alternative = await firstReal(candidates, { budget, fetchImpl: amazonFetch });
+        return { item, alternative, tried: candidates.map((c) => c.title) };
+      }));
+    };
 
-    const data = await response.json();
-    const parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}');
-    const byItem = new Map(
-      (Array.isArray(parsed.essentials) ? parsed.essentials : [])
-        .filter((e) => e && e.item)
-        .map((e) => [String(e.item).toLowerCase(), e])
-    );
+    const first = await verify(ESSENTIALS, []);
+    // Items where nothing was a real listing get one more round, told what
+    // wasn't available so the model doesn't repeat itself.
+    const missing = first.filter((e) => !e.alternative);
+    const second = missing.length
+      ? await verify(missing.map((e) => e.item), missing.flatMap((e) => e.tried))
+      : [];
+    const retried = new Map(second.map((e) => [e.item, e.alternative]));
 
-    return ESSENTIALS.map((item) => {
-      const e = byItem.get(item.toLowerCase());
-      // The model sometimes writes the word "null" instead of null.
-      if (!e || !e.title || /^(?:null|none|n\/a|)$/i.test(String(e.title).trim())) {
-        return { item, alternative: null };
-      }
-      const price = Number(e.typicalPriceCad);
-      // Over budget is dropped, not shown with a warning.
-      if (context && context.budget && Number.isFinite(price) && price > context.budget) {
-        return { item, alternative: null };
-      }
-      const saving = Number(e.co2SavingKgPerYear);
-      return {
-        item,
-        alternative: {
-          source: 'ai',
-          title: String(e.title).trim().slice(0, 90),
-          why: /^null$/i.test(String(e.why || '').trim()) ? '' : String(e.why || '').trim().slice(0, 180),
-          typicalPriceCad: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
-          co2SavingKgPerYear: Number.isFinite(saving) && saving > 0 ? Math.round(saving) : null,
-          fitsContext: context && e.fitsContext ? String(e.fitsContext).trim().slice(0, 80) : null,
-          url: searchUrlFor(null, e.searchQuery || e.title),
-          estimated: true,
-        },
-      };
-    });
+    return first.map(({ item, alternative }) => ({ item, alternative: alternative || retried.get(item) || null }));
   } catch (error) {
     console.warn(`[verte] essentials unavailable: ${error.message}`);
-    return ESSENTIALS.map((item) => ({ item, alternative: null }));
+    return empty;
   }
+}
+
+/** Items → Map(item lowercased → the model's candidates for it). */
+async function requestCandidates(items, context, unavailable) {
+  const note = unavailable.length
+    ? `\nNot available on Amazon.ca${context && context.budget ? ' within budget' : ''} — do not suggest these again: ${unavailable.join('; ')}`
+    : '';
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: SYSTEM + contextRules(context) },
+        { role: 'user', content: `Items: ${items.join(', ')}${note}` },
+      ],
+    }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  const parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}');
+  return new Map(
+    (Array.isArray(parsed.essentials) ? parsed.essentials : [])
+      .filter((e) => e && e.item)
+      .map((e) => [String(e.item).toLowerCase(), Array.isArray(e.candidates) ? e.candidates : []])
+  );
 }
 
 module.exports = { ESSENTIALS, isEssentialsRequest, essentialsFor, contextKey };

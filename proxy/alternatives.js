@@ -4,16 +4,21 @@
  * WHAT THIS IS AND ISN'T. The model proposes alternative products and says why
  * each is lower-carbon. Those suggestions are model output, not published
  * data, and the card labels them as estimates — never as sourced figures. The
- * one hard rule enforced here: we never hand the UI a product URL the model
- * invented. Links are RETAILER SEARCH URLs built from the suggested name, so
- * every link on the card resolves to a real page.
+ * one hard rule enforced here: we never hand the UI a product the model
+ * invented. Each suggestion is looked up on Amazon.ca and only those with a
+ * real product page are kept, linked to that page (src/lib/amazonLinks.js).
  *
  * Sourced numbers still come from the Snowflake knowledge base (proxy/
  * guidance.js) and stay clearly separated from anything on this side.
  * ------------------------------------------------------------------------- */
 
+const { allReal } = require('../src/lib/amazonLinks');
+const { amazonFetch } = require('./amazon');
+
 const SYSTEM = `You are a sustainability analyst. Given a product someone is about to buy,
-propose up to 3 concrete lower-carbon alternatives they could buy instead.
+propose up to 5 concrete lower-carbon alternatives they could buy instead, best
+first. Every one must be a product currently listed on Amazon.ca; use different
+brands or models so that if one isn't available, others are.
 
 Who you are advising: a university student in Canada, living on their own for
 the first time. All prices and budgets are Canadian dollars (CAD); only suggest
@@ -35,8 +40,10 @@ Prefer, in order:
 4. A smaller or right-sized version, when the original is oversized for its use.
 
 Rules:
-- Name a real, buyable product category and model family. Never invent a model
-  number you are not confident exists.
+- Name a real, buyable product. Never invent a model number.
+- Name each product the way Amazon.ca lists it TODAY: brand + current product
+  line + type (for example "Acer Aspire 3 15.6-inch Laptop"). No discontinued
+  models and no SKU codes like "A515-45-R3ZV" — those only turn up spare parts.
 - "why" is ONE sentence naming the actual mechanism (kWh/year, certification,
   lifespan), not a vague claim about being eco-friendly.
 - co2SavingKgPerYear: a number ONLY when you can reason it from energy use.
@@ -63,8 +70,8 @@ The person asked for this out loud, so they are looking for something to buy.
 Reply with JSON only: {"scarcityReason":null,"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"...","typicalPriceCad":0,"fitsContext":"..."}]}`;
 
 /* Verte serves Canadian students: every link goes to Amazon.ca, whatever
- * retailer the page came from. The extension then swaps the search for the
- * exact product (src/lib/amazonLinks.js). */
+ * retailer the page came from. The search is where verification starts; what
+ * the UI gets is the product page it found. */
 function searchUrlFor(_sourceUrl, query) {
   return `https://www.amazon.ca/s?k=${encodeURIComponent(query)}`;
 }
@@ -94,9 +101,38 @@ const NONE = { alternatives: [], scarcityReason: null };
  * Empty when we have no key or the call fails — never a fabricated list.
  */
 async function alternativesFor(product, guidance, context = null) {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return NONE;
+  if (!process.env.OPENAI_API_KEY) return NONE;
+  const budget = (context && context.budget) || null;
 
+  try {
+    let answer = await requestCandidates(product, guidance, context, []);
+    if (!answer) return NONE;
+    // Only real Amazon.ca listings, at real prices, reach the UI.
+    let alternatives = await allReal(answer.candidates, { budget, fetchImpl: amazonFetch, limit: 3 });
+
+    // Nothing real: one more round, told what wasn't available.
+    if (!alternatives.length && answer.candidates.length) {
+      const retry = await requestCandidates(product, guidance, context, answer.candidates.map((c) => c.title));
+      if (retry) {
+        answer = retry;
+        alternatives = await allReal(retry.candidates, { budget, fetchImpl: amazonFetch, limit: 3 });
+      }
+    }
+
+    return {
+      alternatives,
+      // Only meaningful alongside a pick; a reason with nothing under it is
+      // just the empty state again.
+      scarcityReason: answer.reason && alternatives.length ? answer.reason.slice(0, 220) : null,
+    };
+  } catch (error) {
+    console.warn(`[verte] alternatives unavailable: ${error.message}`);
+    return NONE;
+  }
+}
+
+/** The model's candidates, shaped as alternatives with a search URL to verify. */
+async function requestCandidates(product, guidance, context, unavailable) {
   const prompt = [
     product.spoken
       ? `The person said out loud what they want to buy: "${product.title}". Work out the product they mean first.`
@@ -106,70 +142,61 @@ async function alternativesFor(product, guidance, context = null) {
     guidance && guidance.embodiedCo2Kg
       ? `Published manufacturing footprint for this category: ~${guidance.embodiedCo2Kg} kg CO2e`
       : '',
+    unavailable.length
+      ? `Not available on Amazon.ca${context && context.budget ? ' within budget' : ''} — suggest different products, not these: ${unavailable.join('; ')}`
+      : '',
   ]
     .filter(Boolean)
     .join('\n');
 
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-        temperature: 0.2,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: (product.spoken ? SYSTEM + SPOKEN : SYSTEM) + contextRules(context) },
-          { role: 'user', content: prompt },
-        ],
-      }),
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      temperature: 0.2,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: (product.spoken ? SYSTEM + SPOKEN : SYSTEM) + contextRules(context) },
+        { role: 'user', content: prompt },
+      ],
+    }),
+  });
+  if (!response.ok) {
+    console.warn(`[verte] alternatives HTTP ${response.status}`);
+    return null;
+  }
+
+  const data = await response.json();
+  const parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}');
+  const list = Array.isArray(parsed.alternatives) ? parsed.alternatives : [];
+
+  const candidates = list
+    .filter((a) => a && typeof a.title === 'string' && a.title.trim())
+    // The model is asked to stay in budget; this makes sure it did.
+    .filter((a) => {
+      const price = Number(a.typicalPriceCad);
+      return !(context && context.budget && Number.isFinite(price) && price > context.budget);
+    })
+    .slice(0, 5)
+    .map((a) => {
+      const saving = Number(a.co2SavingKgPerYear);
+      const price = Number(a.typicalPriceCad);
+      return {
+        typicalPriceCad: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
+        fitsContext: context && a.fitsContext ? String(a.fitsContext).trim().slice(0, 80) : null,
+        source: 'ai',
+        title: String(a.title).trim().slice(0, 90),
+        why: String(a.why || '').trim().slice(0, 180),
+        co2SavingKgPerYear: Number.isFinite(saving) && saving > 0 ? Math.round(saving) : null,
+        // Where the lookup starts; replaced by the real product page.
+        url: searchUrlFor(product.sourceUrl, a.searchQuery || a.title),
+        estimated: true,
+      };
     });
 
-    if (!response.ok) {
-      console.warn(`[verte] alternatives HTTP ${response.status}`);
-      return NONE;
-    }
-
-    const data = await response.json();
-    const parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}');
-    const list = Array.isArray(parsed.alternatives) ? parsed.alternatives : [];
-
-    const alternatives = list
-      .filter((a) => a && typeof a.title === 'string' && a.title.trim())
-      // The model is asked to stay in budget; this makes sure it did.
-      .filter((a) => {
-        const price = Number(a.typicalPriceCad);
-        return !(context && context.budget && Number.isFinite(price) && price > context.budget);
-      })
-      .slice(0, 3)
-      .map((a) => {
-        const saving = Number(a.co2SavingKgPerYear);
-        const price = Number(a.typicalPriceCad);
-        return {
-          typicalPriceCad: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
-          fitsContext: context && a.fitsContext ? String(a.fitsContext).trim().slice(0, 80) : null,
-          source: 'ai',
-          title: String(a.title).trim().slice(0, 90),
-          why: String(a.why || '').trim().slice(0, 180),
-          co2SavingKgPerYear: Number.isFinite(saving) && saving > 0 ? Math.round(saving) : null,
-          // A real search on the retailer you're already on — never a made-up
-          // product URL that 404s the moment anyone clicks it.
-          url: searchUrlFor(product.sourceUrl, a.searchQuery || a.title),
-          estimated: true,
-        };
-      });
-
-    const reason = typeof parsed.scarcityReason === 'string' ? parsed.scarcityReason.trim() : '';
-    return {
-      alternatives,
-      // Only meaningful alongside a pick; a reason with nothing under it is
-      // just the empty state again.
-      scarcityReason: reason && alternatives.length ? reason.slice(0, 220) : null,
-    };
-  } catch (error) {
-    console.warn(`[verte] alternatives unavailable: ${error.message}`);
-    return NONE;
-  }
+  const reason = typeof parsed.scarcityReason === 'string' ? parsed.scarcityReason.trim() : '';
+  return { candidates, reason };
 }
 
 module.exports = { alternativesFor, searchUrlFor };

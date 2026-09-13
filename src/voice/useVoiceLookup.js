@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ENDPOINTS } from '../config';
 import { watchForSilence } from './silence';
-import { withExactLinks } from '../lib/amazonLinks';
 
 // Recording ends when the person stops talking; this is only a backstop.
 const MAX_RECORDING_MS = 15000;
@@ -69,18 +68,6 @@ export function useVoiceLookup() {
     setStandingState(value);
   }, []);
   const discard = useRef(false);
-  // Only the newest answer may be upgraded with exact links.
-  const shown = useRef(0);
-
-  /* Show the answer straight away with search links, then swap in exact
-   * product pages as they resolve. */
-  const show = useCallback((body) => {
-    const id = ++shown.current;
-    setResult(body);
-    withExactLinks(body)
-      .then((exact) => { if (id === shown.current) setResult(exact); })
-      .catch(() => {});   // the search links already on screen still work
-  }, []);
 
   const fail = useCallback((err) => {
     setError(describeError(err));
@@ -106,9 +93,9 @@ export function useVoiceLookup() {
     // "University essentials" isn't a product later context can refine.
     lastRequest.current = body.kind === 'essentials' ? '' : title;
     setTranscript(heard);
-    show(body);
+    setResult(body);
     setState('done');
-  }, [show]);
+  }, []);
 
   /* Context on its own ("under $500", "I don't have a car") refines the last
    * product when there is one; with nothing to refine, the user is asked. */
@@ -160,12 +147,12 @@ export function useVoiceLookup() {
       }
       lastRequest.current = body.result && body.result.kind === 'essentials' ? '' : body.transcript;
       setTranscript(body.transcript);
-      show(body.result);
+      setResult(body.result);
       setState('done');
     } catch (err) {
       fail(err);
     }
-  }, [fail, refineOrAsk, show]);
+  }, [fail, refineOrAsk]);
 
   const submitText = useCallback(async (text) => {
     const title = String(text || '').trim();

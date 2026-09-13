@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { parseResults, bestMatch, closestMatch, resolveLink, resolveAll, withExactLinks, clearResolved } from './amazonLinks';
+import { parseResults, bestMatch, closestMatch, resolveLink, resolveAll, clearResolved, firstReal, allReal } from './amazonLinks';
 
 beforeEach(clearResolved);
 
@@ -89,22 +89,40 @@ test('reads Canadian prices, however Amazon writes them', () => {
   expect(parseResults(html).map((r) => r.price)).toEqual([null, 1248.08, 549.99, null]);
 });
 
-test('a whole essentials result gets exact links, and over-budget real prices drop out', async () => {
+test('an essential is the first candidate with a real product page, within the real budget', async () => {
   const fetchImpl = jest.fn().mockResolvedValue({ ok: true, text: async () => html });
   const laptop = parseResults(html)[2];                       // organic, CA$549.99
-  const essentials = [
-    { item: 'Laptop', alternative: { title: laptop.title.split(',')[0], url: 'https://www.amazon.ca/s?k=laptop' } },
-    { item: 'Kettle', alternative: null },
-  ];
+  const invented = { title: 'Dell XPS 13 9999', url: 'https://www.amazon.ca/s?k=dell' };
+  const real = { title: laptop.title.split(',')[0], url: 'https://www.amazon.ca/s?k=acer' };
 
-  const open = await withExactLinks({ kind: 'essentials', context: null, essentials }, fetchImpl);
-  expect(open.essentials[0].alternative.url).toBe(`https://www.amazon.ca/dp/${laptop.asin}`);
-  expect(open.essentials[0].alternative.livePrice).toBe(549.99);
-  expect(open.essentials[1]).toEqual({ item: 'Kettle', alternative: null });
+  const pick = await firstReal([invented, real], { fetchImpl });
+  expect(pick.url).toBe(`https://www.amazon.ca/dp/${laptop.asin}`);
+  expect(pick.livePrice).toBe(549.99);
 
-  // Under CA$200 the real price rules it out: dropped, not faked.
-  const capped = await withExactLinks({ kind: 'essentials', context: { budget: 200 }, essentials }, fetchImpl);
-  expect(capped.essentials[0]).toEqual({ item: 'Laptop', alternative: null });
+  // Nothing real within CA$200: no pick at all, never a search link.
+  expect(await firstReal([invented, real], { budget: 200, fetchImpl })).toBeNull();
+  expect(await firstReal([invented], { fetchImpl })).toBeNull();
+});
+
+test('an exact model match beats an earlier closest match', async () => {
+  const fetchImpl = jest.fn().mockResolvedValue({ ok: true, text: async () => html });
+  const results = parseResults(html);
+  const closest = { title: 'Acer Aspire 9 Laptop', url: 'https://www.amazon.ca/s?k=a' };
+  const exact = { title: 'Aspire 5 Touchscreen Laptop', url: 'https://www.amazon.ca/s?k=b' };
+  const pick = await firstReal([closest, exact], { fetchImpl });
+  expect(pick.exact).toBe(true);
+  expect(pick.url).toBe(`https://www.amazon.ca/dp/${results[0].asin}`);
+});
+
+test('product alternatives keep only real listings, without repeats', async () => {
+  const fetchImpl = jest.fn().mockResolvedValue({ ok: true, text: async () => html });
+  const laptop = parseResults(html)[2];
+  const list = await allReal([
+    { title: 'Made Up Brand Laptop 3000', url: 'https://www.amazon.ca/s?k=x' },
+    { title: laptop.title.split(',')[0], url: 'https://www.amazon.ca/s?k=y' },
+    { title: laptop.title.split(',')[0], url: 'https://www.amazon.ca/s?k=z' },
+  ], { fetchImpl });
+  expect(list.map((a) => a.url)).toEqual([`https://www.amazon.ca/dp/${laptop.asin}`]);
 });
 
 test('an accessory "for" the product is not the product', () => {
@@ -145,4 +163,17 @@ test('the same pick resolves once and shows the same listing every time', async 
   const second = await resolveLink(alt(), fetchImpl);
   expect(second).toEqual(first);
   expect(fetchImpl).toHaveBeenCalledTimes(1);
+});
+
+test('with a budget, the listing of the same product that fits is chosen', async () => {
+  const listing = (asin, price) => `<div data-component-type="s-search-result" data-asin="${asin}">
+    <h2 class="a-size-mini"><span>Asus</span></h2>
+    <h2 aria-label="Vivobook Go 15 Thin &amp; Light Laptop"><span>x</span></h2>
+    <span class="a-offscreen">$${price}</span></div>`;
+  const page = listing('B000000899', '899.00') + listing('B000000449', '449.00');
+  const fetchImpl = jest.fn().mockResolvedValue({ ok: true, text: async () => page });
+  const alt = { title: 'ASUS Vivobook Go 15 Laptop', typicalPriceCad: 480, url: 'https://www.amazon.ca/s?k=vivobook' };
+
+  expect((await firstReal([alt], { budget: 500, fetchImpl })).url).toBe('https://www.amazon.ca/dp/B000000449');
+  expect((await firstReal([alt], { fetchImpl })).url).toBe('https://www.amazon.ca/dp/B000000899');
 });

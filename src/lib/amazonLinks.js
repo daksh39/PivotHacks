@@ -8,7 +8,9 @@
  * If nothing matches well enough, the search link stays: a search is better
  * than a confident link to the wrong product.
  *
- * Runs in the user's browser (popup and content script), not the proxy.
+ * Runs in the proxy (proxy/amazon.js supplies the fetch), so only picks with a
+ * real Amazon.ca product page ever reach the popup or the card. Plain CommonJS
+ * so Node can require it and the extension's tests can import it.
  */
 
 const RESULT_START = /<div[^>]*data-component-type="s-search-result"/g;
@@ -22,7 +24,7 @@ function decode(text) {
 }
 
 /** Real search results from an Amazon search page's HTML. */
-export function parseResults(html) {
+function parseResults(html) {
   const starts = [];
   let match;
   RESULT_START.lastIndex = 0;
@@ -80,7 +82,7 @@ function plausiblePrice(result, estimate) {
  * (first word) must appear, every model number must appear, and most of the
  * name's other words must too.
  */
-export function bestMatch(results, wanted) {
+function bestMatch(results, wanted) {
   const want = tokens(wanted);
   if (!want.length) return null;
   const brand = want[0];
@@ -105,7 +107,7 @@ export function bestMatch(results, wanted) {
  * brand that shares most of the product words, model numbers ignored. The
  * caller shows THIS product's real name and price, never the model's guess.
  */
-export function closestMatch(results, wanted) {
+function closestMatch(results, wanted) {
   const want = tokens(wanted).filter((t) => !/\d/.test(t));
   if (!want.length) return null;
   const brand = want[0];
@@ -135,16 +137,16 @@ async function fetchText(url, fetchImpl) {
 const resolved = new Map();
 
 /** For tests: forget every resolved listing. */
-export function clearResolved() {
+function clearResolved() {
   resolved.clear();
 }
 
 /** One alternative → the same alternative, with an exact link when found. */
-export function resolveLink(alternative, fetchImpl = fetch) {
+function resolveLink(alternative, fetchImpl = fetch, budget = null) {
   if (!alternative || !alternative.title) return Promise.resolve(alternative);
-  const key = `${alternative.url}|${alternative.title}|${alternative.typicalPriceCad || ''}`;
+  const key = `${alternative.url}|${alternative.title}|${alternative.typicalPriceCad || ''}|${budget || ''}`;
   if (!resolved.has(key)) {
-    const pending = lookupListing(alternative, fetchImpl);
+    const pending = lookupListing(alternative, fetchImpl, budget);
     resolved.set(key, pending);
     // Only a found listing is worth remembering; a miss may be a network blip.
     pending.then((out) => { if (out === alternative) resolved.delete(key); });
@@ -156,15 +158,18 @@ function pick({ title, url, searchUrl, exact, livePrice, image }) {
   return { title, url, searchUrl, exact, livePrice, image };
 }
 
-async function lookupListing(alternative, fetchImpl) {
+async function lookupListing(alternative, fetchImpl, budget) {
   if (!alternative || !alternative.title || !/amazon\.[a-z.]+\/s\?k=/.test(alternative.url || '')) return alternative;
   try {
     const url = new URL(alternative.url);
     const estimate = alternative.typicalPriceCad || null;
     const results = parseResults(await fetchText(url.href, fetchImpl))
       .filter((r) => plausiblePrice(r, estimate));
-    const exact = bestMatch(results, alternative.title);
-    const match = exact || closestMatch(results, alternative.title);
+    // With a budget, the same product line often has a listing that fits
+    // (a smaller spec, another seller); look there first.
+    const affordable = budget ? results.filter((r) => r.price && r.price <= budget) : results;
+    const exact = bestMatch(affordable, alternative.title) || bestMatch(results, alternative.title);
+    const match = exact || closestMatch(affordable, alternative.title) || closestMatch(results, alternative.title);
     if (!match) return alternative;
     return {
       ...alternative,
@@ -186,29 +191,49 @@ async function lookupListing(alternative, fetchImpl) {
  * we have one. The model's own price estimate can't be trusted for this: asked
  * for "under $60" it will happily price a laptop at $59.
  */
-export async function resolveAll(alternatives, { budget = null, fetchImpl = fetch } = {}) {
+async function resolveAll(alternatives, { budget = null, fetchImpl = fetch } = {}) {
   const resolved = await Promise.all((alternatives || []).map((a) => resolveLink(a, fetchImpl)));
   return resolved.filter((a) => !(budget && a && a.livePrice && a.livePrice > budget));
 }
 
-/**
- * A whole VerteResult with exact links: its alternatives, or for the
- * university essentials each item's pick. An essential whose real price is
- * over budget is dropped to "nothing found", same as the proxy does.
- */
-export async function withExactLinks(result, fetchImpl = fetch) {
-  if (!result) return result;
-  const budget = (result.context && result.context.budget) || null;
-
-  if (result.kind === 'essentials') {
-    const essentials = await Promise.all((result.essentials || []).map(async (entry) => {
-      if (!entry.alternative) return entry;
-      const [alternative = null] = await resolveAll([entry.alternative], { budget, fetchImpl });
-      return { ...entry, alternative };
-    }));
-    return { ...result, essentials };
-  }
-
-  if (!Array.isArray(result.alternatives)) return result;
-  return { ...result, alternatives: await resolveAll(result.alternatives, { budget, fetchImpl }) };
+/* Within budget by the REAL price when we have it, the estimate otherwise.
+ * With no price at all, a budget can't be promised. */
+function fitsBudget(alternative, budget) {
+  if (!budget) return true;
+  const price = alternative.livePrice || alternative.typicalPriceCad;
+  return Boolean(price) && price <= budget;
 }
+
+const isProductPage = (a) => Boolean(a && /amazon\.[a-z.]+\/dp\/[A-Z0-9]{10}/.test(a.url || ''));
+
+/**
+ * The model's candidates for one slot, in its order of preference → the first
+ * that is a real Amazon product page within budget. An exact model match wins
+ * over an earlier candidate that only found the closest listing. Null when
+ * none is real: nothing is shown rather than a search or a guess.
+ */
+async function firstReal(candidates, { budget = null, fetchImpl = fetch } = {}) {
+  let closest = null;
+  for (const candidate of candidates || []) {
+    const found = await resolveLink(candidate, fetchImpl, budget);
+    if (!isProductPage(found) || !fitsBudget(found, budget)) continue;
+    if (found.exact) return found;
+    closest = closest || found;
+  }
+  return closest;
+}
+
+/** Every candidate that is a real product page within budget, no repeats. */
+async function allReal(candidates, { budget = null, fetchImpl = fetch, limit = 3 } = {}) {
+  const found = await Promise.all((candidates || []).map((c) => resolveLink(c, fetchImpl, budget)));
+  const seen = new Set();
+  return found
+    .filter((a) => isProductPage(a) && fitsBudget(a, budget))
+    .filter((a) => !seen.has(a.url) && seen.add(a.url))
+    .slice(0, limit);
+}
+
+module.exports = {
+  parseResults, bestMatch, closestMatch, resolveLink, resolveAll, clearResolved,
+  firstReal, allReal, isProductPage,
+};

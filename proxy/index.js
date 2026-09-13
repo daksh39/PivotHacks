@@ -12,6 +12,8 @@ const express = require('express');
 const cors = require('cors');
 
 const { lookup } = require('./lookup');
+const { essentialsFor } = require('./essentials');
+const { searchUrlFor } = require('./alternatives');
 const { guidanceTable } = require('./guidance');
 const { transcribe, isHeard } = require('./voice');
 
@@ -96,4 +98,8 @@ app.post('/voice', express.raw({ type: 'audio/*', limit: '10mb' }), async (req, 
 app.listen(PORT, async () => {
   console.log(`[verte] proxy on http://localhost:${PORT}`);
   await guidanceTable();   // warm the knowledge base so the first card is instant
+  // Checking a whole kit against Amazon.ca takes a while; do it before anyone taps.
+  essentialsFor(null, searchUrlFor).then((kit) => {
+    console.log(`[verte] university essentials ready — ${kit.filter((e) => e.alternative).length}/${kit.length} real listings`);
+  });
 });
