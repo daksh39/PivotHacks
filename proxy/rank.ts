@@ -58,6 +58,19 @@ function reachable(o: UsedOption, ctx: BuyerContext, g: CategoryGuidance): boole
   return ctx.hasCar
 }
 
+/** Amounts in copy carry their currency. "24 over your budget" is ambiguous. */
+function money(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  } catch {
+    return `${amount}`
+  }
+}
+
 /** Can they actually pay for it? A ceiling is inclusive — $174 fits a $174 cap. */
 function affordable(o: UsedOption, ctx: BuyerContext): boolean {
   if (ctx.budgetCap === null) return true
@@ -89,7 +102,7 @@ export function rank(
   const withinBudget = byPrice.filter((o) => affordable(o, ctx))
 
   if (!withinBudget.length) {
-    const over = Math.ceil(cheapest.price - (ctx.budgetCap ?? 0))
+    const over = money(Math.ceil(cheapest.price - (ctx.budgetCap ?? 0)), cheapest.currency)
     return {
       /* Every listing stays on the card. Hiding them would conceal that a
        * secondhand market exists at all — they are shown, marked over budget. */

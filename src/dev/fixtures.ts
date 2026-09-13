@@ -194,7 +194,7 @@ export const FIXTURE_OVER_BUDGET: VerteResult = {
   reason: 'nothing-in-budget',
   passedOver: {
     option: FIXTURE_HEADPHONES.options[1],
-    why: 'the cheapest one is 24 over your budget',
+    why: 'the cheapest one is CA$24 over your budget',
   },
   savingsUsd: null,
   co2AvoidedKg: null,

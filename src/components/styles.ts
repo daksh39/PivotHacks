@@ -26,6 +26,29 @@ export const cardStyles = /* css */ `
   max-width: 420px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+
+  /* Anchored top-left: the card grows out of where the collapsed strip sits,
+   * so expanding reads as the same object rather than a new one (spatial
+   * consistency). Scaling from the centre makes it look like a popup. */
+  transform-origin: top left;
+  animation: verte-arrive 260ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+/* ---------------------------------------------------------------------------
+ * Motion.
+ *
+ * This card appears uninvited on somebody else's page, so the entrance is
+ * deliberately quiet — a short rise and settle, no bounce. Overshoot is for
+ * motion the user themselves set going; there is no gesture here, so bounce
+ * would read as attention-seeking.
+ *
+ * Press feedback fires on pointer-down rather than on click, because the
+ * moment feedback waits for release the whole thing stops feeling direct.
+ * ------------------------------------------------------------------------- */
+
+@keyframes verte-arrive {
+  from { opacity: 0; transform: translateY(4px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* --- header -------------------------------------------------------------- */
@@ -326,4 +349,54 @@ export const cardStyles = /* css */ `
 /* --- empty --------------------------------------------------------------- */
 
 .verte__empty { font-size: 13.5px; color: ${color.inkSoft}; }
+/* --- press feedback: instant, on the way down ---------------------------- */
+
+.verte__strip,
+.verte__route,
+.verte__chip,
+.verte__dismiss,
+.verte__listing {
+  transition: transform 100ms ease-out, background-color 140ms ease-out;
+}
+
+.verte__strip:active,
+.verte__route:active,
+.verte__chip:active,
+.verte__listing:active {
+  transform: scale(0.985);
+}
+
+.verte__dismiss:active { transform: scale(0.9); }
+
+.verte__listing:hover { background: ${color.tint}; }
+
+/* --- focus: visible, always ---------------------------------------------- */
+
+.verte :focus-visible {
+  outline: 2px solid ${color.accentText};
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* --- reduced motion ------------------------------------------------------
+ * Not "no feedback" — a gentler, non-vestibular equivalent. The cross-fade
+ * survives so the card still reads as arriving; the movement does not.
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .verte { animation: verte-fade 160ms ease-out both; }
+  @keyframes verte-fade { from { opacity: 0; } to { opacity: 1; } }
+
+  .verte__strip,
+  .verte__route,
+  .verte__chip,
+  .verte__dismiss,
+  .verte__listing { transition: background-color 140ms ease-out; }
+
+  .verte__strip:active,
+  .verte__route:active,
+  .verte__chip:active,
+  .verte__listing:active,
+  .verte__dismiss:active { transform: none; }
+}
 `

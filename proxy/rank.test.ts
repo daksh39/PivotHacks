@@ -84,10 +84,11 @@ describe('with a budget', () => {
     expect(out.options).toHaveLength(3)
   })
 
-  test('tells them how far over the nearest one is', () => {
+  test('tells them how far over the nearest one is, with the currency', () => {
+    /* "24 over your budget" is ambiguous on a page priced in CAD. */
     const out = rank(listings, ctx({ budgetCap: 150 }), guidance())
     expect(out.passedOver?.option.price).toBe(174)
-    expect(out.passedOver?.why).toContain('24')
+    expect(out.passedOver?.why).toContain('CA$24')
   })
 
   test('a budget equal to the price still counts as affordable', () => {
