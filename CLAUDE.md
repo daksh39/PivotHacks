@@ -72,9 +72,13 @@ select `dist/`.
 
 Nobody waits on anybody. Every lane has a green signal it can get by itself:
 
-- **lane/extension** — `npm run dev`, load `dist/`, open an Amazon product page.
-  The card appears. Listings are read from the page itself, so this works
-  whether or not the proxy is running.
+- **lane/extension** — `npm run proxy` in one terminal, then `npm run dev`, load
+  `dist/`, open an Amazon product page. The card appears.
+  The proxy must be running. Listings are read from the page itself, but the
+  verdict and the carbon figure come from `/lookup`, and with nothing answering
+  there the content script unmounts and you see no card at all — which looks
+  exactly like a broken extension. If the card never appears, check the proxy
+  before you check anything else.
 - **lane/ui** — `npm run preview:card`. Every state renders in a real shadow
   root. Zero dependency on the extension or the proxy.
 - **lane/proxy** — `npm run proxy` in one terminal, `npm run smoke` in another.
