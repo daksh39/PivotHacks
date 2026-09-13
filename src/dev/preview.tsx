@@ -20,6 +20,7 @@ import {
   MOCK_MINI_FRIDGE,
   MOCK_MINI_FRIDGE_BLOCKED,
   MOCK_MINI_FRIDGE_DEADLINE,
+  MOCK_MONITOR,
 } from '../mocks'
 import { pageGround } from '../tokens'
 
@@ -77,6 +78,10 @@ function Preview() {
         alignItems: 'flex-start',
       }}
     >
+      <Panel label="THE DEMO — every figure cited">
+        <Card result={MOCK_MONITOR} defaultExpanded onDismiss={() => {}} />
+      </Panel>
+
       <Panel label="collapsed">
         <Card result={MOCK_MINI_FRIDGE} />
       </Panel>

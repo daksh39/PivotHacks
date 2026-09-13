@@ -15,7 +15,7 @@
 import { useState } from 'react'
 import type { UsedOption, VerteResult } from '../types'
 import { explainReason } from '../reason'
-import { formatCo2, formatUsd, milesDrivenEquivalent } from '../carbon'
+import { formatCo2, formatUsd, isSourced, milesDrivenEquivalent } from '../carbon'
 import { Verdict } from './Verdict'
 import { Empty } from './Empty'
 import { Leaf } from './Skeleton'
@@ -167,8 +167,11 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
             {/* 2 — the verdict */}
             <Verdict guidance={guidance} />
 
-            {/* 3 — carbon, framed as avoided manufacturing */}
-            {co2AvoidedKg != null && co2AvoidedKg > 0 && (
+            {/* 3 — carbon, framed as avoided manufacturing.
+              * Rendered ONLY when the figure carries a real citation (§09).
+              * An uncited number is the thing that gets picked apart in Q&A,
+              * and showing nothing costs us far less than showing that. */}
+            {co2AvoidedKg != null && co2AvoidedKg > 0 && isSourced(guidance.co2Source) && (
               <>
                 <hr className="verte__rule" />
                 <p className="verte__carbon">

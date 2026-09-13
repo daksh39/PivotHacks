@@ -50,6 +50,40 @@ const SEED: Record<string, CategoryGuidance> = {
     note: 'Hygiene and pest risk, and compression is permanent. Buy this one new.',
     bulky: true,
   },
+  /* SOURCED. Dell publishes a per-product carbon footprint datasheet for the
+   * S2421HS 24" monitor: 476 kg CO2e over the full life cycle, of which
+   * manufacturing is 67.7% -> ~322 kg. Displays are the strongest case Verte
+   * has: the footprint is overwhelmingly in the making, not the using. */
+  monitor: {
+    category: 'monitor',
+    verdict: 'safe',
+    checkTips: [
+      'Show a white image and look for dead pixels.',
+      'Check the corners for backlight bleed in a dark room.',
+      'Confirm which cables are included.',
+    ],
+    embodiedCo2Kg: 322,
+    co2Source: 'Dell S2421HS Monitor PCF datasheet — 476 kg CO2e total, 67.7% manufacturing',
+    note: 'Most of a display\'s footprint is in the making of it, so a used one avoids nearly all of it.',
+    bulky: false,
+  },
+
+  /* SOURCED. Apple's Product Environmental Report for the 13-inch MacBook Air
+   * puts life-cycle emissions at ~161 kg CO2e with 76% from production. */
+  laptop: {
+    category: 'laptop',
+    verdict: 'check',
+    checkTips: [
+      'Ask for the battery cycle count.',
+      'Confirm it powers on and gets past the setup screen.',
+      'Check it is not activation locked to the previous owner.',
+    ],
+    embodiedCo2Kg: 122,
+    co2Source: 'Apple 13-inch MacBook Air Product Environmental Report — 161 kg CO2e, 76% production',
+    note: 'Production dominates a laptop\'s footprint. Activation lock is the one thing that makes a cheap one worthless.',
+    bulky: false,
+  },
+
   desk: {
     category: 'desk',
     verdict: 'safe',

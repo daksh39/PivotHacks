@@ -31,8 +31,12 @@ export const MOCK_MINI_FRIDGE: VerteResult = {
       'Confirm it cools within an hour of plugging in.',
     ],
     embodiedCo2Kg: 46,
-    co2Source: 'PLACEHOLDER — lane/demo to source',
-    note: 'Compressor appliances last well. Buying used avoids nearly all of the footprint.',
+    co2Source: 'PLACEHOLDER — no defensible source found; see note',
+    /* Deliberately still unsourced, and the card therefore shows no carbon
+     * figure for it. Published LCAs consistently find that for refrigerators
+     * the USE phase dominates, not manufacturing — so "avoids nearly all of
+     * the footprint" is not a claim we can make here. Demo the monitor. */
+    note: 'Compressor appliances last well, and a used one is the cheap option.',
     bulky: true,
   },
   options: [
@@ -145,7 +149,67 @@ export const MOCK_EMPTY: VerteResult = {
   co2AvoidedKg: null,
 }
 
+/**
+ * THE DEMO PRODUCT. Every figure on this card is citable.
+ *
+ * Dell publishes a carbon footprint datasheet for the S2421HS: 476 kg CO2e
+ * across the life cycle, 67.7% of it manufacturing. So a used monitor really
+ * does avoid nearly all of its footprint — the thesis at full strength, which
+ * is not true of appliances that run around the clock.
+ */
+export const MOCK_MONITOR: VerteResult = {
+  product: {
+    title: 'Dell 24 Monitor - S2421HS, 1920 x 1080, IPS, HDMI',
+    price: 189,
+    currency: 'USD',
+    category: 'monitor',
+    imageUrl: null,
+    sourceUrl: 'https://www.amazon.com/dp/B08DHXG6TQ',
+  },
+  guidance: {
+    category: 'monitor',
+    verdict: 'safe',
+    checkTips: [
+      'Show a white image and look for dead pixels.',
+      'Check the corners for backlight bleed in a dark room.',
+    ],
+    embodiedCo2Kg: 322,
+    co2Source: 'Dell S2421HS Monitor PCF datasheet — 476 kg CO2e total, 67.7% manufacturing',
+    note: "Most of a display's footprint is in the making of it, so a used one avoids nearly all of it.",
+    bulky: false,
+  },
+  options: [
+    {
+      source: 'ebay',
+      title: 'Dell S2421HS 24" IPS Monitor - Tested, Working',
+      price: 72,
+      currency: 'USD',
+      url: 'https://www.ebay.com/itm/000000000101',
+      imageUrl: null,
+      condition: 'Used',
+      daysToHand: 5,
+    },
+    {
+      source: 'campus',
+      title: 'Dell 24" monitor, graduating, must sell',
+      price: 85,
+      currency: 'USD',
+      url: 'https://example.edu/listings/11',
+      imageUrl: null,
+      condition: 'Used — good',
+      distanceMi: 1.1,
+      daysToHand: 1,
+    },
+  ],
+  context: { needInDays: null, hasCar: false },
+  reason: 'cheapest',
+  passedOver: null,
+  savingsUsd: 117,
+  co2AvoidedKg: 322,
+}
+
 export const MOCKS = {
+  monitor: MOCK_MONITOR,
   'mini-fridge': MOCK_MINI_FRIDGE,
   mattress: MOCK_MATTRESS,
   'drying-rack': MOCK_EMPTY,
@@ -193,3 +257,4 @@ export const MOCK_MINI_FRIDGE_BLOCKED: VerteResult = {
   savingsUsd: null,
   co2AvoidedKg: null,
 }
+
