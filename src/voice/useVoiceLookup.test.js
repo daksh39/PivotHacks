@@ -79,3 +79,11 @@ test('error messages are plain English', () => {
   expect(describeError({ offline: true })).toMatch('npm run proxy');
   expect(describeError({ status: 503 })).toMatch('OpenAI key');
 });
+
+test('with nothing underneath, the voice bar drops its divider', () => {
+  const { container } = render(
+    <VoiceButton standalone state="idle" transcript="" error=""
+                 onStart={() => {}} onStop={() => {}} onSubmitText={() => {}} />
+  );
+  expect(container.firstChild).toHaveClass('voice--standalone');
+});

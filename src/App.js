@@ -33,12 +33,16 @@ function App() {
   let body = null;
   if (voice.result) body = <AlternativesScreen result={voice.result} />;
   else if (state && state.status === 'ok' && state.result) body = <AlternativesScreen result={state.result} />;
-  else if (state) body = <StatusScreen status={state.status} />;
+  // 'none' means this page isn't a shop Verte reads (a new tab, a news site).
+  // That's not a problem worth a message — the voice bar works anywhere, so
+  // it stands on its own. Status screens are kept for things that went wrong.
+  else if (state && state.status !== 'none') body = <StatusScreen status={state.status} />;
 
   return (
     <div className="verte-app">
       <div className="verte-app-header"><VerteHeader isSmall={true} /></div>
       <VoiceButton
+        standalone={!body}
         state={voice.state}
         transcript={voice.transcript}
         error={voice.error}

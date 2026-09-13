@@ -3,6 +3,12 @@
   padding: 14px 24px 12px;
 }
 
+/* Nothing underneath, so no divider and a little more room to breathe. */
+.voice--standalone {
+  border-bottom: 0;
+  padding-bottom: 20px;
+}
+
 .voice-btn {
   align-items: center;
   background: var(--verte-moss);

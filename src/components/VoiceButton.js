@@ -22,13 +22,13 @@ function MicIcon() {
  * The voice bar: one mic button, its status, what we heard, and a typed
  * fallback. Presentational — all behaviour comes from useVoiceLookup.
  */
-function VoiceButton({ state, transcript, error, onStart, onStop, onSubmitText }) {
+function VoiceButton({ state, transcript, error, onStart, onStop, onSubmitText, standalone }) {
   const [text, setText] = useState('');
   const listening = state === 'listening';
   const busy = state === 'thinking';
 
   return (
-    <div className="voice">
+    <div className={standalone ? 'voice voice--standalone' : 'voice'}>
       <button
         type="button"
         className={`voice-btn${listening ? ' voice-btn--live' : ''}`}
