@@ -42,7 +42,7 @@ const request = (over: Partial<LookupRequest> = {}): LookupRequest => ({
     imageUrl: null,
     sourceUrl: 'https://www.amazon.com/dp/TEST',
   },
-  context: { needInDays: null, hasCar: false },
+  context: { needInDays: null, hasCar: false, budgetCap: null },
   options: [option()],
   ...over,
 })
@@ -91,10 +91,10 @@ describe('service worker lookup', () => {
   })
 
   it('forwards the product and the buyer context alongside them', async () => {
-    await send(request({ context: { needInDays: 3, hasCar: true } }))
+    await send(request({ context: { needInDays: 3, hasCar: true, budgetCap: null } }))
     const body = sentBody()
     expect(body.product.title).toMatch(/Mini Fridge/)
-    expect(body.context).toEqual({ needInDays: 3, hasCar: true })
+    expect(body.context).toEqual({ needInDays: 3, hasCar: true, budgetCap: null })
   })
 
   it('sends an empty array rather than undefined when nothing was found', async () => {

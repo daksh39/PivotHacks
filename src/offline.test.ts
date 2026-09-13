@@ -13,13 +13,16 @@
  * makes this test go quiet rather than go red.
  * ------------------------------------------------------------------------- */
 
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { OFFLINE_GUIDANCE, resolveLocally } from './offline'
-import { getCategoryGuidance } from '../proxy/snowflake'
-import { classify } from '../proxy/categories'
+import { __SEED, getCategoryGuidance } from '../proxy/snowflake'
+import { generate } from '../proxy/offline.gen'
+import { KNOWN_CATEGORIES } from '../proxy/categories'
 import type { BuyerContext, ProductContext, UsedOption } from './types'
 
-const NO_CONTEXT: BuyerContext = { needInDays: null, hasCar: false }
+const NO_CONTEXT: BuyerContext = { needInDays: null, hasCar: false, budgetCap: null }
 
 const product = (over: Partial<ProductContext> = {}): ProductContext => ({
   title: 'Midea 3.1 Cu. Ft. Compact Mini Fridge',
@@ -43,14 +46,30 @@ const option = (over: Partial<UsedOption> = {}): UsedOption => ({
   ...over,
 })
 
-describe('offline guidance mirrors the proxy', () => {
-  for (const slug of Object.keys(OFFLINE_GUIDANCE)) {
-    it(`agrees with the proxy about "${slug}"`, async () => {
-      const theirs = await getCategoryGuidance(slug)
-      if (!theirs) return // real Snowflake, no credentials here — nothing to compare
-      expect(OFFLINE_GUIDANCE[slug]).toEqual(theirs)
-    })
-  }
+describe('the offline table is a faithful copy of the proxy table', () => {
+  it('is exactly what the generator produces — regenerate if this fails', () => {
+    /* npx tsx proxy/offline.gen.ts
+     * Same guard main uses for data/category-guidance.sql: the copy is
+     * generated, so the only way it drifts is by someone editing it by hand
+     * or by SEED moving underneath it. */
+    const onDisk = readFileSync(resolve(process.cwd(), 'src/offline-guidance.ts'), 'utf8')
+    expect(onDisk).toBe(generate())
+  })
+
+  it('covers every category the proxy has guidance for', async () => {
+    for (const slug of Object.keys(__SEED)) {
+      expect(OFFLINE_GUIDANCE[slug], `${slug} missing offline`).toBeDefined()
+      expect(OFFLINE_GUIDANCE[slug]).toEqual(await getCategoryGuidance(slug))
+    }
+  })
+
+  it('covers every slug the classifier can emit', () => {
+    /* Otherwise the extension recognises a product, classifies it, and then
+     * goes quiet the moment the proxy is not running. */
+    for (const slug of KNOWN_CATEGORIES) {
+      expect(OFFLINE_GUIDANCE[slug], `${slug} classifies but has no offline guidance`).toBeDefined()
+    }
+  })
 
   it('never carries a carbon figure without a source to back it', () => {
     for (const g of Object.values(OFFLINE_GUIDANCE)) {
@@ -81,10 +100,24 @@ describe('resolving without the proxy', () => {
   })
 
   it('claims no saving when nothing arrives in time', () => {
-    const result = resolveLocally(product(), { needInDays: 1, hasCar: false }, [option()])
+    const result = resolveLocally(product(), { needInDays: 1, hasCar: false, budgetCap: null }, [option()])
     expect(result!.reason).toBe('nothing-arrives-in-time')
     expect(result!.savingsUsd).toBeNull()
     expect(result!.co2AvoidedKg).toBeNull()
+  })
+
+  it('claims no saving when nothing is within budget', () => {
+    /* The budget rule arrived with main. The offline path delegates to the
+     * same rank(), so it has to come out the same way here. */
+    const result = resolveLocally(product(), { needInDays: null, hasCar: false, budgetCap: 40 }, [
+      option(),
+    ])
+    expect(result!.reason).toBe('nothing-in-budget')
+    expect(result!.savingsUsd).toBeNull()
+    expect(result!.co2AvoidedKg).toBeNull()
+    /* Over-budget listings stay on the card — hiding them would conceal that
+     * a secondhand market exists at all. */
+    expect(result!.options).toHaveLength(1)
   })
 
   it('never subtracts one currency from another', () => {
@@ -99,16 +132,4 @@ describe('resolving without the proxy', () => {
     expect(resolveLocally(product({ title: 'Artisanal Sourdough Starter' }), NO_CONTEXT, [])).toBeNull()
   })
 
-  it('covers every category the proxy has guidance for', async () => {
-    /* If lane/snowflake adds a category, the offline copy should gain it too —
-     * otherwise the extension goes quiet on it the moment the proxy is down. */
-    const slugs = new Set<string>()
-    for (const title of [
-      'mini fridge', 'mattress', 'monitor', 'laptop', 'desk',
-    ]) {
-      const slug = classify(title)
-      if (slug && (await getCategoryGuidance(slug))) slugs.add(slug)
-    }
-    for (const slug of slugs) expect(OFFLINE_GUIDANCE[slug]).toBeDefined()
-  })
 })

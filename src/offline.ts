@@ -22,107 +22,23 @@
  *
  * WHAT IS DUPLICATED, AND WHAT GUARDS IT
  *
- * `OFFLINE_GUIDANCE` mirrors the seed table in proxy/snowflake.ts, which is
- * lane/snowflake's file and not ours to import — it will grow a database
- * client that cannot be bundled into a service worker. offline.test.ts asserts
- * this table still agrees with the proxy's, so the copy cannot drift quietly.
+ * The category table is copied out of proxy/snowflake.ts, which we cannot
+ * import — it reaches for snowflake-sdk, which has no business in a service
+ * worker. But the copy is GENERATED, never retyped: src/offline-guidance.ts
+ * comes from `npx tsx proxy/offline.gen.ts`, the same arrangement main already
+ * uses for data/category-guidance.sql. offline.test.ts fails if it drifts.
+ *
+ * Everything else is shared outright. The result itself is built by
+ * src/result.ts, which the proxy also calls, so the two cannot disagree about
+ * savings, carbon, or which reasons mean "nothing here is usable".
  * ------------------------------------------------------------------------- */
 
-import type {
-  BuyerContext,
-  CategoryGuidance,
-  ProductContext,
-  UsedOption,
-  VerteResult,
-} from './types'
+import type { BuyerContext, CategoryGuidance, ProductContext, UsedOption, VerteResult } from './types'
 import { classify } from '../proxy/categories'
-import { rank } from '../proxy/rank'
+import { buildResult } from './result'
+import { OFFLINE_GUIDANCE } from './offline-guidance'
 
-/**
- * Mirrors the SEED in proxy/snowflake.ts. §09: a category carries a carbon
- * figure ONLY where co2Source names a real reference. Where none was found,
- * embodiedCo2Kg is 0 and co2Source is empty, and the card shows no claim at
- * all rather than a number nobody can defend.
- */
-export const OFFLINE_GUIDANCE: Record<string, CategoryGuidance> = {
-  'mini-fridge': {
-    category: 'mini-fridge',
-    verdict: 'safe',
-    checkTips: [
-      'Check the door seal for cracks or gaps.',
-      'Confirm it cools within an hour of plugging in.',
-    ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
-    note: 'Compressor appliances last well. Buying used avoids nearly all of the footprint.',
-    bulky: true,
-  },
-  mattress: {
-    category: 'mattress',
-    verdict: 'avoid',
-    checkTips: [],
-    embodiedCo2Kg: 0,
-    co2Source: '',
-    note: 'Hygiene and pest risk, and compression is permanent. Buy this one new.',
-    bulky: true,
-  },
-  monitor: {
-    category: 'monitor',
-    verdict: 'safe',
-    checkTips: [
-      'Show a white image and look for dead pixels.',
-      'Check the corners for backlight bleed in a dark room.',
-      'Confirm which cables are included.',
-    ],
-    embodiedCo2Kg: 322,
-    co2Source: 'Dell S2421HS Monitor PCF datasheet — 476 kg CO2e total, 67.7% manufacturing',
-    note: "Most of a display's footprint is in the making of it, so a used one avoids nearly all of it.",
-    bulky: false,
-  },
-  laptop: {
-    category: 'laptop',
-    verdict: 'check',
-    checkTips: [
-      'Ask for the battery cycle count.',
-      'Confirm it powers on and gets past the setup screen.',
-      'Check it is not activation locked to the previous owner.',
-    ],
-    embodiedCo2Kg: 122,
-    co2Source: 'Apple 13-inch MacBook Air Product Environmental Report — 161 kg CO2e, 76% production',
-    note: "Production dominates a laptop's footprint. Activation lock is the one thing that makes a cheap one worthless.",
-    bulky: false,
-  },
-  desk: {
-    category: 'desk',
-    verdict: 'safe',
-    checkTips: [
-      'Check the drawer runners slide cleanly.',
-      "Make sure it isn't particleboard that has been wet.",
-    ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
-    note: 'Ideal used. Solid wood outlives several owners.',
-    bulky: true,
-  },
-}
-
-/** Same rule the proxy applies: never subtract one currency from another. */
-function sameCurrency(options: UsedOption[], currency: string): UsedOption[] {
-  return options.filter((option) => option.currency === currency)
-}
-
-/** Against the RECOMMENDED option, not the cheapest — and never when nothing works. */
-function savingsFor(
-  product: ProductContext,
-  options: UsedOption[],
-  reason: VerteResult['reason'],
-): number | null {
-  if (reason === 'nothing-arrives-in-time') return null
-  const recommended = options[0]?.price ?? null
-  return product.price != null && recommended != null && product.price > recommended
-    ? Math.round(product.price - recommended)
-    : null
-}
+export { OFFLINE_GUIDANCE }
 
 /**
  * Null means the same thing it means at the proxy: we have nothing useful to
@@ -140,22 +56,6 @@ export function resolveLocally(
   const guidance = OFFLINE_GUIDANCE[category]
   if (!guidance) return null
 
-  /* Show nothing secondhand when we are telling them to buy it new. */
-  const usable = guidance.verdict === 'avoid' ? [] : options
-  const comparable = sameCurrency(usable, product.currency)
-  const ranked = rank(comparable, context, guidance)
-
-  return {
-    product: { ...product, category: guidance.category },
-    guidance,
-    options: ranked.options,
-    context,
-    reason: ranked.reason,
-    passedOver: ranked.passedOver,
-    savingsUsd: savingsFor(product, ranked.options, ranked.reason),
-    co2AvoidedKg:
-      ranked.options.length && ranked.reason !== 'nothing-arrives-in-time'
-        ? guidance.embodiedCo2Kg
-        : null,
-  }
+  /* Identical to what the proxy would have returned — same builder. */
+  return buildResult(product, guidance, options, context)
 }
