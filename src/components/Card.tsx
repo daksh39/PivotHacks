@@ -2,10 +2,15 @@
  * The card.  verte-plan.md §06.
  *
  * THE ORDER IS THE ARGUMENT — do not reshuffle these blocks:
- *   1. Money     — what makes them look. Largest element on the card.
- *   2. Verdict   — the trust-builder. Why they keep it installed.
- *   3. Carbon    — present, framed as avoided manufacturing, never preachy.
- *   4. Listings  — two routes: ship it, or walk to it.
+ *   1. Impact    — why this purchase is worth Verte's attention at all.
+ *   2. Money     — what makes them act. Still the largest element.
+ *   3. Verdict   — the trust-builder. Why they keep it installed.
+ *   4. Listings  — where to actually get it.
+ *
+ * The impact band moved to the top when carbon stopped being a footnote and
+ * started deciding the recommendation. A student with no money still needs the
+ * price to land hard, so money keeps the largest type on the card — but what
+ * Verte is FOR is now the first thing it says.
  *
  * Renders from a VerteResult and nothing else. No fetching, no chrome.* calls,
  * no knowledge of where the data came from. That is what makes it survivable
@@ -15,7 +20,16 @@
 import { useState } from 'react'
 import type { UsedOption, VerteResult } from '../types'
 import { explainReason } from '../reason'
-import { formatCo2, formatUsd, isSourced, milesDrivenEquivalent } from '../carbon'
+import {
+  USE_DOMINANT_WARNING,
+  carbonPayoff,
+  formatCo2,
+  formatUsd,
+  isSourced,
+  milesDrivenEquivalent,
+  payoffHeadline,
+  payoffMeaning,
+} from '../carbon'
 import { Verdict } from './Verdict'
 import { Empty } from './Empty'
 import { Leaf } from './Skeleton'
@@ -57,6 +71,11 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
    * and the card must never quietly substitute the cheapest for it. */
   const recommended: UsedOption | null = options[0] ?? null
   const unusable = reason === 'nothing-arrives-in-time' || reason === 'nothing-in-budget'
+
+  /* How much buying this one used actually matters. It decides what the card
+   * leads with, and whether Verte recommends buying used at all. */
+  const payoff = carbonPayoff(guidance)
+  const lowPayoff = reason === 'low-carbon-payoff' || reason === 'nothing-in-budget'
 
   /* One source per page now — you are on Amazon or you are on Best Buy, and
    * the listings are that retailer's own. There is nothing to switch between,
@@ -100,8 +119,45 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
       </header>
 
       <div className="verte__body">
-        {/* 1 — money leads */}
-        {recommended && !unusable && (
+        {/* 1 — why this purchase is worth anyone's attention.
+          * Rendered only where a real citation backs the figure (§09); an
+          * uncited category shows no band and makes no claim. */}
+        {payoff !== 'unknown' && (
+          <div className={`verte__impact verte__impact--${payoff}`}>
+            <p className="verte__impact-head">{payoffHeadline(payoff)}</p>
+            {isSourced(guidance.co2Source) && guidance.embodiedCo2Kg > 0 && (
+              <p className="verte__impact-figure">
+                {formatCo2(guidance.embodiedCo2Kg)} to make one
+                <span className="verte__carbon-eq">
+                  {' '}— about {milesDrivenEquivalent(guidance.embodiedCo2Kg)} miles driven
+                </span>
+              </p>
+            )}
+            <p className="verte__impact-meaning">{payoffMeaning(payoff)}</p>
+          </div>
+        )}
+
+        {/* The honest catch: where running it outweighs making it, a cheap old
+          * one can be a carbon loss. Say so even though it undercuts us. */}
+        {guidance.useDominant && <p className="verte__caveat">{USE_DOMINANT_WARNING}</p>}
+
+        {/* Verte declining to sell. Low-impact category, small saving — there
+          * is no reason to send a student across town for this. */}
+        {lowPayoff && (
+          <div className="verte__blocked">
+            <p className="verte__blocked-head">{explainReason(reason, context)}</p>
+            <p className="verte__blocked-sub">
+              Making one of these costs almost nothing, and you would save{' '}
+              {savingsUsd != null && product.price != null
+                ? formatUsd(savingsUsd, product.currency)
+                : 'very little'}
+              . Not worth the trip.
+            </p>
+          </div>
+        )}
+
+        {/* 2 — money */}
+        {recommended && !unusable && !lowPayoff && (
           <>
             <div className="verte__price">
               {product.price != null && (
@@ -159,22 +215,8 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
             {/* 2 — the verdict */}
             <Verdict guidance={guidance} />
 
-            {/* 3 — carbon, framed as avoided manufacturing.
-              * Rendered ONLY when the figure carries a real citation (§09).
-              * An uncited number is the thing that gets picked apart in Q&A,
-              * and showing nothing costs us far less than showing that. */}
-            {co2AvoidedKg != null && co2AvoidedKg > 0 && isSourced(guidance.co2Source) && (
-              <>
-                <hr className="verte__rule" />
-                <p className="verte__carbon">
-                  Avoids {formatCo2(co2AvoidedKg)} of manufacturing{' '}
-                  <span className="verte__carbon-eq">
-                    — about {milesDrivenEquivalent(co2AvoidedKg)} miles driven
-                  </span>
-                </p>
-              </>
-            )}
-
+            {/* The figure itself now leads the card, so it is not repeated
+              * here. What stays is the framing: avoided, not saved. */}
             {/* 4 — where to actually get it */}
             {options.length > 0 && (
               <>

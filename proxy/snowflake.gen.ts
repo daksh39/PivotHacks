@@ -28,7 +28,7 @@ export function generate(): string {
     const cited = g.co2Source ? `\n-- SOURCED: ${g.co2Source}` : ''
     return (
       `${cited}\n(${q(g.category)},${q(g.verdict)},${q(JSON.stringify(g.checkTips))},\n` +
-      `  ${g.embodiedCo2Kg},${q(g.co2Source)},${q(g.note)},${g.bulky ? 'TRUE' : 'FALSE'})${last ? ';' : ','}`
+      `  ${g.embodiedCo2Kg},${q(g.co2Source)},${q(g.note)},${g.bulky ? 'TRUE' : 'FALSE'},${g.useDominant ? 'TRUE' : 'FALSE'})${last ? ';' : ','}`
     )
   })
 
@@ -73,7 +73,10 @@ CREATE OR REPLACE TABLE CATEGORY_GUIDANCE (
   CO2_SOURCE       VARCHAR      NOT NULL,   -- '' when uncited
   NOTE             VARCHAR      NOT NULL,
   -- Needs a car to collect. Drives the no-car demotion in proxy/rank.ts.
-  BULKY            BOOLEAN      NOT NULL
+  BULKY            BOOLEAN      NOT NULL,
+  -- Lifetime emissions dominated by RUNNING it, not making it. Where this is
+  -- true, a cheap old unit can be a carbon loss and the card says so.
+  USE_DOMINANT     BOOLEAN      NOT NULL
 );
 
 -- Accumulates across runs — never replaced.
@@ -88,8 +91,8 @@ CREATE TABLE IF NOT EXISTS IMPACT_LOG (
 -- ${order.length} categories, matching proxy/categories.ts one for one.
 
 INSERT INTO CATEGORY_GUIDANCE
-  (CATEGORY, VERDICT, CHECK_TIPS, EMBODIED_CO2_KG, CO2_SOURCE, NOTE, BULKY)
-SELECT column1, column2, PARSE_JSON(column3), column4, column5, column6, column7
+  (CATEGORY, VERDICT, CHECK_TIPS, EMBODIED_CO2_KG, CO2_SOURCE, NOTE, BULKY, USE_DOMINANT)
+SELECT column1, column2, PARSE_JSON(column3), column4, column5, column6, column7, column8
 FROM VALUES
 ${body}
 `

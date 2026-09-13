@@ -139,8 +139,17 @@ the card came from the retailer whose page you are standing on.
 
 ## Card rules (§06)
 
-The order on the card is the argument. Money, then verdict, then carbon, then
-listings. Don't reshuffle it.
+The order on the card is the argument. **Impact, then money, then verdict,
+then listings.** Don't reshuffle it.
+
+This changed once, deliberately. It was money-first, with carbon as a footer,
+back when carbon was a number we printed. Carbon now decides whether Verte
+recommends buying used at all — on a low-footprint category with a small
+saving it says *buying this one new is fine* — so the impact band leads and
+the thing we are actually for is the first thing the card says.
+
+Money still carries the largest type on the card. Pivot 02's user is a student
+with limited budget: the price has to land hard, it just no longer leads.
 
 - `#D0E2B8` and `#9FB87E` are fills and borders, **never text on cream**.
   Accent text is `#3C4A2C`.

@@ -39,6 +39,7 @@ export const FIXTURE_TEXTBOOK: VerteResult = {
     co2Source: '',
     note: 'A previous edition is often fine, and usually a fraction of the price.',
     bulky: false,
+    useDominant: false,
   },
   options: [
     {
@@ -77,6 +78,7 @@ export const FIXTURE_HEADPHONES: VerteResult = {
     co2Source: '',
     note: 'Hygiene is the reason for the caveat, not whether they work.',
     bulky: false,
+    useDominant: false,
   },
   options: [
     {
@@ -128,6 +130,7 @@ export const FIXTURE_MONITOR: VerteResult = {
     co2Source: 'Dell S2421HS Monitor PCF datasheet — 476 kg CO2e total, 67.7% manufacturing',
     note: "Most of a display's footprint is in the making of it, so a used one avoids nearly all of it.",
     bulky: false,
+    useDominant: false,
   },
   options: [
     {
@@ -166,6 +169,7 @@ export const FIXTURE_MATTRESS: VerteResult = {
     co2Source: '',
     note: 'Hygiene and pest risk, and foam compression is permanent. Buy this one new.',
     bulky: true,
+    useDominant: false,
   },
   options: [],
   context: { needInDays: null, hasCar: false, budgetCap: null },

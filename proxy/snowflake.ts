@@ -46,6 +46,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Single-impact protection, and a helmet that has already been dropped looks identical to one that has not.",
     bulky: false,
+    useDominant: false,
   },
   'desk-chair': {
     category: 'desk-chair',
@@ -54,10 +55,11 @@ const SEED: Record<string, CategoryGuidance> = {
       "Sit on it and check the gas cylinder does not sink.",
       "Test that the recline lock holds.",
     ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
+    embodiedCo2Kg: 85,
+    co2Source: 'Herman Miller Aeron Chair Environmental Product Declaration (2016) — 85.3 kg CO2e cradle-to-gate, A1–A3',
     note: "A failed gas cylinder is a real repair, not a quirk.",
     bulky: true,
+    useDominant: false,
   },
   'non-stick-pan': {
     category: 'non-stick-pan',
@@ -67,6 +69,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "The coating degrades and scratches. Buy cast iron or stainless used instead.",
     bulky: false,
+    useDominant: false,
   },
   'smoke-detector': {
     category: 'smoke-detector',
@@ -76,6 +79,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Sensors expire on a fixed schedule from manufacture.",
     bulky: false,
+    useDominant: false,
   },
   'surge-protector': {
     category: 'surge-protector',
@@ -85,6 +89,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Protection components wear out invisibly with every surge absorbed.",
     bulky: false,
+    useDominant: false,
   },
   'drying-rack': {
     category: 'drying-rack',
@@ -96,6 +101,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Nothing to go wrong. Always worth checking used first.",
     bulky: false,
+    useDominant: false,
   },
   'storage-bin': {
     category: 'storage-bin',
@@ -107,6 +113,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "No meaningful risk. Never buy these new.",
     bulky: false,
+    useDominant: false,
   },
   pillow: {
     category: 'pillow',
@@ -116,6 +123,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Hygiene, and they are cheap enough new that it does not sting.",
     bulky: false,
+    useDominant: false,
   },
   bookshelf: {
     category: 'bookshelf',
@@ -128,6 +136,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Very little that can go wrong.",
     bulky: true,
+    useDominant: false,
   },
   dresser: {
     category: 'dresser',
@@ -140,6 +149,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Heavy, so favour local pickup over shipping.",
     bulky: true,
+    useDominant: false,
   },
   microwave: {
     category: 'microwave',
@@ -152,6 +162,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A damaged door seal is the one real safety concern.",
     bulky: false,
+    useDominant: false,
   },
   textbook: {
     category: 'textbook',
@@ -160,10 +171,11 @@ const SEED: Record<string, CategoryGuidance> = {
       "Confirm the edition matches the syllabus.",
       "Ask whether an access code is required and still unused.",
     ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
+    embodiedCo2Kg: 3,
+    co2Source: 'Wells et al. 2012, Journal of Industrial Ecology — 2.71 kg CO2e per paperback, cradle-to-gate',
     note: "A previous edition is often fine, and usually a fraction of the price.",
     bulky: false,
+    useDominant: false,
   },
   cookware: {
     category: 'cookware',
@@ -176,6 +188,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Cast iron and stainless are effectively indestructible.",
     bulky: false,
+    useDominant: false,
   },
   bike: {
     category: 'bike',
@@ -185,10 +198,11 @@ const SEED: Record<string, CategoryGuidance> = {
       "Spin both wheels and check they run true.",
       "Chain, brakes and tyres are cheap to replace.",
     ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
+    embodiedCo2Kg: 116,
+    co2Source: 'Trek Bicycle 2021 Sustainability Report — Marlin hardtail, 116 kg CO2e per bike manufactured',
     note: "Frame condition is the only thing that really matters.",
     bulky: false,
+    useDominant: false,
   },
   fan: {
     category: 'fan',
@@ -201,6 +215,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "No meaningful risk.",
     bulky: false,
+    useDominant: false,
   },
   blender: {
     category: 'blender',
@@ -213,6 +228,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Seals perish long before motors do.",
     bulky: false,
+    useDominant: false,
   },
   kettle: {
     category: 'kettle',
@@ -226,6 +242,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A failed auto shut-off is the one thing to avoid.",
     bulky: false,
+    useDominant: false,
   },
   headphones: {
     category: 'headphones',
@@ -238,6 +255,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Hygiene is the reason for the caveat, not whether they work.",
     bulky: false,
+    useDominant: false,
   },
   'winter-coat': {
     category: 'winter-coat',
@@ -250,6 +268,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Excellent value used. Flattened insulation cannot be restored.",
     bulky: false,
+    useDominant: false,
   },
   'mini-fridge': {
     category: 'mini-fridge',
@@ -260,8 +279,9 @@ const SEED: Record<string, CategoryGuidance> = {
     ],
     embodiedCo2Kg: 0,
     co2Source: '',
-    note: 'Compressor appliances last well. Buying used avoids nearly all of the footprint.',
+    note: 'Compressor appliances last well, but the electricity is the real cost here — a cheap old one is not automatically the greener choice.',
     bulky: true,
+    useDominant: true,
   },
   mattress: {
     category: 'mattress',
@@ -271,6 +291,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: 'Hygiene and pest risk, and compression is permanent. Buy this one new.',
     bulky: true,
+    useDominant: false,
   },
   /* SOURCED. Dell publishes a per-product carbon footprint datasheet for the
    * S2421HS 24" monitor: 476 kg CO2e over the full life cycle, of which
@@ -288,6 +309,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: 'Dell S2421HS Monitor PCF datasheet — 476 kg CO2e total, 67.7% manufacturing',
     note: 'Most of a display\'s footprint is in the making of it, so a used one avoids nearly all of it.',
     bulky: false,
+    useDominant: false,
   },
 
   /* SOURCED. Apple's Product Environmental Report for the 13-inch MacBook Air
@@ -304,6 +326,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: 'Apple 13-inch MacBook Air Product Environmental Report — 161 kg CO2e, 76% production',
     note: 'Production dominates a laptop\'s footprint. Activation lock is the one thing that makes a cheap one worthless.',
     bulky: false,
+    useDominant: false,
   },
 
   desk: {
@@ -317,6 +340,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: 'Ideal used. Solid wood outlives several owners.',
     bulky: true,
+    useDominant: false,
   },
 
   /* --- the long tail -------------------------------------------------
@@ -336,6 +360,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Stick drift is the one failure that makes a cheap controller worthless, and it is easy to test in a minute.",
     bulky: false,
+    useDominant: false,
   },
   "game-console": {
     category: "game-console",
@@ -345,10 +370,11 @@ const SEED: Record<string, CategoryGuidance> = {
       "Listen to the fan under load; a screaming fan means dust or dried paste.",
       "Check the disc drive reads and the storage is wiped, not just logged out.",
     ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
+    embodiedCo2Kg: 89,
+    co2Source: 'University of Cambridge study of the PlayStation 4 — ~89 kg CO2e to manufacture and ship one unit',
     note: "Consoles last a decade and hold value. The risks are an account ban and a neglected fan, both checkable.",
     bulky: false,
+    useDominant: false,
   },
   "e-reader": {
     category: "e-reader",
@@ -362,6 +388,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "E-ink barely ages, so a used one is close to a new one. A screen crack is the thing that ends it.",
     bulky: false,
+    useDominant: false,
   },
   "tablet": {
     category: "tablet",
@@ -371,10 +398,11 @@ const SEED: Record<string, CategoryGuidance> = {
       "Ask for the battery health percentage.",
       "Check it still receives OS updates \u2014 old tablets get dropped quietly.",
     ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
+    embodiedCo2Kg: 59,
+    co2Source: 'Apple iPad (9th generation) Product Environmental Report — 75 kg CO2e life cycle, 78% production',
     note: "Production dominates a tablet's footprint. Activation lock is the one thing that makes a cheap one worthless.",
     bulky: false,
+    useDominant: false,
   },
   "smart-tv": {
     category: "smart-tv",
@@ -388,6 +416,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A panel fault is invisible on a switched-off screen, and it is the only defect that really matters.",
     bulky: false,
+    useDominant: false,
   },
   "camera": {
     category: "camera",
@@ -401,6 +430,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Bodies are built for far more actuations than most owners ever use, so a low shutter count is a genuinely good buy.",
     bulky: false,
+    useDominant: false,
   },
   "keyboard": {
     category: "keyboard",
@@ -413,6 +443,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Mechanical switches outlive several owners and anything broken is obvious in thirty seconds.",
     bulky: false,
+    useDominant: false,
   },
   "computer-mouse": {
     category: "computer-mouse",
@@ -425,6 +456,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Switches wear out before anything else, and a double-clicking mouse is unusable for work.",
     bulky: false,
+    useDominant: false,
   },
   "speaker": {
     category: "speaker",
@@ -437,6 +469,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Drivers and cabinets do not age much. A blown speaker announces itself immediately.",
     bulky: false,
+    useDominant: false,
   },
   "router": {
     category: "router",
@@ -449,6 +482,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A router with no security updates is a liability on your network, so the model's support status matters more than its age.",
     bulky: false,
+    useDominant: false,
   },
   "printer": {
     category: "printer",
@@ -462,6 +496,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "The purchase price is the small part. A cheap used inkjet with expensive clogged heads is no bargain.",
     bulky: true,
+    useDominant: false,
   },
   "power-bank": {
     category: "power-bank",
@@ -471,6 +506,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Lithium cells degrade with every cycle and with age, and a used pack's history is unknowable. A damaged cell is a fire risk. Buy this one new.",
     bulky: false,
+    useDominant: false,
   },
   "water-bottle": {
     category: "water-bottle",
@@ -480,6 +516,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "You cannot verify how a bottle was cleaned or what was kept in it, and the seal and straw are where that matters. Buy this one new.",
     bulky: false,
+    useDominant: false,
   },
   "water-filter": {
     category: "water-filter",
@@ -489,6 +526,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A filter's job is what it has already absorbed. Buying that history secondhand defeats the point. Buy this one new.",
     bulky: false,
+    useDominant: false,
   },
   "multi-cooker": {
     category: "multi-cooker",
@@ -502,6 +540,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "The body lasts for years and the two parts that do not \u2014 the ring and the valve \u2014 are cheap to replace.",
     bulky: false,
+    useDominant: false,
   },
   "coffee-maker": {
     category: "coffee-maker",
@@ -515,6 +554,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A descaled machine lasts a decade. A neglected one is a repair job, and you can tell which you are looking at.",
     bulky: false,
+    useDominant: false,
   },
   "vacuum": {
     category: "vacuum",
@@ -528,6 +568,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Motors long outlast batteries and filters. Price the consumables before you decide it is a bargain.",
     bulky: true,
+    useDominant: false,
   },
   "air-purifier": {
     category: "air-purifier",
@@ -540,6 +581,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "The machine is fine used. Always budget for a new filter on day one \u2014 the old one is not worth inheriting.",
     bulky: true,
+    useDominant: false,
   },
   "fitness-tracker": {
     category: "fitness-tracker",
@@ -553,6 +595,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Account locks and tired batteries are the two things that turn a cheap tracker into a paperweight.",
     bulky: false,
+    useDominant: false,
   },
   "backpack": {
     category: "backpack",
@@ -565,6 +608,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Bags are built for years of abuse, and everything that fails is visible from the outside.",
     bulky: false,
+    useDominant: false,
   },
   "luggage": {
     category: "luggage",
@@ -578,6 +622,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A hard case survives far more trips than one owner takes. Wheels and handles are the only real wear points.",
     bulky: true,
+    useDominant: false,
   },
   "shoes": {
     category: "shoes",
@@ -591,6 +636,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Fine for casual and fashion pairs. For running, worn midsoles are a genuine injury risk however good they look.",
     bulky: false,
+    useDominant: false,
   },
   "toys": {
     category: "toys",
@@ -604,6 +650,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Toys are one of the strongest secondhand cases: barely used, and children outgrow them long before they wear out.",
     bulky: false,
+    useDominant: false,
   },
   "electric-toothbrush": {
     category: "electric-toothbrush",
@@ -613,6 +660,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A used toothbrush handle cannot be meaningfully sanitised where it matters, around the head seal. Buy this one new.",
     bulky: false,
+    useDominant: false,
   },
   "memory-card": {
     category: "memory-card",
@@ -622,6 +670,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Flash memory wears out silently with use, and the secondhand market for cards is full of relabelled fakes. Buy this one new.",
     bulky: false,
+    useDominant: false,
   },
   "external-drive": {
     category: "external-drive",
@@ -635,6 +684,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Enclosures and interfaces last, but a drive's remaining life is the whole question \u2014 and SMART data answers it honestly.",
     bulky: false,
+    useDominant: false,
   },
   "webcam": {
     category: "webcam",
@@ -647,6 +697,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Nothing inside wears out, and anything broken shows up the first time you open it.",
     bulky: false,
+    useDominant: false,
   },
   "microphone": {
     category: "microphone",
@@ -659,6 +710,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Microphones are famously durable \u2014 studios run the same ones for decades.",
     bulky: false,
+    useDominant: false,
   },
   "streaming-stick": {
     category: "streaming-stick",
@@ -671,6 +723,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "The hardware is fine. What dates these is app support, so the model year matters more than the condition.",
     bulky: false,
+    useDominant: false,
   },
   "smart-home": {
     category: "smart-home",
@@ -684,6 +737,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "The one thing that bricks these is an account the seller forgot to release, and it is free to check before you pay.",
     bulky: false,
+    useDominant: false,
   },
   "hair-dryer": {
     category: "hair-dryer",
@@ -697,6 +751,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Motors and elements last well. A frayed cord is the one fault worth walking away from.",
     bulky: false,
+    useDominant: false,
   },
   "sunglasses": {
     category: "sunglasses",
@@ -710,6 +765,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Frames outlive lenses. A scratched or relensed pair may no longer block what it claims to.",
     bulky: false,
+    useDominant: false,
   },
   "weights": {
     category: "weights",
@@ -722,6 +778,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Cast iron is the strongest secondhand case there is. It does not wear out, and new ones cost a fortune to ship.",
     bulky: true,
+    useDominant: false,
   },
   "exercise-machine": {
     category: "exercise-machine",
@@ -735,6 +792,7 @@ const SEED: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Bought new with good intentions and sold barely used, so condition is usually excellent. The catch is the subscription and getting it home.",
     bulky: true,
+    useDominant: false,
   },
 }
 
@@ -786,6 +844,7 @@ function toGuidance(row: Record<string, unknown>): CategoryGuidance | null {
     co2Source,
     note: String(row.NOTE ?? ''),
     bulky: Boolean(row.BULKY),
+    useDominant: Boolean(row.USE_DOMINANT),
   }
 }
 

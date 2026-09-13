@@ -23,6 +23,7 @@ const guidance = (over: Partial<CategoryGuidance> = {}): CategoryGuidance => ({
   co2Source: '',
   note: '',
   bulky: false,
+  useDominant: false,
   ...over,
 })
 

@@ -399,4 +399,51 @@ export const cardStyles = /* css */ `
   .verte__listing:active,
   .verte__dismiss:active { transform: none; }
 }
+
+/* --- the impact band: what the card now leads with ----------------------- */
+.verte__impact {
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid transparent;
+}
+/* #D0E2B8 and #9FB87E are fills and borders, never text on cream (§06).
+ * All accent text here is #3C4A2C at ~9:1. */
+.verte__impact--high { background: #D0E2B8; border-color: #9FB87E; }
+.verte__impact--moderate { background: #E8F0DA; border-color: #D0E2B8; }
+.verte__impact--low { background: #F2EFE6; border-color: #E0DACB; }
+
+.verte__impact-head {
+  margin: 0;
+  font-family: "Domine", Georgia, serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3C4A2C;
+}
+.verte__impact--low .verte__impact-head { color: #6B6B5E; }
+
+.verte__impact-figure {
+  margin: 6px 0 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 20px;
+  line-height: 1.2;
+  color: #42473C;
+}
+.verte__impact-meaning {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #5C6152;
+}
+
+/* The catch we would rather state than hide. */
+.verte__caveat {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-left: 3px solid #9FB87E;
+  background: #FBF8F1;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #5C6152;
+}
 `

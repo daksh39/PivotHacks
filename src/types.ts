@@ -77,18 +77,38 @@ export type RecommendationReason =
   | 'cheaper-option-needs-car'
   | 'nothing-arrives-in-time'
   | 'nothing-in-budget'
+  /**
+   * The category barely costs anything to make and the saving is small, so
+   * buying used here is not worth the effort. Verte says that plainly rather
+   * than manufacturing a reason to care.
+   */
+  | 'low-carbon-payoff'
 
 /** What we know about buying this category used. */
 export type CategoryGuidance = {
   category: string
   verdict: 'safe' | 'check' | 'avoid'
   checkTips: string[]
-  /** estimate — carries a source */
+  /**
+   * Manufacturing emissions avoided by not buying this new, in kg CO2e.
+   *
+   * This is the number the whole product now turns on, not a footnote under
+   * the price: it decides whether Verte pushes towards used at all. 0 means
+   * nobody has sourced a figure, and an unsourced category makes no claim and
+   * no push — see carbonPayoff() in src/carbon.ts.
+   */
   embodiedCo2Kg: number
   co2Source: string
   note: string
   /** Needs a car to collect. Drives the no-car demotion in proxy/rank.ts. */
   bulky: boolean
+  /**
+   * True where LIFETIME emissions are dominated by running the thing, not by
+   * making it — a fridge is the clear case. Buying those used can be a carbon
+   * LOSS if the secondhand one is old and inefficient, so Verte says so
+   * instead of cheering. Set only where a source supports it.
+   */
+  useDominant: boolean
 }
 
 /** The one object the UI renders. Nothing else reaches a component. */

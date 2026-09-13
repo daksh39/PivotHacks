@@ -23,6 +23,7 @@ import type {
   VerteResult,
 } from './types'
 import { rank } from '../proxy/rank'
+import { carbonPayoff } from './carbon'
 
 /**
  * Reasons that mean "there is nothing here they can actually buy".
@@ -32,6 +33,50 @@ import { rank } from '../proxy/rank'
  * true of a saving on something over their budget.
  */
 const NOTHING_USABLE: VerteResult['reason'][] = ['nothing-arrives-in-time', 'nothing-in-budget']
+
+/**
+ * Reasons where we must not claim avoided manufacturing.
+ *
+ * Everything in NOTHING_USABLE, plus the case where Verte is actively telling
+ * them to buy new: banking the carbon from a purchase we just advised against
+ * would be having it both ways. The SAVING still stands there, because the
+ * card needs it to show how small it is — "you would save $2, not worth the
+ * trip" is the argument.
+ */
+const NO_CARBON_CLAIM: VerteResult['reason'][] = [...NOTHING_USABLE, 'low-carbon-payoff']
+
+/**
+ * Below this share of the new price, a saving is not worth a stranger, a
+ * pickup and a risk — so on a category that barely costs anything to make,
+ * Verte stops selling.
+ */
+const SMALL_SAVING_SHARE = 0.15
+
+/**
+ * Carbon deciding the recommendation, not decorating it.
+ *
+ * Verte's claim is that buying used matters. On a paperback it does not much:
+ * about 3 kg of manufacturing, against 122 for a laptop. Pretending those are
+ * the same story is how the whole pitch stops being believed, so where the
+ * carbon payoff is low AND the money saved is small, the recommendation flips
+ * and we say buying new is fine.
+ *
+ * Only ever overrides the "we found you something" reasons. If nothing arrives
+ * in time or nothing is affordable, that is already the more important answer.
+ */
+function carbonOverride(
+  reason: VerteResult['reason'],
+  guidance: CategoryGuidance,
+  product: ProductContext,
+  recommended: UsedOption | undefined,
+): VerteResult['reason'] {
+  if (NOTHING_USABLE.includes(reason)) return reason
+  if (!recommended || carbonPayoff(guidance) !== 'low') return reason
+  if (product.price == null) return reason
+
+  const saved = product.price - recommended.price
+  return saved < product.price * SMALL_SAVING_SHARE ? 'low-carbon-payoff' : reason
+}
 
 /**
  * Listings we can legitimately compare against this product.
@@ -74,19 +119,20 @@ export function buildResult(
   /* Show nothing secondhand when we are telling them to buy it new. */
   const usable = guidance.verdict === 'avoid' ? [] : found
   const ranked = rank(sameCurrency(usable, product.currency), context, guidance)
+  const reason = carbonOverride(ranked.reason, guidance, product, ranked.options[0])
 
   return {
     product: { ...product, category: guidance.category },
     guidance,
     options: ranked.options,
     context,
-    reason: ranked.reason,
+    reason,
     passedOver: ranked.passedOver,
-    savingsUsd: savingsFor(product, ranked.options, ranked.reason),
+    savingsUsd: savingsFor(product, ranked.options, reason),
     /* Only claim avoided manufacturing if they have something they can
      * actually buy instead. Nothing viable, no claim. */
     co2AvoidedKg:
-      ranked.options.length && !NOTHING_USABLE.includes(ranked.reason)
+      ranked.options.length && !NO_CARBON_CLAIM.includes(reason)
         ? guidance.embodiedCo2Kg
         : null,
   }

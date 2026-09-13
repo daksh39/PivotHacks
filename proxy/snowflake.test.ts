@@ -28,6 +28,7 @@ type SqlRow = {
   co2Source: string
   bulky: boolean
   tipCount: number
+  useDominant: boolean
 }
 
 /** Parses the INSERT block of data/category-guidance.sql. */
@@ -43,7 +44,8 @@ function readSql(): Record<string, SqlRow> {
     const tips = chunk.match(/'(\[.*?\])'/s)?.[1]
     /* The number and source sit immediately after the tips array. */
     const tail = chunk.match(/\]',\s*([\d.]+),'((?:[^']|'')*)'/s)
-    const bulky = chunk.match(/,(TRUE|FALSE)\)[,;]/)?.[1]
+    const flags = chunk.match(/,(TRUE|FALSE),(TRUE|FALSE)\)[,;]/)
+    const bulky = flags?.[1]
     if (!slug || !verdict || !tail || !bulky || tips === undefined) continue
 
     rows[slug] = {
@@ -51,6 +53,7 @@ function readSql(): Record<string, SqlRow> {
       embodiedCo2Kg: Number(tail[1]),
       co2Source: tail[2].replace(/''/g, "'"),
       bulky: bulky === 'TRUE',
+      useDominant: flags?.[2] === 'TRUE',
       tipCount: (JSON.parse(tips) as string[]).length,
     }
   }
@@ -104,9 +107,35 @@ describe('no citation, no claim (§09)', () => {
     else expect(embodiedCo2Kg).toBeGreaterThan(0)
   })
 
-  it('still cites the two categories we have sources for', () => {
-    const cited = Object.keys(__SEED).filter((s) => isSourced(__SEED[s].co2Source))
-    expect(cited.sort()).toEqual(['laptop', 'monitor'])
+  it('pairs every figure with a citation, in both directions', () => {
+    /* Was a hardcoded list of the two categories that had sources. That is a
+     * list that goes stale every time someone does the research, and it tells
+     * you nothing when it fails. The invariant is what we actually care about:
+     * a number without a source is a claim we cannot defend, and a source
+     * without a number is a citation that proves nothing. */
+    for (const [slug, g] of Object.entries(__SEED)) {
+      if (g.embodiedCo2Kg > 0) {
+        expect(isSourced(g.co2Source), `${slug} carries a figure with no source`).toBe(true)
+      }
+      if (isSourced(g.co2Source)) {
+        expect(g.embodiedCo2Kg, `${slug} cites a source but claims nothing`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('names the document behind each figure, not just a vibe', () => {
+    /* "where did 322 kg come from" is the first question a good judge asks.
+     * A source string has to be checkable — a report, datasheet, EPD or
+     * paper — not the word "estimate". */
+    const cited = Object.values(__SEED).filter((g) => isSourced(g.co2Source))
+    expect(cited.length).toBeGreaterThan(0)
+    for (const g of cited) {
+      expect(g.co2Source.length, `${g.category}'s source is too thin to check`).toBeGreaterThan(25)
+      expect(
+        /report|datasheet|declaration|epd|study|journal|assessment/i.test(g.co2Source),
+        `${g.category}'s source does not name a document: ${g.co2Source}`,
+      ).toBe(true)
+    }
   })
 })
 
