@@ -98,15 +98,23 @@ To load it in Chrome, open `chrome://extensions`, turn on Developer mode, choose
 ```
 src/
   types.ts              shared types, everything is built against these
-  contentScript/        page detection and product extraction
-  background/           service worker
+  mocks.ts              shared fixtures, so no one is blocked on anyone
+  tokens.ts             design system
+  carbon.ts             CO2 formatting and the miles-driven equivalence
+  contentScript/        page detection, product extraction, shadow root
+  background/           service worker, the only thing that calls the proxy
   components/           the card and its states
   popup/                extension popup
+  dev/preview.html      the card alone, every state, in a plain page
 proxy/
-  index.ts              eBay and Snowflake access
+  index.ts              the one endpoint, POST /lookup
+  ebay.ts               Browse API, OAuth, caching
+  snowflake.ts          campus listings and the category knowledge base
   categories.ts         title to category classification
+  smoke.sh              proves the proxy returns a well-formed VerteResult
 data/
   category-guidance.sql knowledge base seed
+site/                   landing page
 ```
 
 ## A note on the data

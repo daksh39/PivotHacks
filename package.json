@@ -1,0 +1,40 @@
+{
+  "name": "verte",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Verte — the greenest product is the one that already exists.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview:card": "vite --open /src/dev/preview.html",
+    "proxy": "tsx watch proxy/index.ts",
+    "proxy:mock": "VERTE_MOCK=1 tsx watch proxy/index.ts",
+    "site": "vite --config site/vite.config.ts",
+    "site:build": "vite build --config site/vite.config.ts",
+    "smoke": "bash proxy/smoke.sh",
+    "typecheck": "tsc --noEmit",
+    "all": "concurrently -n proxy,ext -c green,cyan \"npm:proxy:mock\" \"npm:dev\""
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.7.1",
+    "@types/chrome": "^0.0.268",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "snowflake-sdk": "^1.11.0",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.4"
+  }
+}
