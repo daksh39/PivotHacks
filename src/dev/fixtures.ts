@@ -203,3 +203,101 @@ export const FIXTURE_OVER_BUDGET: VerteResult = {
   savingsUsd: null,
   co2AvoidedKg: null,
 }
+
+/* --- carbon deciding the answer ------------------------------------------
+ * The two states the carbon rework introduced. Both are reachable on a real
+ * page; they are here so lane/ui can see them without a proxy, a browser
+ * extension, or the right stock on Amazon that day.
+ * ----------------------------------------------------------------------- */
+
+/**
+ * Verte declining to sell. A paperback costs about 3 kg to make, and this one
+ * is barely cheaper used — so the recommendation flips to "buy it new".
+ */
+export const FIXTURE_LOW_PAYOFF: VerteResult = {
+  product: {
+    title: 'Calculus: Early Transcendentals, 9th Edition',
+    price: 24.99,
+    currency: 'USD',
+    category: 'textbook',
+    imageUrl: null,
+    sourceUrl: 'https://www.amazon.com/dp/1119777984',
+  },
+  guidance: {
+    category: 'textbook',
+    verdict: 'safe',
+    checkTips: [
+      'Confirm the edition matches the syllabus.',
+      'Ask whether an access code is required and still unused.',
+    ],
+    embodiedCo2Kg: 3,
+    co2Source: 'Wells et al. 2012, Journal of Industrial Ecology — 2.71 kg CO2e per paperback, cradle-to-gate',
+    note: 'A previous edition is often fine, and usually a fraction of the price.',
+    bulky: false,
+    useDominant: false,
+  },
+  options: [
+    {
+      source: 'amazon',
+      title: 'Used - Very Good',
+      price: 21.5,
+      currency: 'USD',
+      url: 'https://www.amazon.com/gp/offer-listing/1119777984/?condition=used',
+      imageUrl: null,
+      condition: 'Used - Very Good',
+      daysToHand: 7,
+    },
+  ],
+  context: { needInDays: null, hasCar: false, budgetCap: null },
+  reason: 'low-carbon-payoff',
+  passedOver: null,
+  savingsUsd: 3,
+  /* No claim: we just told them to buy new. */
+  co2AvoidedKg: null,
+}
+
+/**
+ * The case against ourselves. A fridge's lifetime emissions are mostly the
+ * electricity, so a cheap old one can be a carbon loss — and the card says so
+ * while still showing the saving.
+ */
+export const FIXTURE_USE_DOMINANT: VerteResult = {
+  product: {
+    title: 'Midea 3.1 Cu. Ft. Compact Mini Fridge with Freezer',
+    price: 189.99,
+    currency: 'USD',
+    category: 'mini-fridge',
+    imageUrl: null,
+    sourceUrl: 'https://www.amazon.com/dp/B07YYPQSFF',
+  },
+  guidance: {
+    category: 'mini-fridge',
+    verdict: 'safe',
+    checkTips: [
+      'Check the door seal for cracks or gaps.',
+      'Confirm it cools within an hour of plugging in.',
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: 'Compressor appliances last well, but the electricity is the real cost here — a cheap old one is not automatically the greener choice.',
+    bulky: true,
+    useDominant: true,
+  },
+  options: [
+    {
+      source: 'amazon',
+      title: 'Used - Very Good',
+      price: 99,
+      currency: 'USD',
+      url: 'https://www.amazon.com/gp/offer-listing/B07YYPQSFF/?condition=used',
+      imageUrl: null,
+      condition: 'Used - Very Good',
+      daysToHand: 7,
+    },
+  ],
+  context: { needInDays: null, hasCar: false, budgetCap: null },
+  reason: 'cheapest',
+  passedOver: null,
+  savingsUsd: 91,
+  co2AvoidedKg: null,
+}

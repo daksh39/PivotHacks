@@ -21,6 +21,8 @@ import {
   FIXTURE_MONITOR,
   FIXTURE_OVER_BUDGET,
   FIXTURE_TEXTBOOK,
+  FIXTURE_LOW_PAYOFF,
+  FIXTURE_USE_DOMINANT,
 } from './fixtures'
 import { pageGround } from '../tokens'
 
@@ -90,6 +92,13 @@ function Preview() {
       </Panel>
       <Panel label="expanded — Best Buy open box">
         <Card result={FIXTURE_HEADPHONES} defaultExpanded onDismiss={() => {}} />
+      </Panel>
+
+      <Panel label="CARBON CHANGED THE ANSWER — buy it new">
+        <Card result={FIXTURE_LOW_PAYOFF} defaultExpanded onDismiss={() => {}} />
+      </Panel>
+      <Panel label="ARGUING AGAINST ITSELF — running it costs more than making it">
+        <Card result={FIXTURE_USE_DOMINANT} defaultExpanded onDismiss={() => {}} />
       </Panel>
 
       <Panel label="BUDGET CHANGED THE ANSWER">
