@@ -15,6 +15,23 @@
   white-space: nowrap;
 }
 
+.alt-context {
+  background: var(--verte-moss-tint);
+  border-radius: var(--verte-radius-pill);
+  color: var(--verte-accent-text);
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 8px;
+  padding: 4px 10px;
+}
+
+.alt-fit {
+  color: var(--verte-accent-text);
+  font-size: 11px;
+  margin-top: 3px;
+}
+
 .alt-baseline {
   margin-top: 6px;
 }
@@ -41,7 +58,8 @@
 
 .alt-list {
   list-style: none;
-  margin-top: 14px;
+  margin: 14px 0 0;
+  padding: 0;   /* the browser's default list indent pushed picks right */
 }
 
 .alt-item {

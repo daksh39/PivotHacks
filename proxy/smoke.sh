@@ -38,6 +38,10 @@ check "alternatives are marked as estimates"     "all(a['estimated'] is True for
 check "links are searches, never invented URLs"  "all('/s?k=' in a['url'] or 'searchpage' in a['url'] for a in d['alternatives'])" "$MON"
 check "unknown category still gets a card"      "d['product']['category']=='other' and d['embodiedCo2Kg'] is None" '{"product":{"title":"Sterling silver cufflinks","price":40,"sourceUrl":"https://www.amazon.com/dp/Z"}}'
 check "voice: always at least one pick"          "len(d['alternatives'])>=1" '{"product":{"title":"Find me a hairdryer.","sourceUrl":"https://www.amazon.com/","spoken":true}}'
+check "context: parsed from what was said"       "d['context']['budget']==500 and d['context']['noCar'] is True and d['context']['deadline']=='by friday'" '{"product":{"title":"a laptop under $500, I need it by Friday and I don'"'"'t have a car","spoken":true}}'
+check "context: every pick is within budget"     "d['alternatives'] and all((a['typicalPriceUsd'] or 0)<=500 for a in d['alternatives'])" '{"product":{"title":"a laptop under $500","spoken":true}}'
+check "context: voice never guesses a location"  "d['context'] is None" '{"product":{"title":"a laptop for college","sourceUrl":"https://www.amazon.com/","spoken":true}}'
+check "context alone asks for a product"        "d.get('code')=='needs-product'" '{"product":{"title":"i dont have a car","spoken":true}}'
 check "missing title → 400"                      "d.get('error')=='product.title is required'" '{"product":{}}'
 
 # ── Voice ────────────────────────────────────────────────────────────────────

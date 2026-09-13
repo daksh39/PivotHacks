@@ -64,6 +64,8 @@
  * @property {CategoryGuidance}  guidance       sourced, from Snowflake
  * @property {Alternative[]}     alternatives   estimated, from the model
  * @property {string|null}       scarcityReason why a category has few lower-carbon options (voice)
+ * @property {object|null}       context        budget, deadline, noCar, country — steers the pick
+ * @property {string[]}          contextTags    the same context as short on-screen tags
  * @property {UsedOption[]}      pageOptions    anything the page itself reported
  * @property {number|null}       embodiedCo2Kg  sourced manufacturing figure, or null
  * @property {number|null}       co2AvoidedKg

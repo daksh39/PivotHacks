@@ -15,6 +15,7 @@
 const { classifyDeep } = require('./categories');
 const { guidanceFor } = require('./guidance');
 const { alternativesFor } = require('./alternatives');
+const { extractContext, hasContext, contextTags, namesProduct } = require('./context');
 const { isSourced } = require('./carbon');
 
 const MAX_OPTIONS = 6;
@@ -33,6 +34,13 @@ function rank(options) {
  * @returns {Promise<object>} VerteResult — always, for any product with a title
  */
 async function lookup(product, listings = []) {
+  // "I don't have a car" is context, not a product. Recommending something
+  // anyway means the model invents what to buy — so ask instead.
+  if (product.spoken && !namesProduct(product.title)) {
+    const context = extractContext(product.title, null);
+    return { needsProduct: true, context: hasContext(context) ? context : null };
+  }
+
   // An unknown category no longer ends the lookup. The knowledge base only
   // covers 24 categories, and treating everything else as "nothing to say"
   // is what made real product pages report themselves as non-products.
@@ -49,7 +57,14 @@ async function lookup(product, listings = []) {
     bulky: false,
   };
 
-  const { alternatives, scarcityReason } = await alternativesFor({ ...product, category }, guidance);
+  // What someone says ("under $600, by Friday, no car") is the context that
+  // steers the pick. Page lookups can pass context explicitly.
+  // A spoken request has no real page, so its placeholder retailer URL says
+  // nothing about where the person is — location must come from their words.
+  const parsed = product.context || (product.spoken ? extractContext(product.title, null) : null);
+  const context = hasContext(parsed) ? parsed : null;
+
+  const { alternatives, scarcityReason } = await alternativesFor({ ...product, category }, guidance, context);
   const pageOptions = guidance.verdict === 'avoid' ? [] : rank(listings);
 
   const cheapest = pageOptions.length ? pageOptions[0].price : null;
@@ -68,6 +83,8 @@ async function lookup(product, listings = []) {
     guidance,
     alternatives,
     scarcityReason,
+    context,
+    contextTags: contextTags(context),
     pageOptions,
     embodiedCo2Kg,
     co2AvoidedKg: pageOptions.length && isSourced(guidance) ? guidance.embodiedCo2Kg : null,

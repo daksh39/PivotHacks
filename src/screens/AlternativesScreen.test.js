@@ -32,3 +32,20 @@ test('with real alternatives and no reason, it keeps the normal heading', () => 
   expect(screen.getByText('Lower-carbon options')).toBeInTheDocument();
   expect(screen.queryByText('Not many lower-carbon options')).not.toBeInTheDocument();
 });
+
+test('shows the context that shaped the picks, with each pick\'s price and fit', () => {
+  render(<AlternativesScreen result={{
+    ...base,
+    scarcityReason: null,
+    contextTags: ['under $500', 'by friday', 'no car'],
+    alternatives: [{ ...pick, title: 'Acer Aspire 5', url: 'https://www.amazon.com/s?k=Acer',
+                     typicalPriceUsd: 499, fitsContext: 'Affordable and widely available' }],
+  }} />);
+  expect(screen.getByText('Recommended for: under $500 · by friday · no car')).toBeInTheDocument();
+  expect(screen.getByText('~$499 · Affordable and widely available')).toBeInTheDocument();
+});
+
+test('no context, no context line', () => {
+  render(<AlternativesScreen result={{ ...base, alternatives: [pick], scarcityReason: null }} />);
+  expect(screen.queryByText(/Recommended for/)).not.toBeInTheDocument();
+});

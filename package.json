@@ -1,7 +1,7 @@
 {
   "name": "verte",
   "description": "Verte — a sustainability assistant Chrome extension that suggests lower-carbon alternatives, by voice or on product pages.",
-  "version": "4.3.0",
+  "version": "4.4.1",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.2",

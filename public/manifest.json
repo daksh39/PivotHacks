@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Verte",
-  "version": "4.3.0",
+  "version": "4.4.1",
   "description": "Your sustainability assistant. Tell Verte what you're buying, or open a product page, and see lower-carbon alternatives.",
   "icons": {
     "16": "icons/16.png",

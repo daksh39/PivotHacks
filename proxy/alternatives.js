@@ -31,7 +31,7 @@ Rules:
   Otherwise null. Do not guess. A null is a correct answer.
 - If the product has no meaningful lower-carbon alternative, return an empty list.
 
-Reply with JSON only: {"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"..."}]}`;
+Reply with JSON only: {"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"...","typicalPriceUsd":0,"fitsContext":"..."}]}`;
 
 /* A spoken request is someone asking for help finding a thing, not someone
  * already holding one — an empty answer leaves them with nothing. So in voice
@@ -48,7 +48,7 @@ The person asked for this out loud, so they are looking for something to buy.
   the category.
 - If there are real lower-carbon options, set "scarcityReason" to null.
 
-Reply with JSON only: {"scarcityReason":null,"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"..."}]}`;
+Reply with JSON only: {"scarcityReason":null,"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"...","typicalPriceUsd":0,"fitsContext":"..."}]}`;
 
 const SEARCH_URL = {
   amazon: (q) => `https://www.amazon.com/s?k=${encodeURIComponent(q)}`,
@@ -61,13 +61,31 @@ function searchUrlFor(sourceUrl, query) {
   return SEARCH_URL.amazon(query);
 }
 
+/* Buyer context must CHANGE the pick, not decorate it. These are constraints,
+ * and the budget is enforced again in code after the model answers. */
+function contextRules(context) {
+  if (!context) return '';
+  const rules = [];
+  if (context.budget) rules.push(`- Budget: every pick must typically cost at most $${context.budget}. Prefer the lowest-carbon option within budget over a greener one outside it.`);
+  if (context.deadline) rules.push(`- Needed ${context.deadline}: prefer widely stocked models with fast delivery; avoid niche or back-ordered brands.`);
+  if (context.noCar) rules.push('- No car: prefer compact, lightweight items, or ones delivered to the door. Avoid bulky pick-up-only items.');
+  if (context.country) rules.push(`- Location ${context.country}: only suggest models sold in ${context.country}, in local retail.`);
+  if (!rules.length) return '';
+  return `
+
+Buyer context (these change which option is best):
+${rules.join('\n')}
+- typicalPriceUsd: the usual retail price in USD as a number.
+- fitsContext: ONE short phrase saying how this pick fits the context above.`;
+}
+
 const NONE = { alternatives: [], scarcityReason: null };
 
 /**
  * @returns {Promise<{alternatives: Array, scarcityReason: string|null}>}
  * Empty when we have no key or the call fails — never a fabricated list.
  */
-async function alternativesFor(product, guidance) {
+async function alternativesFor(product, guidance, context = null) {
   const key = process.env.OPENAI_API_KEY;
   if (!key) return NONE;
 
@@ -93,7 +111,7 @@ async function alternativesFor(product, guidance) {
         temperature: 0.2,
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: product.spoken ? SYSTEM + SPOKEN : SYSTEM },
+          { role: 'system', content: (product.spoken ? SYSTEM + SPOKEN : SYSTEM) + contextRules(context) },
           { role: 'user', content: prompt },
         ],
       }),
@@ -110,10 +128,18 @@ async function alternativesFor(product, guidance) {
 
     const alternatives = list
       .filter((a) => a && typeof a.title === 'string' && a.title.trim())
+      // The model is asked to stay in budget; this makes sure it did.
+      .filter((a) => {
+        const price = Number(a.typicalPriceUsd);
+        return !(context && context.budget && Number.isFinite(price) && price > context.budget);
+      })
       .slice(0, 3)
       .map((a) => {
         const saving = Number(a.co2SavingKgPerYear);
+        const price = Number(a.typicalPriceUsd);
         return {
+          typicalPriceUsd: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
+          fitsContext: context && a.fitsContext ? String(a.fitsContext).trim().slice(0, 80) : null,
           source: 'ai',
           title: String(a.title).trim().slice(0, 90),
           why: String(a.why || '').trim().slice(0, 180),

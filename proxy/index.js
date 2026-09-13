@@ -40,6 +40,9 @@ app.post('/lookup', async (req, res) => {
       // Unknown category. The card renders nothing rather than guessing.
       return res.status(404).json({ error: 'no guidance for this product' });
     }
+    if (result.needsProduct) {
+      return res.status(422).json({ error: 'No product named', code: 'needs-product', context: result.context });
+    }
     return res.json(result);
   } catch (error) {
     console.error('[verte] lookup failed:', error);
@@ -76,6 +79,9 @@ app.post('/voice', express.raw({ type: 'audio/*', limit: '10mb' }), async (req, 
       },
       []
     );
+    if (result.needsProduct) {
+      return res.status(422).json({ error: 'No product named', code: 'needs-product', transcript });
+    }
     return res.json({ transcript, result });
   } catch (error) {
     if (error.status) return res.status(error.status).json({ error: error.message });

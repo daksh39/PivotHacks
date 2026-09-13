@@ -8,11 +8,16 @@ import './styles/AlternativesScreen.css';
  * alternatives are model estimates and say so.
  */
 function AlternativesScreen({ result }) {
-    const { product, guidance, alternatives, embodiedCo2Kg, scarcityReason } = result;
+    const { product, guidance, alternatives, embodiedCo2Kg, scarcityReason, contextTags = [] } = result;
 
     return (
         <div className="alt-container">
             <div className="alt-product">{product.title}</div>
+
+            {contextTags.length > 0 && (
+                // The context that changed these picks, exactly as understood.
+                <div className="alt-context">Recommended for: {contextTags.join(' · ')}</div>
+            )}
 
             {embodiedCo2Kg > 0 ? (
                 <div className="alt-baseline">
@@ -47,6 +52,12 @@ function AlternativesScreen({ result }) {
                                     {alternative.title}
                                 </a>
                                 <div className="alt-why">{alternative.why}</div>
+                                {(alternative.typicalPriceUsd || alternative.fitsContext) && (
+                                    <div className="alt-fit">
+                                        {[alternative.typicalPriceUsd ? `~$${alternative.typicalPriceUsd}` : null,
+                                          alternative.fitsContext].filter(Boolean).join(' · ')}
+                                    </div>
+                                )}
                                 {alternative.co2SavingKgPerYear ? (
                                     <div className="alt-delta">
                                         ~{alternative.co2SavingKgPerYear} kg CO₂e/year less
