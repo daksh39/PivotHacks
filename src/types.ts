@@ -95,6 +95,12 @@ export type RecommendationReason =
   | 'cheaper-option-needs-car'
   | 'nothing-arrives-in-time'
   | 'nothing-in-budget'
+  /**
+   * The category barely costs anything to make AND the saving is small, so
+   * buying used here is not worth the trip. Verte says that plainly rather
+   * than manufacturing a reason to care. See carbonPayoff() in src/carbon.ts.
+   */
+  | 'low-carbon-payoff'
 
 /** What we know about buying this category used. */
 export type CategoryGuidance = {
@@ -105,8 +111,15 @@ export type CategoryGuidance = {
   embodiedCo2Kg: number
   co2Source: string
   note: string
-  /** Needs a car to collect. Drives the no-car demotion in proxy/rank.ts. */
+  /** Needs a car to collect. Drives the no-car demotion in src/rank.ts. */
   bulky: boolean
+  /**
+   * True where LIFETIME emissions are dominated by RUNNING the thing rather
+   * than making it — a fridge is the clear case. Buying those secondhand can
+   * be a carbon LOSS if the used one is old and inefficient, so the card says
+   * so instead of cheering. Set only where a source supports it.
+   */
+  useDominant: boolean
 }
 
 /** The one object the UI renders. Nothing else reaches a component. */

@@ -78,6 +78,7 @@ describe('always present on a product page', () => {
       co2Source: '',
       note: 'x',
       bulky: false,
+      useDominant: false,
     }
     expect(buildResult(product, guidance, [], ctx)).not.toBeNull()
   })

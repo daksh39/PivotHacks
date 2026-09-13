@@ -94,6 +94,7 @@ function toGuidance(row: Record<string, unknown>): CategoryGuidance | null {
     co2Source,
     note: String(row.NOTE ?? ''),
     bulky: Boolean(row.BULKY),
+    useDominant: Boolean(row.USE_DOMINANT),
   }
 }
 

@@ -26,14 +26,29 @@ export type ImpactLine = {
   source: string | null
 }
 
-/** Null when there is genuinely nothing to claim. */
-export function impactLine(result: VerteResult): ImpactLine | null {
+/**
+ * Null when there is genuinely nothing to claim.
+ *
+ * `quantifiedAbove` is true when the impact band at the top of the card has
+ * already printed the kilogram figure. Repeating it here put the same number
+ * on the card twice, so in that case this falls through to the qualitative
+ * claim, which still adds something the band does not say.
+ */
+export function impactLine(
+  result: VerteResult,
+  quantifiedAbove = false,
+): ImpactLine | null {
   const { guidance, options, reason, co2AvoidedKg } = result
 
   /* Telling them to buy new is the one case with no environmental case to
    * make, and pretending otherwise would be dishonest. */
   if (guidance?.verdict === 'avoid') return null
   if (reason === 'nothing-arrives-in-time' || reason === 'nothing-in-budget') return null
+
+  /* We just told them buying new is fine, because the carbon payoff here is
+   * negligible. Making an environmental claim on top of that would be having
+   * it both ways — the impact band above the price already states the case. */
+  if (reason === 'low-carbon-payoff') return null
 
   /* Nothing listed today. Still true, still the thesis, and this is now the
    * most common card — leaving it silent is how the product stopped looking
@@ -45,7 +60,7 @@ export function impactLine(result: VerteResult): ImpactLine | null {
     }
   }
 
-  if (co2AvoidedKg && co2AvoidedKg > 0 && isSourced(guidance?.co2Source)) {
+  if (!quantifiedAbove && co2AvoidedKg && co2AvoidedKg > 0 && isSourced(guidance?.co2Source)) {
     return {
       /* A comparison, not an abstraction. "Avoids 322 kg of manufacturing"
        * invites "compared with what?"; this answers it. */
