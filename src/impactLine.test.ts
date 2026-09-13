@@ -70,6 +70,12 @@ describe('with a cited figure', () => {
     expect(impactLine(cited)?.headline).toContain('322 kg')
   })
 
+  test('states it as a comparison against the product on screen', () => {
+    /* "Avoids ~322 kg of manufacturing" is abstract. The question people
+     * actually ask is how much less than the thing they are looking at. */
+    expect(impactLine(cited)?.headline).toContain('less than buying this new')
+  })
+
   test('gives the driving equivalent people can picture', () => {
     expect(impactLine(cited)?.headline).toContain('810 miles')
   })

@@ -47,7 +47,9 @@ export function impactLine(result: VerteResult): ImpactLine | null {
 
   if (co2AvoidedKg && co2AvoidedKg > 0 && isSourced(guidance?.co2Source)) {
     return {
-      headline: `Avoids ${formatCo2(co2AvoidedKg)} of manufacturing — about ${milesDrivenEquivalent(
+      /* A comparison, not an abstraction. "Avoids 322 kg of manufacturing"
+       * invites "compared with what?"; this answers it. */
+      headline: `${formatCo2(co2AvoidedKg)} less than buying this new — about ${milesDrivenEquivalent(
         co2AvoidedKg,
       )} miles driven`,
       source: guidance?.co2Source ?? null,

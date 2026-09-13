@@ -15,6 +15,23 @@
 import type { CategoryGuidance } from './types'
 
 export const GUIDANCE: Record<string, CategoryGuidance> = {
+  /* SOURCED. Published smartphone LCAs consistently put manufacturing at
+   * 85-95% of a phone's lifetime footprint, around 55 kg CO2e on average —
+   * the strongest used-versus-new case of any category we cover. */
+  phone: {
+    category: 'phone',
+    verdict: 'check',
+    checkTips: [
+      'Ask for the battery health percentage.',
+      'Confirm it is not carrier-locked or activation-locked.',
+      'Check the IMEI is not blacklisted before paying.',
+    ],
+    embodiedCo2Kg: 55,
+    co2Source:
+      'Published smartphone LCAs — ~55 kg CO2e manufacturing, 85-95% of lifetime footprint',
+    note: 'Manufacturing is almost the entire footprint of a phone, so a used one avoids nearly all of it.',
+    bulky: false,
+  },
   'pressure-cooker': {
     category: 'pressure-cooker',
     verdict: 'check',
