@@ -92,6 +92,49 @@ type BestBuyProduct = {
 /** Best Buy has no condition field; the open-box variants are named for it. */
 const OPEN_BOX = /open box/i
 
+/* --- making sure it is the SAME product ---------------------------------- */
+
+const STOPWORDS = new Set(['open', 'box', 'the', 'with', 'and', 'for', 'new'])
+
+/**
+ * Tokens that look like a model number — letters and digits together, such as
+ * "WH-CH720N" or "S2421HS".
+ *
+ * These must survive intact. Shortening the query by splitting the title on
+ * "-" turned "Sony WH-CH720N ..." into "Sony WH", which matched every Sony
+ * headphone: a WH-CH720N page came back with WH-1000XM5 listings. Recommending
+ * the wrong product is worse than recommending nothing.
+ */
+export function modelTokens(title: string): string[] {
+  return (title.toLowerCase().match(/[a-z0-9][a-z0-9-]{3,}/g) ?? []).filter(
+    (token) => /[a-z]/.test(token) && /[0-9]/.test(token),
+  )
+}
+
+/** Meaningful words, for products whose names carry no model number. */
+function words(title: string): string[] {
+  return (title.toLowerCase().match(/[a-z]{3,}/g) ?? []).filter((w) => !STOPWORDS.has(w))
+}
+
+/**
+ * Is this listing the same product as the page?
+ *
+ * When the page's title carries a model number, that model must appear in the
+ * listing — brand and category alone are not enough. Otherwise fall back to
+ * requiring most of the page's words.
+ */
+export function sameProduct(pageTitle: string, listingTitle: string): boolean {
+  const listing = listingTitle.toLowerCase()
+
+  const models = modelTokens(pageTitle)
+  if (models.length) return models.some((model) => listing.includes(model))
+
+  const pageWords = words(pageTitle)
+  if (!pageWords.length) return false
+  const hits = pageWords.filter((word) => listing.includes(word)).length
+  return hits / pageWords.length >= 0.6
+}
+
 export async function bestBuyOpenBox(
   title: string,
   url: string,
@@ -101,9 +144,12 @@ export async function bestBuyOpenBox(
   const origin = originOf(url)
   const currency = currencyForUrl(url)
 
-  /* Their search does better with the model than with the full marketing
-   * title, which runs to a dozen words of adjectives. */
-  const query = encodeURIComponent(title.split(/[,|–—-]/)[0].trim().slice(0, 80))
+  /* Send the model number when there is one — it is the most selective thing
+   * in the title. Never split on "-": model numbers contain hyphens. */
+  const models = modelTokens(title)
+  const query = encodeURIComponent(
+    (models.length ? `${title.split(/\s+/)[0]} ${models[0]}` : title).trim().slice(0, 80),
+  )
 
   try {
     const response = await doFetch(
@@ -115,6 +161,7 @@ export async function bestBuyOpenBox(
     const body = (await response.json()) as { products?: BestBuyProduct[] }
     return (body.products ?? [])
       .filter((product) => OPEN_BOX.test(product.name ?? ''))
+      .filter((product) => sameProduct(title, product.name ?? ''))
       .map((product) => toOption(product, origin, currency))
       .filter((option): option is UsedOption => option !== null)
   } catch {

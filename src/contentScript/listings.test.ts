@@ -16,7 +16,7 @@
  * ------------------------------------------------------------------------- */
 
 import { beforeEach, describe, expect, test } from 'vitest'
-import { bestBuyOpenBox, usedFromAmazonPage } from './listings'
+import { bestBuyOpenBox, modelTokens, sameProduct, usedFromAmazonPage } from './listings'
 
 beforeEach(() => {
   document.head.innerHTML = ''
@@ -70,6 +70,49 @@ describe('usedFromAmazonPage', () => {
   })
 })
 
+/* --- matching the RIGHT product ------------------------------------------ */
+
+describe('modelTokens', () => {
+  /* Caught live: splitting the title on "-" to shorten the query cut
+   * "Sony WH-CH720N ..." down to "Sony WH", which matched every Sony
+   * headphone. The search returned WH-1000XM5 listings for a WH-CH720N page. */
+  test('keeps a hyphenated model number intact', () => {
+    expect(modelTokens('Sony WH-CH720N Over-Ear Noise Cancelling Bluetooth Headphones - Black'))
+      .toContain('wh-ch720n')
+  })
+
+  test('finds a model number with no hyphen', () => {
+    expect(modelTokens('Dell 24 Monitor - S2421HS, 1920 x 1080, IPS')).toContain('s2421hs')
+  })
+
+  test('ignores plain words and bare numbers', () => {
+    const tokens = modelTokens('Sony WH-CH720N Over-Ear Headphones - Black')
+    expect(tokens).not.toContain('headphones')
+    expect(tokens).not.toContain('black')
+  })
+})
+
+describe('sameProduct', () => {
+  const page = 'Sony WH-CH720N Over-Ear Noise Cancelling Bluetooth Headphones - Black'
+
+  test('accepts the open-box listing for the same model', () => {
+    expect(
+      sameProduct(page, 'Open Box - Sony WH-CH720N Over-Ear Noise Cancelling Headphones - White'),
+    ).toBe(true)
+  })
+
+  test('rejects a different model from the same brand', () => {
+    expect(sameProduct(page, 'Open Box - Sony WH-1000XM5 Wireless Noise Cancelling')).toBe(false)
+  })
+
+  test('falls back to word overlap when there is no model number', () => {
+    expect(sameProduct('Simple Houseware Drying Rack', 'Open Box - Simple Houseware Drying Rack')).toBe(
+      true,
+    )
+    expect(sameProduct('Simple Houseware Drying Rack', 'Open Box - Dyson Air Purifier')).toBe(false)
+  })
+})
+
 /* --- best buy: open-box variants from the search JSON -------------------- */
 
 describe('bestBuyOpenBox', () => {
@@ -111,6 +154,33 @@ describe('bestBuyOpenBox', () => {
         status: ok ? 200 : 500,
         json: async () => body,
       }) as unknown as Response) as unknown as typeof fetch
+
+  test('never returns a different model than the page is showing', async () => {
+    const offers = await bestBuyOpenBox(
+      'Sony WH-CH720N Over-Ear Noise Cancelling Bluetooth Headphones - Black',
+      'https://www.bestbuy.ca/en-ca/product/x/1',
+      {
+        fetchImpl: fakeFetch({
+          products: [
+            {
+              sku: '1',
+              name: 'Open Box - Sony WH-1000XM5 Wireless Noise Cancelling Headphones',
+              salePrice: 199.99,
+              productUrl: '/en-ca/product/a/1',
+            },
+            {
+              sku: '2',
+              name: 'Open Box - Sony WH-CH720N Over-Ear Noise Cancelling Headphones - White',
+              salePrice: 180,
+              productUrl: '/en-ca/product/b/2',
+            },
+          ],
+        }),
+      },
+    )
+    expect(offers).toHaveLength(1)
+    expect(offers[0].price).toBe(180)
+  })
 
   test('keeps only the open-box listings, never the new one', async () => {
     const offers = await bestBuyOpenBox('Sony WH-CH720N', 'https://www.bestbuy.ca/en-ca/product/x/1', {
