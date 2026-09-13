@@ -16,7 +16,7 @@ import { cardHtml, skeletonHtml, TOKENS } from './card';
 
 const HOST_ID = 'verte-card-host';
 
-/* Where the card belongs: next to the buy button, in reading order, not
+/* Where the card belongs: directly above the buy box, in reading order, not
  * floating over the page. Falls back down the list until something exists. */
 const ANCHORS = [
   '#buybox',
@@ -66,7 +66,11 @@ function mount() {
   const slot = document.createElement('div');
   shadow.appendChild(slot);
 
-  anchor.parentNode.insertBefore(host, anchor.nextSibling);
+  // Above the buy area, so the lower-carbon choice is seen before the buy
+  // button, not after it. #rightCol is the whole column rather than the buy
+  // box, so the card goes inside it, at the top.
+  if (anchor.id === 'rightCol') anchor.insertBefore(host, anchor.firstChild);
+  else anchor.parentNode.insertBefore(host, anchor);
   return shadow;
 }
 

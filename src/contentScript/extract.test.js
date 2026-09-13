@@ -126,3 +126,35 @@ describe('cardHtml', () => {
     expect(html).not.toContain('Picked by Verte AI');
   });
 });
+
+describe('card placement', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    global.chrome = {
+      runtime: { sendMessage: jest.fn(), lastError: null },
+      storage: { local: { set: jest.fn() } },
+    };
+  });
+
+  function page(buyArea) {
+    // JSON-LD, because the test page runs on localhost where the Amazon
+    // title adapter doesn't apply.
+    document.head.innerHTML = `<script type="application/ld+json">${JSON.stringify({
+      '@type': 'Product', name: 'Dell 24 inch Monitor', offers: { price: '179' },
+    })}</script>`;
+    document.body.innerHTML = buyArea;
+  }
+
+  test('sits directly above the buy box', () => {
+    page('<div id="rightCol"><div id="buybox">Add to cart</div></div>');
+    jest.isolateModules(() => require('./index'));
+    const host = document.getElementById('verte-card-host');
+    expect(host.nextElementSibling.id).toBe('buybox');
+  });
+
+  test('goes to the top of the right column when there is no buy box', () => {
+    page('<div id="rightCol"><div id="other">Seller info</div></div>');
+    jest.isolateModules(() => require('./index'));
+    expect(document.getElementById('rightCol').firstElementChild.id).toBe('verte-card-host');
+  });
+});
