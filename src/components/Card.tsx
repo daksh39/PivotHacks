@@ -20,6 +20,29 @@ import { Verdict } from './Verdict'
 import { Empty } from './Empty'
 import { Leaf } from './Skeleton'
 
+/** "Tomorrow" reads better than "1 day" and is what they actually care about. */
+function arrival(days: number): string {
+  if (days <= 0) return 'Today'
+  if (days === 1) return 'Tomorrow'
+  return `${days} days`
+}
+
+/**
+ * Why this particular listing doesn't work for them, or null if it does.
+ *
+ * Both constraints have to be represented. Marking only the slow ones left
+ * campus pickups reading "Tomorrow" on a card that said nothing was reachable,
+ * which is worse than not marking anything.
+ */
+function blockedReason(o: UsedOption, result: VerteResult): string | null {
+  const { context, guidance } = result
+  if (o.source === 'campus' && guidance.bulky && !context.hasCar) return 'Needs a car'
+  if (context.needInDays != null && o.daysToHand > context.needInDays) {
+    return `${arrival(o.daysToHand)} · too late`
+  }
+  return null
+}
+
 type Props = {
   result: VerteResult
   onDismiss?: () => void
@@ -29,7 +52,7 @@ type Props = {
 
 export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded)
-  const [tab, setTab] = useState<UsedOption['source']>('ebay')
+
 
   const { product, guidance, options, savingsUsd, co2AvoidedKg, reason, passedOver, context } =
     result
@@ -39,6 +62,11 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
    * and the card must never quietly substitute the cheapest for it. */
   const recommended: UsedOption | null = options[0] ?? null
   const unusable = reason === 'nothing-arrives-in-time'
+
+  /* Open on the tab that actually contains the recommendation. Defaulting to
+   * eBay put the headline price ($45 campus) on a tab showing $28 and $33 —
+   * the card appeared to contradict itself. */
+  const [tab, setTab] = useState<UsedOption['source']>(options[0]?.source ?? 'ebay')
   const ebay = options.filter((o) => o.source === 'ebay')
   const campus = options.filter((o) => o.source === 'campus')
   const shown = tab === 'ebay' ? ebay : campus
@@ -134,7 +162,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
           <Empty result={result} />
         ) : (
           <>
-            <hr className="verte__rule" />
+            {(recommended || unusable) && <hr className="verte__rule" />}
 
             {/* 2 — the verdict */}
             <Verdict guidance={guidance} />
@@ -185,7 +213,16 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
                         </span>
                         <span className="verte__listing-title">{o.title}</span>
                         <span className="verte__listing-meta">
-                          {o.distanceMi != null ? `${o.distanceMi} mi` : o.condition}
+                          {blockedReason(o, result) ? (
+                            <span className="verte__eta verte__eta--late">
+                              {blockedReason(o, result)}
+                            </span>
+                          ) : (
+                            <span className="verte__eta">{arrival(o.daysToHand)}</span>
+                          )}
+                          {o.distanceMi != null && (
+                            <span className="verte__listing-dist">{o.distanceMi} mi</span>
+                          )}
                         </span>
                       </a>
                     </li>

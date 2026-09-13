@@ -216,6 +216,18 @@ export const cardStyles = /* css */ `
   .verte__chip { transition: none; }
 }
 
+/* --- listing meta: arrival is the field the ranking turns on ------------- */
+
+.verte__listing-meta { display: flex; align-items: baseline; gap: 8px; }
+.verte__eta { font-size: 12px; color: ${color.ink}; }
+
+/* Doesn't meet the deadline. Colour alone never carries it — the blocked
+ * banner and the reason line both say it in words too (ui-ux priority 10). */
+.verte__eta--late { color: ${verdictColor.avoid.text}; }
+
+
+.verte__listing-dist { font-size: 12px; color: ${color.inkSoft}; }
+
 .verte__carbon { font-size: 13.5px; color: ${color.ink}; }
 .verte__carbon-eq { color: ${color.inkSoft}; }
 

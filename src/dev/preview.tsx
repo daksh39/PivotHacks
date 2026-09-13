@@ -18,6 +18,7 @@ import {
   MOCK_EMPTY,
   MOCK_MATTRESS,
   MOCK_MINI_FRIDGE,
+  MOCK_MINI_FRIDGE_BLOCKED,
   MOCK_MINI_FRIDGE_DEADLINE,
 } from '../mocks'
 import { pageGround } from '../tokens'
@@ -84,6 +85,10 @@ function Preview() {
       </Panel>
       <Panel label="expanded — deadline changed the winner">
         <Card result={MOCK_MINI_FRIDGE_DEADLINE} defaultExpanded onDismiss={() => {}} />
+      </Panel>
+
+      <Panel label="expanded — context blocks everything">
+        <Card result={MOCK_MINI_FRIDGE_BLOCKED} defaultExpanded onDismiss={() => {}} />
       </Panel>
 
       <Panel label="expanded — buy new">

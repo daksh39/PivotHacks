@@ -15,9 +15,13 @@ export function Popup() {
   const [context, setContext] = useState<BuyerContext>(DEFAULT_CONTEXT)
 
   useEffect(() => {
-    void chrome.storage.local
-      .get('impact')
-      .then(({ impact }) => impact && setImpact(impact as Impact))
+    try {
+      void chrome.storage.local
+        .get('impact')
+        .then(({ impact }) => impact && setImpact(impact as Impact))
+    } catch {
+      /* No extension APIs — previewing in a plain tab. Zeroes are fine. */
+    }
     void loadContext().then(setContext)
   }, [])
 

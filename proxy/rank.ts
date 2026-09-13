@@ -89,9 +89,11 @@ export function rank(
    * recommendation the buyer can't interrogate is one they won't trust. */
   const blockedByCar = !reachable(cheapest, ctx, guidance)
 
+  /* The card already prints the price right before this clause, so don't
+   * repeat it — "Skipped $28 on eBay — $28 option takes 6 days" reads badly. */
   const why = blockedByCar
-    ? `the $${cheapest.price} listing is a ${cheapest.distanceMi} mile pickup, and this is too big to carry`
-    : `the $${cheapest.price} listing takes ${cheapest.daysToHand} days and you need it in ${ctx.needInDays}`
+    ? `it's a ${cheapest.distanceMi} mile pickup and this is too big to carry`
+    : `it takes ${cheapest.daysToHand} days to arrive and you need it in ${ctx.needInDays}`
 
   const reason: RecommendationReason = blockedByCar
     ? 'cheaper-option-needs-car'

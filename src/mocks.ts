@@ -170,7 +170,22 @@ export const MOCK_MINI_FRIDGE_DEADLINE: VerteResult = {
   reason: 'only-option-in-time',
   passedOver: {
     option: MOCK_MINI_FRIDGE.options[0],
-    why: '$28 option takes 6 days and you need it in 2',
+    why: 'it takes 6 days to arrive and you need it in 2',
   },
   savingsUsd: 44,
+}
+
+/**
+ * Deadline plus no car, on a bulky category. Every listing is unreachable:
+ * the eBay ones can't arrive in time, the campus ones can't be collected.
+ * Verte stops selling and says buy new — the same honesty as the mattress
+ * case, but reached through context rather than the category.
+ */
+export const MOCK_MINI_FRIDGE_BLOCKED: VerteResult = {
+  ...MOCK_MINI_FRIDGE,
+  context: { needInDays: 2, hasCar: false },
+  reason: 'nothing-arrives-in-time',
+  passedOver: null,
+  savingsUsd: null,
+  co2AvoidedKg: null,
 }
