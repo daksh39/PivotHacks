@@ -315,22 +315,67 @@ export function extractProduct(url: string = location.href): ProductContext | nu
   }
 }
 
+/* --- is this a product page? ------------------------------------------- */
+
+/**
+ * URL shapes that are product pages beyond doubt.
+ *
+ * The first version of this knew two of them and missed the rest, so a large
+ * share of real product pages were rejected before extraction ever ran:
+ *
+ *   - bestbuy.COM does not use /product/ at all. Its product URLs are
+ *     /site/<slug>/<sku>.p?skuId=… — so every US Best Buy page was skipped,
+ *     even though the manifest matches the domain. Only bestbuy.ca matched.
+ *   - Amazon serves /gp/aw/d/<ASIN> to mobile and to some referral paths.
+ *   - amazon.ca bilingual URLs carry a /-/en/ segment before /dp/.
+ */
+const PRODUCT_URL: Record<Exclude<Site, 'generic'>, RegExp[]> = {
+  amazon: [/\/(?:dp|gp\/product|gp\/aw\/d|gp\/aw\/ol)\//i],
+  bestbuy: [/\/product\//i, /\/site\/.+\.p(?:$|[?#])/i, /[?&]skuId=/i],
+}
+
+/**
+ * What the page itself shows, for the URLs the list above still misses.
+ *
+ * Retail URL shapes churn — that is the whole reason the first version fell
+ * behind — so the URL is a fast path, not the authority. When it does not
+ * match, ask the DOM instead, using elements that exist ONLY on a product
+ * page. `#productTitle` is Amazon's; an add-to-cart control beside an <h1> is
+ * Best Buy's. A search results page has neither, which is what keeps this from
+ * putting a card on a page full of other people's prices.
+ */
+function domSaysProduct(site: Site): boolean {
+  switch (site) {
+    case 'amazon':
+      return document.querySelector('#productTitle') !== null
+    case 'bestbuy':
+      return (
+        document.querySelector('h1') !== null &&
+        document.querySelector(
+          '[data-testid="add-to-cart-button"], [class*="addToCartButton"], .shop-add-to-cart, .fulfillment-add-to-cart-button',
+        ) !== null
+      )
+    default:
+      return false
+  }
+}
+
 /** Cheap gate before we bother extracting anything. */
 export function looksLikeProductPage(url: string = location.href): boolean {
   let path: string
   try {
-    path = new URL(url).pathname
+    const parsed = new URL(url)
+    path = parsed.pathname + parsed.search
   } catch {
     return false
   }
 
-  switch (siteOf(url)) {
-    case 'amazon':
-      return /\/(dp|gp\/product)\//.test(path)
-    case 'bestbuy':
-      return /\/product\//.test(path)
-    default:
-      /* Unknown retailer: only proceed if it publishes a Product block. */
-      return fromJsonLd() !== null
+  const site = siteOf(url)
+  if (site === 'generic') {
+    /* Unknown retailer: only proceed if it says so in structured data. */
+    return fromJsonLd() !== null || metaOf('og:type') === 'product'
   }
+
+  if (PRODUCT_URL[site].some((pattern) => pattern.test(path))) return true
+  return domSaysProduct(site)
 }

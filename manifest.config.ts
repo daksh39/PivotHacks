@@ -44,12 +44,15 @@ export default defineManifest({
 
   content_scripts: [
     {
+      /* "*.amazon.com" also matches bare "amazon.com", which "www.amazon.com"
+       * does not — and a link that skips the www is a page where nothing
+       * happened at all, with no console line to explain it. */
       matches: [
-        'https://www.amazon.com/*',
-        'https://www.amazon.ca/*',
-        'https://www.amazon.co.uk/*',
-        'https://www.bestbuy.com/*',
-        'https://www.bestbuy.ca/*',
+        'https://*.amazon.com/*',
+        'https://*.amazon.ca/*',
+        'https://*.amazon.co.uk/*',
+        'https://*.bestbuy.com/*',
+        'https://*.bestbuy.ca/*',
       ],
       js: ['src/contentScript/index.tsx'],
       run_at: 'document_idle',
