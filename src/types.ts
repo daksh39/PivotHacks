@@ -25,6 +25,24 @@ export type ProductContext = {
  * own page or its own frontend API, same-origin, with no credential. */
 export type ListingSource = 'amazon' | 'bestbuy'
 
+/**
+ * A certified NEW product, shown only when nothing secondhand exists.
+ *
+ * Deliberately NOT a UsedOption variant. Keeping them separate means no
+ * ranking, currency or savings logic can ever accidentally treat a newly
+ * manufactured product as secondhand.
+ */
+export type GreenerOption = {
+  source: ListingSource
+  title: string
+  price: number
+  currency: string
+  url: string
+  imageUrl: string | null
+  /** Verbatim from the retailer, naming the certifier. Never our own words. */
+  certification: string
+}
+
 /** One secondhand option, from any source. */
 export type UsedOption = {
   source: ListingSource
@@ -115,6 +133,14 @@ export type VerteResult = {
   passedOver: { option: UsedOption; why: string } | null
   savingsUsd: number | null
   co2AvoidedKg: number | null
+  /**
+   * Rung 2 of the ladder: greener NEW products.
+   *
+   * Populated only when `options` is empty. A newly manufactured item still
+   * carries its full footprint, so it is the second-best answer and must
+   * never be offered alongside one that already exists.
+   */
+  greener: GreenerOption[]
 }
 
 /* --- message passing: content script <-> service worker ------------------ */
