@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Verte \u2014 the greenest product is the one that already exists.",
+  "description": "Verte — the greenest product is the one that already exists.",
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
@@ -14,6 +14,7 @@
     "site:build": "vite build --config site/vite.config.ts"
   },
   "dependencies": {
+    "@types/node": "^26.5.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -27,11 +28,11 @@
     "@vitejs/plugin-react": "^4.3.1",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "jsdom": "^25.0.1",
-    "snowflake-sdk": "^1.11.0",
-    "tsx": "^4.16.2",
+    "snowflake-sdk": "^1.15.0",
+    "tsx": "^4.23.13",
     "typescript": "^5.5.3",
     "vite": "^5.3.4",
     "vitest": "^2.1.9"
