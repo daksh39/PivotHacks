@@ -15,6 +15,7 @@ import { Card } from '../components/Card'
 import { extractProduct, looksLikeProductPage, readBreadcrumbs } from './extract'
 import { trace } from './trace'
 import { findUsedListings } from './listings'
+import { findGreener } from './greener'
 import { mountCard, unmountCard } from './mount'
 import { waitFor } from './wait'
 
@@ -98,7 +99,13 @@ async function buildCard(product: ProductContext) {
   const category = product.category || classify(product.title, readBreadcrumbs())
   const guidance = guidanceFor(category)
 
-  return buildResult(product, guidance, options, context)
+  /* Rung 2, and only then. Skipping the request when a used option exists
+   * also avoids opening product pages whose result we would discard. */
+  const greener = options.length
+    ? []
+    : await findGreener(product.title, product.sourceUrl).catch(() => [])
+
+  return buildResult(product, guidance, options, context, greener)
 }
 
 void run()

@@ -288,6 +288,36 @@ export const cardStyles = /* css */ `
   opacity: 0.75;
 }
 
+/* --- rung 2: a greener NEW option --------------------------------------- */
+
+.verte__greener { margin-top: 14px; }
+.verte__greener-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: ${color.accentText};
+  margin-bottom: 6px;
+}
+/* Says "new" on every row. This is the weaker answer and must read that way. */
+.verte__cert {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: ${color.accentText};
+  background: ${color.moss};
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+.verte__cert-detail {
+  font-size: 12px;
+  line-height: 1.45;
+  color: ${color.inkSoft};
+  margin: 2px 0 8px 2px;
+  overflow-wrap: anywhere;
+}
+
 .verte__carbon { font-size: 13.5px; color: ${color.ink}; }
 .verte__carbon-eq { color: ${color.inkSoft}; }
 

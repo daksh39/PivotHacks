@@ -19,6 +19,7 @@ import { formatUsd } from '../carbon'
 import { impactLine } from '../impactLine'
 import { Verdict } from './Verdict'
 import { Empty } from './Empty'
+import { Greener } from './Greener'
 import { Leaf } from './Skeleton'
 
 /** "Tomorrow" reads better than "1 day" and is what they actually care about. */
@@ -50,7 +51,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded)
 
 
-  const { product, guidance, options, savingsUsd, co2AvoidedKg, reason, passedOver, context } =
+  const { product, guidance, options, savingsUsd, co2AvoidedKg, reason, passedOver, context, greener } =
     result
 
   /* options[0] is the RECOMMENDATION, already ranked against the buyer's
@@ -208,6 +209,8 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
           * no-listings one, which is the most common of all. It lived inside
           * the has-listings branch, so the card that most needed the argument
           * was the one card that carried none of it. */}
+        <Greener options={greener} />
+
         {impact && (
           <div className="verte__impact">
             <Leaf />

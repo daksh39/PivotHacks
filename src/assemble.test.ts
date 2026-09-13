@@ -9,7 +9,7 @@
  */
 import { describe, expect, test } from 'vitest'
 import { buildResult } from './assemble'
-import type { BuyerContext, UsedOption } from './types'
+import type { BuyerContext, GreenerOption, UsedOption } from './types'
 
 const ctx: BuyerContext = { needInDays: null, hasCar: false, budgetCap: null }
 const product = {
@@ -80,5 +80,35 @@ describe('always present on a product page', () => {
       bulky: false,
     }
     expect(buildResult(product, guidance, [], ctx)).not.toBeNull()
+  })
+})
+
+/* --- the ladder rule ----------------------------------------------------- */
+
+const greenerOption: GreenerOption = {
+  source: 'amazon',
+  title: 'BEICHEN Mini Fridge 4 Liter',
+  price: 61,
+  currency: 'CAD',
+  url: 'https://www.amazon.com/dp/B0FN44NCTQ',
+  imageUrl: null,
+  certification: 'Contains at least 50% recycled material. Global Recycled Standard',
+}
+
+describe('the ladder', () => {
+  test('offers a greener new product when nothing secondhand exists', () => {
+    const out = buildResult(product, null, [], ctx, [greenerOption])
+    expect(out.greener).toHaveLength(1)
+  })
+
+  test('NEVER offers a new product when a used one exists', () => {
+    /* The rule the whole thesis rests on: something newly manufactured must
+     * never compete with something that already exists. */
+    const out = buildResult(product, null, [option], ctx, [greenerOption])
+    expect(out.greener).toEqual([])
+  })
+
+  test('defaults to none when no alternatives were passed', () => {
+    expect(buildResult(product, null, [], ctx).greener).toEqual([])
   })
 })

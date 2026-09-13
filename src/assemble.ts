@@ -14,6 +14,7 @@
 import type {
   BuyerContext,
   CategoryGuidance,
+  GreenerOption,
   ProductContext,
   UsedOption,
   VerteResult,
@@ -65,6 +66,7 @@ export function buildResult(
   guidance: CategoryGuidance | null,
   options: UsedOption[],
   context: BuyerContext,
+  greener: GreenerOption[] = [],
 ): VerteResult {
   const comparable = sameCurrency(options, product.currency)
 
@@ -90,5 +92,9 @@ export function buildResult(
       ranked.reason !== 'nothing-in-budget'
         ? guidance.embodiedCo2Kg
         : null,
+    /* The ladder. A newly manufactured product is offered ONLY when nothing
+     * that already exists is available — buying new is always the weaker
+     * answer, and presenting the two side by side would quietly undo that. */
+    greener: ranked.options.length ? [] : greener,
   }
 }

@@ -16,6 +16,7 @@ import { Skeleton } from '../components/Skeleton'
 import { cardStyles } from '../components/styles'
 import {
   FIXTURE_EMPTY,
+  FIXTURE_GREENER,
   FIXTURE_HEADPHONES,
   FIXTURE_MATTRESS,
   FIXTURE_MONITOR,
@@ -90,6 +91,10 @@ function Preview() {
 
       <Panel label="NOTHING FOUND — now the most common card">
         <Card result={FIXTURE_NOTHING_FOUND} defaultExpanded onDismiss={() => {}} />
+      </Panel>
+
+      <Panel label="NO SECONDHAND — GREENER NEW OPTION">
+        <Card result={FIXTURE_GREENER} defaultExpanded onDismiss={() => {}} />
       </Panel>
 
       <Panel label="collapsed">

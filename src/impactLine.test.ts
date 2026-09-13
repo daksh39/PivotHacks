@@ -53,6 +53,7 @@ const result = (over: Partial<VerteResult> = {}): VerteResult => ({
   passedOver: null,
   savingsUsd: 50,
   co2AvoidedKg: null,
+  greener: [],
   ...over,
 })
 

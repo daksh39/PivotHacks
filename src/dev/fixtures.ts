@@ -56,6 +56,7 @@ export const FIXTURE_TEXTBOOK: VerteResult = {
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: 174,
+  greener: [],
   co2AvoidedKg: null,
 }
 
@@ -104,6 +105,7 @@ export const FIXTURE_HEADPHONES: VerteResult = {
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: 70,
+  greener: [],
   co2AvoidedKg: null,
 }
 
@@ -145,6 +147,7 @@ export const FIXTURE_MONITOR: VerteResult = {
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: 97,
+  greener: [],
   co2AvoidedKg: 322,
 }
 
@@ -172,6 +175,7 @@ export const FIXTURE_MATTRESS: VerteResult = {
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: null,
+  greener: [],
   co2AvoidedKg: null,
 }
 
@@ -180,6 +184,7 @@ export const FIXTURE_EMPTY: VerteResult = {
   ...FIXTURE_TEXTBOOK,
   options: [],
   savingsUsd: null,
+  greener: [],
   co2AvoidedKg: null,
 }
 
@@ -197,6 +202,7 @@ export const FIXTURE_OVER_BUDGET: VerteResult = {
     why: 'the cheapest one is CA$24 over your budget',
   },
   savingsUsd: null,
+  greener: [],
   co2AvoidedKg: null,
 }
 
@@ -231,6 +237,7 @@ export const FIXTURE_UNKNOWN: VerteResult = {
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: 50,
+  greener: [],
   co2AvoidedKg: null,
 }
 
@@ -265,5 +272,23 @@ export const FIXTURE_NOTHING_FOUND: VerteResult = {
   reason: 'cheapest',
   passedOver: null,
   savingsUsd: null,
+  greener: [],
   co2AvoidedKg: null,
+}
+
+/** Rung 2: nothing secondhand, so the greenest NEW option is offered. */
+export const FIXTURE_GREENER: VerteResult = {
+  ...FIXTURE_NOTHING_FOUND,
+  greener: [
+    {
+      source: 'amazon',
+      title: 'BEICHEN Mini Fridge 4 Liter/6 Can Portable Cooler',
+      price: 61,
+      currency: 'CAD',
+      url: 'https://www.amazon.com/dp/B0FN44NCTQ',
+      imageUrl: null,
+      certification:
+        'Recycled materials. Contains at least 50% recycled material. As certified by Global Recycled Standard',
+    },
+  ],
 }
