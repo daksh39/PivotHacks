@@ -8,6 +8,7 @@
 import { StrictMode } from 'react'
 import type { LookupRequest, LookupResponse, VerteResult } from '../types'
 import { mockFor } from '../mocks'
+import { loadContext } from '../context'
 import { Card } from '../components/Card'
 import { Skeleton } from '../components/Skeleton'
 import { extractProduct, looksLikeProductPage } from './extract'
@@ -57,10 +58,15 @@ async function run(): Promise<void> {
 }
 
 async function lookup(product: LookupRequest['product']): Promise<VerteResult | null> {
+  /* Pivot 03: the buyer's situation travels with the request, because it
+   * decides which option comes back first. */
+  const context = await loadContext()
+
   try {
     const response: LookupResponse = await chrome.runtime.sendMessage({
       type: 'VERTE_LOOKUP',
       product,
+      context,
     } satisfies LookupRequest)
 
     if (response?.ok) return response.result

@@ -16,11 +16,12 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
-import type { ProductContext, VerteResult } from '../src/types'
+import type { BuyerContext, ProductContext, VerteResult } from '../src/types'
 import { mockFor } from '../src/mocks'
 import { classify } from './categories'
 import { searchEbay } from './ebay'
 import { getCampusListings, getCategoryGuidance, logImpact } from './snowflake'
+import { DEFAULT_CONTEXT, rank } from './rank'
 
 const MOCK = process.env.VERTE_MOCK === '1'
 const PORT = Number(process.env.PORT ?? 8787)
@@ -34,7 +35,8 @@ app.get('/health', (_req, res) => {
 })
 
 app.post('/lookup', async (req, res) => {
-  const product = req.body as ProductContext
+  const { product, context } = req.body as { product: ProductContext; context?: BuyerContext }
+  const ctx: BuyerContext = context ?? DEFAULT_CONTEXT
 
   if (!product?.title) {
     res.status(400).json({ error: 'ProductContext.title is required' })
@@ -51,7 +53,11 @@ app.post('/lookup', async (req, res) => {
    * to and the same bytes the preview page renders, so every lane is building
    * against exactly what ships. */
   if (MOCK) {
-    res.json(mockFor(category))
+    const base = mockFor(category)
+    /* Re-rank the fixture against the requested context so mock mode
+     * demonstrates the pivot rather than serving one frozen ordering. */
+    const ranked = rank(base.options, ctx, base.guidance)
+    res.json({ ...base, ...ranked, context: ctx, savingsUsd: savingsFor(base.product, ranked.options) })
     return
   }
 
@@ -72,9 +78,9 @@ app.post('/lookup', async (req, res) => {
               console.warn('[verte] eBay search failed, continuing:', e.message)
               return []
             })),
-          ].sort((a, b) => a.price - b.price)
+          ]
 
-    res.json(assemble(product, guidance, options))
+    res.json(assemble(product, guidance, options, ctx))
     if (guidance.verdict !== 'avoid') void logImpact(category, guidance.embodiedCo2Kg)
   } catch (error) {
     console.error('[verte] lookup failed:', error)
@@ -83,25 +89,41 @@ app.post('/lookup', async (req, res) => {
 })
 
 /** The only place a VerteResult is built. Keep it that way. */
+function savingsFor(product: ProductContext, options: VerteResult['options']): number | null {
+  /* Against the RECOMMENDED option, not the cheapest one. If context pushed us
+   * to a pricier listing, the saving we advertise has to be the one they'd
+   * actually get. Quoting the cheap listing's saving would be a lie. */
+  const recommended = options[0]?.price ?? null
+  return product.price != null && recommended != null && product.price > recommended
+    ? Math.round(product.price - recommended)
+    : null
+}
+
 function assemble(
   product: ProductContext,
   guidance: Awaited<ReturnType<typeof getCategoryGuidance>>,
   options: VerteResult['options'],
+  ctx: BuyerContext,
 ): VerteResult {
-  const cheapest = options.length ? Math.min(...options.map((o) => o.price)) : null
-  const savingsUsd =
-    product.price != null && cheapest != null && product.price > cheapest
-      ? Math.round(product.price - cheapest)
-      : null
+  const ranked = rank(options, ctx, guidance!)
+  const savingsUsd = savingsFor(product, ranked.options)
 
   return {
     product: { ...product, category: guidance!.category },
     guidance: guidance!,
-    options,
+    options: ranked.options,
+    context: ctx,
+    reason: ranked.reason,
+    passedOver: ranked.passedOver,
     savingsUsd,
     /* We only claim avoided manufacturing if they actually have something to
      * buy instead. No listings, no claim. */
-    co2AvoidedKg: options.length ? guidance!.embodiedCo2Kg : null,
+    /* Only claim avoided manufacturing if they have something they can
+     * actually buy instead. Nothing viable, no claim. */
+    co2AvoidedKg:
+      ranked.options.length && ranked.reason !== 'nothing-arrives-in-time'
+        ? guidance!.embodiedCo2Kg
+        : null,
   }
 }
 

@@ -119,5 +119,10 @@ function toUsedOption(item: EbayItem): UsedOption | null {
     url: item.itemWebUrl,
     imageUrl: item.image?.imageUrl ?? null,
     condition: item.condition ?? 'Pre-owned',
+    /* eBay's Browse summaries don't reliably carry a delivery estimate, so we
+     * assume a shipped week. Conservative on purpose: it is better to tell
+     * someone an item might miss their deadline than to promise it won't.
+     * If a real estimate is available later, read it here. */
+    daysToHand: 7,
   }
 }

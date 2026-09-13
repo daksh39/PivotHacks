@@ -39,6 +39,7 @@ const SEED: Record<string, CategoryGuidance> = {
     embodiedCo2Kg: 46,
     co2Source: 'PLACEHOLDER — lane/demo to source',
     note: 'Compressor appliances last well. Buying used avoids nearly all of the footprint.',
+    bulky: true,
   },
   mattress: {
     category: 'mattress',
@@ -47,6 +48,7 @@ const SEED: Record<string, CategoryGuidance> = {
     embodiedCo2Kg: 0,
     co2Source: 'PLACEHOLDER — lane/demo to source',
     note: 'Hygiene and pest risk, and compression is permanent. Buy this one new.',
+    bulky: true,
   },
   desk: {
     category: 'desk',
@@ -58,6 +60,7 @@ const SEED: Record<string, CategoryGuidance> = {
     embodiedCo2Kg: 32,
     co2Source: 'PLACEHOLDER — lane/demo to source',
     note: 'Ideal used. Solid wood outlives several owners.',
+    bulky: true,
   },
 }
 
@@ -86,6 +89,8 @@ export async function getCampusListings(slug: string): Promise<UsedOption[]> {
       imageUrl: null,
       condition: 'Used — good',
       distanceMi: 2,
+      /* Local pickup: arrange it today, collect tomorrow. */
+      daysToHand: 1,
     },
   ]
 }

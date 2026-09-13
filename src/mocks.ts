@@ -33,52 +33,54 @@ export const MOCK_MINI_FRIDGE: VerteResult = {
     embodiedCo2Kg: 46,
     co2Source: 'PLACEHOLDER — lane/demo to source',
     note: 'Compressor appliances last well. Buying used avoids nearly all of the footprint.',
+    bulky: true,
   },
   options: [
-    {
-      source: 'campus',
-      title: 'Mini fridge, used one year, works perfectly',
-      price: 34,
-      url: 'https://example.edu/listings/1',
-      imageUrl: null,
-      condition: 'Used — good',
-      distanceMi: 2,
-    },
-    {
-      source: 'campus',
-      title: 'Compact fridge — moving out, must go',
-      price: 40,
-      url: 'https://example.edu/listings/2',
-      imageUrl: null,
-      condition: 'Used — good',
-      distanceMi: 0.8,
-    },
+    /* Cheapest is also the slowest. That tension is the whole point of
+     * pivot 03 — with a deadline, this $28 listing loses to the $45 one. */
     {
       source: 'ebay',
       title: 'Midea 3.1 Cu Ft Compact Refrigerator — Pre-owned',
-      price: 52,
+      price: 28,
       url: 'https://www.ebay.com/itm/000000000001',
       imageUrl: null,
       condition: 'Pre-owned',
+      daysToHand: 6,
     },
     {
       source: 'ebay',
       title: 'Mini Fridge 3.2 Cu Ft with Freezer Compartment',
-      price: 58,
+      price: 33,
       url: 'https://www.ebay.com/itm/000000000002',
       imageUrl: null,
       condition: 'Used',
+      daysToHand: 4,
     },
     {
-      source: 'ebay',
-      title: 'Compact Refrigerator, Black — Good Working Order',
-      price: 61,
-      url: 'https://www.ebay.com/itm/000000000003',
+      source: 'campus',
+      title: 'Mini fridge, used one year, works perfectly',
+      price: 45,
+      url: 'https://example.edu/listings/1',
       imageUrl: null,
-      condition: 'Pre-owned',
+      condition: 'Used — good',
+      distanceMi: 2,
+      daysToHand: 1,
+    },
+    {
+      source: 'campus',
+      title: 'Compact fridge — moving out, must go',
+      price: 49,
+      url: 'https://example.edu/listings/2',
+      imageUrl: null,
+      condition: 'Used — good',
+      distanceMi: 0.8,
+      daysToHand: 1,
     },
   ],
-  savingsUsd: 55,
+  context: { needInDays: null, hasCar: true },
+  reason: 'cheapest',
+  passedOver: null,
+  savingsUsd: 61,
   co2AvoidedKg: 46,
 }
 
@@ -102,8 +104,12 @@ export const MOCK_MATTRESS: VerteResult = {
     embodiedCo2Kg: 0,
     co2Source: 'PLACEHOLDER — lane/demo to source',
     note: 'Hygiene and pest risk, and foam compression is permanent. Buy this one new.',
+    bulky: true,
   },
   options: [],
+  context: { needInDays: null, hasCar: true },
+  reason: 'cheapest',
+  passedOver: null,
   savingsUsd: null,
   co2AvoidedKg: null,
 }
@@ -125,8 +131,12 @@ export const MOCK_EMPTY: VerteResult = {
     embodiedCo2Kg: 8,
     co2Source: 'PLACEHOLDER — lane/demo to source',
     note: 'Nothing to go wrong. Always worth checking used first.',
+    bulky: false,
   },
   options: [],
+  context: { needInDays: null, hasCar: true },
+  reason: 'cheapest',
+  passedOver: null,
   savingsUsd: null,
   co2AvoidedKg: null,
 }
@@ -140,4 +150,27 @@ export const MOCKS = {
 /** Best-effort fixture for any category, so no lane is ever blocked. */
 export function mockFor(category: string): VerteResult {
   return (MOCKS as Record<string, VerteResult>)[category] ?? MOCK_MINI_FRIDGE
+}
+
+/**
+ * The same fridge, same listings, with a deadline. This is the pivot 03 demo:
+ * context demotes the $28 option because it cannot arrive in time, and the
+ * $45 campus pickup becomes the recommendation. Nothing was filtered out —
+ * the cheap listing is still in the list, just no longer first.
+ */
+export const MOCK_MINI_FRIDGE_DEADLINE: VerteResult = {
+  ...MOCK_MINI_FRIDGE,
+  options: [
+    MOCK_MINI_FRIDGE.options[2],
+    MOCK_MINI_FRIDGE.options[0],
+    MOCK_MINI_FRIDGE.options[1],
+    MOCK_MINI_FRIDGE.options[3],
+  ],
+  context: { needInDays: 2, hasCar: true },
+  reason: 'only-option-in-time',
+  passedOver: {
+    option: MOCK_MINI_FRIDGE.options[0],
+    why: '$28 option takes 6 days and you need it in 2',
+  },
+  savingsUsd: 44,
 }

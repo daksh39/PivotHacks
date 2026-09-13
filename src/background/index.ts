@@ -20,7 +20,9 @@ chrome.runtime.onMessage.addListener((message: LookupRequest, _sender, sendRespo
   if (message?.type !== 'VERTE_LOOKUP') return false
 
   void (async () => {
-    const key = message.product.sourceUrl
+    /* Cache key includes the context — the same product under a different
+     * deadline is a genuinely different answer, not a cache hit. */
+    const key = `${message.product.sourceUrl}|${message.context.needInDays}|${message.context.hasCar}`
     const hit = cache.get(key)
     if (hit && Date.now() - hit.at < TTL_MS) {
       sendResponse({ ok: true, result: hit.result } satisfies LookupResponse)
@@ -31,7 +33,7 @@ chrome.runtime.onMessage.addListener((message: LookupRequest, _sender, sendRespo
       const response = await fetch(`${PROXY_URL}/lookup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(message.product),
+        body: JSON.stringify({ product: message.product, context: message.context }),
       })
 
       if (!response.ok) {

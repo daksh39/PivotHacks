@@ -31,7 +31,33 @@ export type UsedOption = {
   condition: string
   /** campus listings only */
   distanceMi?: number
+  /**
+   * Days until it is physically in their hands. Campus pickup is 0–1, eBay is
+   * the shipping estimate. This is what lets a deadline outrank price.
+   */
+  daysToHand: number
 }
+
+/* --- pivot 03: the buyer's situation changes the answer ------------------- */
+
+/**
+ * The situational context. This does not filter the list or relabel it — it
+ * decides WHICH option we recommend. See proxy/rank.ts.
+ */
+export type BuyerContext = {
+  /** Days from now they actually need it. null = no deadline. */
+  needInDays: number | null
+  /** Without a car, a bulky item four miles away is not really available. */
+  hasCar: boolean
+}
+
+/** Why options[0] won. The card says this in words. */
+export type RecommendationReason =
+  | 'cheapest'
+  | 'cheapest-in-time'
+  | 'only-option-in-time'
+  | 'cheaper-option-needs-car'
+  | 'nothing-arrives-in-time'
 
 /** What we know about buying this category used. */
 export type CategoryGuidance = {
@@ -42,20 +68,36 @@ export type CategoryGuidance = {
   embodiedCo2Kg: number
   co2Source: string
   note: string
+  /** Needs a car to collect. Drives the no-car demotion in proxy/rank.ts. */
+  bulky: boolean
 }
 
 /** The one object the UI renders. Nothing else reaches a component. */
 export type VerteResult = {
   product: ProductContext
   guidance: CategoryGuidance
+  /** RANKED. options[0] is the recommendation, not merely the cheapest. */
   options: UsedOption[]
+  /** The context that produced this ranking. */
+  context: BuyerContext
+  /** Why options[0] won. */
+  reason: RecommendationReason
+  /**
+   * Set only when context demoted something cheaper, so the card can show
+   * what was given up and why. Null when the cheapest option simply won.
+   */
+  passedOver: { option: UsedOption; why: string } | null
   savingsUsd: number | null
   co2AvoidedKg: number | null
 }
 
 /* --- message passing: content script <-> service worker ------------------ */
 
-export type LookupRequest = { type: 'VERTE_LOOKUP'; product: ProductContext }
+export type LookupRequest = {
+  type: 'VERTE_LOOKUP'
+  product: ProductContext
+  context: BuyerContext
+}
 
 export type LookupResponse =
   | { ok: true; result: VerteResult }
