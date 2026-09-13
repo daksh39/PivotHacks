@@ -40,23 +40,10 @@ export function Popup() {
         <span className="verte__wordmark">Verte</span>
       </header>
       <div className="verte__body">
-        <div className="verte__price">
-          <span className="verte__price-now">{formatUsd(impact.usd)}</span>
-          <span className="verte__save">saved</span>
-        </div>
-        <hr className="verte__rule" />
-        <p className="verte__carbon">
-          {formatCo2(impact.co2Kg)} of manufacturing avoided{' '}
-          <span className="verte__carbon-eq">
-            — about {milesDrivenEquivalent(impact.co2Kg)} miles driven
-          </span>
-        </p>
-        <p className="verte__note">
-          Across {impact.seen} {impact.seen === 1 ? 'product' : 'products'} this term.
-        </p>
-
-        <hr className="verte__rule" />
-
+        {/* Context leads. It is the thing that changes what Verte does, and on
+          * a fresh install the impact tally is all zeroes — opening on "$0
+          * saved, across 0 products" is a poor first impression and buries
+          * the only control the popup has. */}
         <fieldset className="verte__ctx">
           <legend className="verte__ctx-legend">When do you need things?</legend>
           <div className="verte__ctx-row" role="radiogroup" aria-label="When do you need things?">
@@ -87,6 +74,32 @@ export function Popup() {
             These change which listing Verte recommends, not just what it shows.
           </p>
         </fieldset>
+
+        {impact.seen > 0 ? (
+          <>
+            <hr className="verte__rule" />
+            <div className="verte__price">
+              <span className="verte__price-now">{formatUsd(impact.usd)}</span>
+              <span className="verte__save">saved</span>
+            </div>
+            <p className="verte__carbon">
+              {formatCo2(impact.co2Kg)} of manufacturing avoided{' '}
+              <span className="verte__carbon-eq">
+                — about {milesDrivenEquivalent(impact.co2Kg)} miles driven
+              </span>
+            </p>
+            <p className="verte__note">
+              Across {impact.seen} {impact.seen === 1 ? 'product' : 'products'} this term.
+            </p>
+          </>
+        ) : (
+          <>
+            <hr className="verte__rule" />
+            <p className="verte__note">
+              Open a product page and Verte will look for it secondhand.
+            </p>
+          </>
+        )}
       </div>
     </div>
   )
