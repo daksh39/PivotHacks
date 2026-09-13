@@ -16,9 +16,25 @@ export default defineManifest({
   version: '0.1.0',
   description: 'The greenest product is the one that already exists.',
 
+  /* Files live in public/, which Vite copies to the root of dist/ — so these
+   * paths are what they look like at build output, not source paths. Without
+   * them Chrome renders the default grey puzzle piece in the toolbar. */
+  icons: {
+    16: 'icons/16.png',
+    32: 'icons/32.png',
+    48: 'icons/48.png',
+    128: 'icons/128.png',
+  },
+
   action: {
     default_popup: 'src/popup/index.html',
     default_title: 'Verte',
+    default_icon: {
+      16: 'icons/16.png',
+      32: 'icons/32.png',
+      48: 'icons/48.png',
+      128: 'icons/128.png',
+    },
   },
 
   background: {
