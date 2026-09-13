@@ -247,6 +247,24 @@ function fromMeta(): Draft {
   return draft
 }
 
+/* --- the retailer's own category ----------------------------------------- */
+
+/**
+ * The breadcrumb trail, general → specific.
+ *
+ * The site already knows what this product is; guessing from the marketing
+ * title is strictly worse. Amazon renders a wayfinding breadcrumb, and most
+ * other retailers use a nav with a breadcrumb role.
+ */
+export function readBreadcrumbs(): string[] {
+  const nodes = document.querySelectorAll(
+    '#wayfinding-breadcrumbs_feature_div a, nav[aria-label*="readcrumb" i] a, [class*="breadcrumb" i] a',
+  )
+  return [...nodes]
+    .map((node) => node.textContent?.replace(/\s+/g, ' ').trim() ?? '')
+    .filter((text) => text.length > 1 && text.length < 60)
+}
+
 /* --- site dispatch ------------------------------------------------------- */
 
 type Site = 'amazon' | 'bestbuy' | 'generic'

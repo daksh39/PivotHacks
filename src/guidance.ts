@@ -15,6 +15,149 @@
 import type { CategoryGuidance } from './types'
 
 export const GUIDANCE: Record<string, CategoryGuidance> = {
+  'pressure-cooker': {
+    category: 'pressure-cooker',
+    verdict: 'check',
+    checkTips: [
+      "Check the lid gasket \u2014 it perishes and is the usual failure.",
+      "Confirm the pressure-release valve moves freely.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "The pot outlives several gaskets, and gaskets are cheap.",
+    bulky: false,
+  },
+  'air-fryer': {
+    category: 'air-fryer',
+    verdict: 'check',
+    checkTips: [
+      "Check the basket coating is not flaking.",
+      "Run it once to check the fan and thermostat.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "A flaking basket is the one thing worth walking away from.",
+    bulky: false,
+  },
+  toaster: {
+    category: 'toaster',
+    verdict: 'safe',
+    checkTips: [
+      "Shake out the crumb tray and check the element glows evenly.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Almost nothing to go wrong.",
+    bulky: false,
+  },
+  'rice-cooker': {
+    category: 'rice-cooker',
+    verdict: 'check',
+    checkTips: [
+      "Check the inner pot coating for scratches.",
+      "Confirm the keep-warm setting still works.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Inner pots can usually be replaced separately.",
+    bulky: false,
+  },
+  vacuum: {
+    category: 'vacuum',
+    verdict: 'check',
+    checkTips: [
+      "Budget for a new filter.",
+      "Check the brush bar spins and the hose is not split.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Filters and belts are consumables, not faults.",
+    bulky: false,
+  },
+  humidifier: {
+    category: 'humidifier',
+    verdict: 'check',
+    checkTips: [
+      "Check for limescale and mould in the tank.",
+      "Confirm the tank seal does not leak.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Hygiene is the thing to inspect, not the motor.",
+    bulky: false,
+  },
+  lamp: {
+    category: 'lamp',
+    verdict: 'safe',
+    checkTips: [
+      "Check the switch and that the cord is not frayed.",
+      "Bulbs are cheap \u2014 a dead bulb is not a dead lamp.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Nothing meaningful degrades. Ideal used.",
+    bulky: false,
+  },
+  mouse: {
+    category: 'mouse',
+    verdict: 'check',
+    checkTips: [
+      "Click every button, including the scroll wheel.",
+      "Worn feet are cheap to replace; a failing switch is not.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Switches wear before anything else does.",
+    bulky: false,
+  },
+  keyboard: {
+    category: 'keyboard',
+    verdict: 'check',
+    checkTips: [
+      "Test every key.",
+      "Ask whether it has been cleaned \u2014 they collect a lot.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Mechanical keyboards in particular outlast several owners.",
+    bulky: false,
+  },
+  speaker: {
+    category: 'speaker',
+    verdict: 'check',
+    checkTips: [
+      "Play something at volume and listen for rattle.",
+      "Check the charging port if it is portable.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Drivers last a long time; batteries do not.",
+    bulky: false,
+  },
+  'coffee-maker': {
+    category: 'coffee-maker',
+    verdict: 'check',
+    checkTips: [
+      "Descale before first use.",
+      "Check the carafe and seals for cracks.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Limescale is cosmetic. Cracked seals leak.",
+    bulky: false,
+  },
+  backpack: {
+    category: 'backpack',
+    verdict: 'safe',
+    checkTips: [
+      "Run every zip.",
+      "Check the base and strap seams, which fail first.",
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: "Excellent used. Straps and zips tell you everything.",
+    bulky: false,
+  },
   /* Every slug proxy/categories.ts can produce needs an entry here, or the
    * lookup 404s and no card ever appears. Verdicts and tips are real advice;
    * carbon stays 0/'' unless a citation exists (§09). */

@@ -13,7 +13,7 @@ import type { ProductContext } from '../types'
 import { loadContext } from '../context'
 import { Card } from '../components/Card'
 import { Skeleton } from '../components/Skeleton'
-import { extractProduct, looksLikeProductPage } from './extract'
+import { extractProduct, looksLikeProductPage, readBreadcrumbs } from './extract'
 import { findUsedListings } from './listings'
 import { mountCard, unmountCard } from './mount'
 import { waitFor } from './wait'
@@ -69,7 +69,9 @@ async function buildCard(product: ProductContext) {
    * machines, including every machine we would demo on. */
   const context = await loadContext()
   const options = await findUsedListings(product.title, product.sourceUrl)
-  const guidance = guidanceFor(product.category || classify(product.title))
+  /* The retailer's own breadcrumb first, the title only as a fallback. */
+  const category = product.category || classify(product.title, readBreadcrumbs())
+  const guidance = guidanceFor(category)
 
   return buildResult(product, guidance, options, context)
 }

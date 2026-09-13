@@ -28,6 +28,18 @@ const RULES: Rule[] = [
   /* general */
   { slug: 'mattress', keywords: ['mattress', 'memory foam bed', 'mattress topper'] },
   { slug: 'pillow', keywords: ['pillow'] },
+  { slug: 'lamp', keywords: ['desk lamp', 'floor lamp', 'table lamp'] },
+  { slug: 'pressure-cooker', keywords: ['pressure cooker', 'instant pot', 'multi-cooker', 'slow cooker'] },
+  { slug: 'air-fryer', keywords: ['air fryer'] },
+  { slug: 'toaster', keywords: ['toaster'] },
+  { slug: 'rice-cooker', keywords: ['rice cooker'] },
+  { slug: 'vacuum', keywords: ['vacuum cleaner', 'stick vacuum', 'handheld vacuum'] },
+  { slug: 'humidifier', keywords: ['humidifier', 'dehumidifier'] },
+  { slug: 'mouse', keywords: ['wireless mouse', 'gaming mouse'] },
+  { slug: 'keyboard', keywords: ['keyboard'] },
+  { slug: 'speaker', keywords: ['bluetooth speaker', 'smart speaker'] },
+  { slug: 'coffee-maker', keywords: ['coffee maker', 'espresso machine', 'french press'] },
+  { slug: 'backpack', keywords: ['backpack', 'laptop bag'] },
   { slug: 'desk', keywords: ['desk', 'writing table', 'study table'] },
   { slug: 'bookshelf', keywords: ['bookshelf', 'bookcase', 'shelving unit'] },
   { slug: 'dresser', keywords: ['dresser', 'chest of drawers', 'wardrobe'] },
@@ -44,11 +56,78 @@ const RULES: Rule[] = [
   { slug: 'winter-coat', keywords: ['winter coat', 'parka', 'puffer', 'down jacket'] },
 ]
 
+/* --- the retailer's own category ----------------------------------------
+ * Amazon publishes a breadcrumb and Best Buy returns categoryName. Reading
+ * what the site already knows beats guessing from a marketing title, which
+ * missed 5 of 12 real products.
+ * ----------------------------------------------------------------------- */
+
+/** Department wording → our slug. Matched against the crumb text. */
+const DEPARTMENTS: [RegExp, string][] = [
+  [/compact refrigerator|mini fridge|beverage refrigerator/i, 'mini-fridge'],
+  [/microwave/i, 'microwave'],
+  [/\bmonitor/i, 'monitor'],
+  [/laptop|notebook computer|chromebook/i, 'laptop'],
+  [/\bmice\b|\bmouse\b/i, 'mouse'],
+  [/keyboard/i, 'keyboard'],
+  [/headphone|earbud|earphone|headset/i, 'headphones'],
+  [/speaker/i, 'speaker'],
+  [/mattress/i, 'mattress'],
+  [/pillow/i, 'pillow'],
+  [/bookcase|bookshelf|shelving/i, 'bookshelf'],
+  [/dresser|chest of drawers|wardrobe/i, 'dresser'],
+  [/office chair|desk chair|task chair/i, 'desk-chair'],
+  [/lamp|lighting/i, 'lamp'],
+  [/pressure cooker|slow cooker|multi.?cooker/i, 'pressure-cooker'],
+  [/air fryer|deep fryer/i, 'air-fryer'],
+  [/toaster/i, 'toaster'],
+  [/rice cooker/i, 'rice-cooker'],
+  [/vacuum/i, 'vacuum'],
+  [/humidifier/i, 'humidifier'],
+  [/\bdesks?\b|writing table/i, 'desk'],
+  [/cookware|frying pan|saucepan|dutch oven|skillet/i, 'cookware'],
+  [/blender|food processor/i, 'blender'],
+  [/kettle/i, 'kettle'],
+  [/coffee maker|espresso/i, 'coffee-maker'],
+  [/\bfans?\b|air circulator/i, 'fan'],
+  [/storage|organiser|organizer|bins?\b/i, 'storage-bin'],
+  [/backpack|luggage/i, 'backpack'],
+  [/textbook|\bbooks?\b/i, 'textbook'],
+  [/bicycle|cycling/i, 'bike'],
+  [/helmet/i, 'bike-helmet'],
+  [/coat|jacket|parka/i, 'winter-coat'],
+  [/smoke alarm|carbon monoxide/i, 'smoke-detector'],
+  [/surge protector|power strip/i, 'surge-protector'],
+  [/drying rack|laundry/i, 'drying-rack'],
+]
+
 /**
- * Returns null when nothing matches, which is the signal to render no card at
- * all. A wrong verdict is far worse than no verdict.
+ * The category the retailer itself assigns.
+ *
+ * Crumbs run general → specific, so the LAST one that matches wins:
+ * "Electronics › Computers & Accessories › Monitors" is a monitor, not
+ * whatever "Electronics" might suggest.
  */
-export function classify(title: string): string | null {
+export function fromBreadcrumb(crumbs: string[]): string | null {
+  for (let i = crumbs.length - 1; i >= 0; i -= 1) {
+    for (const [pattern, slug] of DEPARTMENTS) {
+      if (pattern.test(crumbs[i])) return slug
+    }
+  }
+  return null
+}
+
+/**
+ * Returns null when we genuinely cannot tell. That is a normal outcome: the
+ * card still shows the saving, just without a verdict.
+ *
+ * The retailer's own category is tried first because a title is marketing
+ * copy — "LED Desk Lamp" is not a desk.
+ */
+export function classify(title: string, crumbs: string[] = []): string | null {
+  const fromSite = fromBreadcrumb(crumbs)
+  if (fromSite) return fromSite
+
   const haystack = title.toLowerCase()
   for (const rule of RULES) {
     if (rule.keywords.some((k) => haystack.includes(k))) return rule.slug
