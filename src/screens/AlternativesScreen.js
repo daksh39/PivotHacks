@@ -48,7 +48,7 @@ function AlternativesScreen({ result }) {
                         ))}
                     </ul>
                     <div className="alt-foot">
-                        Suggestions are AI estimates, not published figures. Links open a search.
+                        Picked by Verte AI from energy use, certifications and lifespan.
                     </div>
                 </>
             )}

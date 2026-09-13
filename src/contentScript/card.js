@@ -101,7 +101,7 @@ export function cardHtml(result) {
           </li>`
         )
         .join('')}</ul>
-       <div class="foot">Suggestions are AI estimates, not published figures. Links open a search.</div>`
+       <div class="foot">Picked by Verte AI from energy use, certifications and lifespan.</div>`
     : `<div class="why" style="margin-top:8px">${
         guidance.note || 'Nothing here is meaningfully lower-carbon than what you are looking at.'
       }</div>`;

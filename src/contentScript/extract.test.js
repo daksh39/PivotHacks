@@ -116,13 +116,13 @@ describe('cardHtml', () => {
     expect(html).toContain('~3 kg CO\u2082e/year less');
   });
 
-  test('labels the suggestions as estimates, not published figures', () => {
-    expect(cardHtml(base)).toContain('AI estimates, not published figures');
+  test('credits the suggestions to Verte AI', () => {
+    expect(cardHtml(base)).toContain('Picked by Verte AI from energy use, certifications and lifespan.');
   });
 
   test('says so plainly when there is no better option', () => {
     const html = cardHtml({ ...base, alternatives: [] });
     expect(html).toContain('Nothing here is meaningfully lower-carbon');
-    expect(html).not.toContain('AI estimates');
+    expect(html).not.toContain('Picked by Verte AI');
   });
 });
