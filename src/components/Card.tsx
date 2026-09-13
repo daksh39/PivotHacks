@@ -16,7 +16,9 @@ import { useState } from 'react'
 import type { UsedOption, VerteResult } from '../types'
 import { explainReason } from '../reason'
 import {
+  MANUFACTURING_BASIS,
   USE_DOMINANT_WARNING,
+  carbonCaseLine,
   carbonPayoff,
   formatCo2,
   formatUsd,
@@ -140,12 +142,22 @@ export function Card({ result, onDismiss, onContext, defaultExpanded = false }: 
                 </span>
               </p>
             )}
-            <p className="verte__payoff-meaning">{payoffMeaning(payoff)}</p>
-            {/* §09: the figure never appears without the document behind it. */}
-            {quantified && (
+            {/* With a measured figure, say what it means for the decision.
+              * Without one, state where the emissions sit — true by
+              * construction, so it stands up without a number. */}
+            <p className="verte__payoff-meaning">
+              {quantified ? payoffMeaning(payoff) : carbonCaseLine(guidance.carbonCase)}
+            </p>
+            {/* §09: a figure never appears without the document behind it, and
+              * the strongest qualitative claim shows what it rests on. */}
+            {quantified ? (
               <p className="verte__payoff-src" title={guidance.co2Source}>
                 {guidance.co2Source}
               </p>
+            ) : (
+              guidance.carbonCase === 'manufacturing' && (
+                <p className="verte__payoff-src">{MANUFACTURING_BASIS}</p>
+              )
             )}
           </div>
         )}

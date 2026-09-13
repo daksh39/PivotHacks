@@ -8,7 +8,7 @@
  * ------------------------------------------------------------------------- */
 
 import { describe, expect, it } from 'vitest'
-import { carbonPayoff, payoffHeadline, payoffMeaning } from './carbon'
+import { carbonCaseLine, carbonPayoff, payoffHeadline, payoffMeaning } from './carbon'
 import { buildResult } from './assemble'
 import { GUIDANCE } from './guidance'
 import type { BuyerContext, CategoryGuidance, ProductContext, UsedOption } from './types'
@@ -24,6 +24,7 @@ const guidance = (over: Partial<CategoryGuidance> = {}): CategoryGuidance => ({
   note: '',
   bulky: false,
   useDominant: false,
+  carbonCase: 'materials' as const,
   ...over,
 })
 
@@ -58,13 +59,41 @@ describe('carbonPayoff', () => {
     expect(carbonPayoff(cited(3))).toBe('low')
   })
 
-  it('claims nothing without a citation, however big the number', () => {
-    /* §09 — the number is worth less than the answer to "where did it come
-     * from". An uncited 300 kg is not a high-impact category, it is a guess. */
-    expect(carbonPayoff(guidance({ embodiedCo2Kg: 300, co2Source: '' }))).toBe('unknown')
-    expect(carbonPayoff(guidance({ embodiedCo2Kg: 300, co2Source: 'PLACEHOLDER' }))).toBe('unknown')
+  it('ignores an uncited number entirely and falls back to the class', () => {
+    /* §09 — the figure is worth less than the answer to "where did it come
+     * from". An uncited 300 kg is not evidence of anything, so it must not
+     * reach the band; what places the category is its carbonCase. */
+    const bogus = guidance({ embodiedCo2Kg: 300, co2Source: '', carbonCase: 'minimal' })
+    expect(carbonPayoff(bogus)).toBe('low')
+    expect(carbonPayoff(guidance({ embodiedCo2Kg: 300, co2Source: 'PLACEHOLDER', carbonCase: 'minimal' }))).toBe('low')
+  })
+
+  it('places a category with no figure by where its emissions sit', () => {
+    /* This is the change that gives ~every card a carbon statement. It is a
+     * claim about WHERE emissions are, not how many, so it needs no number. */
+    expect(carbonPayoff(guidance({ carbonCase: 'manufacturing' }))).toBe('high')
+    expect(carbonPayoff(guidance({ carbonCase: 'materials' }))).toBe('moderate')
+    expect(carbonPayoff(guidance({ carbonCase: 'minimal' }))).toBe('low')
+  })
+
+  it('says nothing at all about a consumable', () => {
+    /* A used sponge is not a sustainability story, and pretending otherwise
+     * is the kind of claim that discredits the honest ones. */
+    expect(carbonPayoff(guidance({ carbonCase: 'consumable' }))).toBe('unknown')
+    expect(carbonCaseLine('consumable')).toBeNull()
     expect(payoffHeadline('unknown')).toBeNull()
     expect(payoffMeaning('unknown')).toBeNull()
+  })
+
+  it('lets a measured figure override the class', () => {
+    /* A cited 3 kg paperback is 'low' even though paper is a material good. */
+    expect(
+      carbonPayoff(guidance({
+        embodiedCo2Kg: 3,
+        co2Source: 'Wells et al. 2012, Journal of Industrial Ecology',
+        carbonCase: 'materials',
+      })),
+    ).toBe('low')
   })
 })
 

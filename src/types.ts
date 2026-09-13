@@ -102,6 +102,9 @@ export type RecommendationReason =
    */
   | 'low-carbon-payoff'
 
+/** Where a category's emissions actually sit. See CategoryGuidance.carbonCase. */
+export type CarbonCase = 'manufacturing' | 'materials' | 'minimal' | 'consumable'
+
 /** What we know about buying this category used. */
 export type CategoryGuidance = {
   category: string
@@ -113,6 +116,27 @@ export type CategoryGuidance = {
   note: string
   /** Needs a car to collect. Drives the no-car demotion in src/rank.ts. */
   bulky: boolean
+  /**
+   * Why this category's footprint is what it is.
+   *
+   * Eight categories have a measured figure from a manufacturer PCF or a
+   * peer-reviewed LCA. The rest never will in the time we have, and a card
+   * that says nothing about carbon on a sustainability product is a card that
+   * has quietly become a price comparison. So every category states its case
+   * QUALITATIVELY, which needs no citation because it is a statement about
+   * where emissions sit rather than how many there are:
+   *
+   *   manufacturing — electronics and powered goods. Making it dominates.
+   *   materials     — furniture, metal, textiles. Real material footprint,
+   *                   long life, nothing emitted by using it.
+   *   minimal       — small light things. Honest: buying used here saves
+   *                   money rather than carbon.
+   *   consumable    — used up in use. Secondhand is not a thing, and Verte
+   *                   makes no environmental claim at all.
+   *
+   * A measured figure always overrides this. See carbonPayoff().
+   */
+  carbonCase: CarbonCase
   /**
    * True where LIFETIME emissions are dominated by RUNNING the thing rather
    * than making it — a fridge is the clear case. Buying those secondhand can

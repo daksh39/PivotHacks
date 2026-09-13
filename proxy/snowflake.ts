@@ -95,6 +95,7 @@ function toGuidance(row: Record<string, unknown>): CategoryGuidance | null {
     note: String(row.NOTE ?? ''),
     bulky: Boolean(row.BULKY),
     useDominant: Boolean(row.USE_DOMINANT),
+    carbonCase: (String(row.CARBON_CASE || 'materials') as CategoryGuidance['carbonCase']),
   }
 }
 
