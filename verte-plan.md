@@ -219,7 +219,7 @@ Mini-fridge, the canonical demo product. Figures illustrative — real ones carr
 
 - The cream ground is ours, not the page's — keep the `#9FB87E` border so the card reads as deliberate against a white retail page rather than a rendering fault.
 - `#D0E2B8` and `#9FB87E` are fills and borders, **never text on cream**. Accent text is `#3C4A2C`.
-- No all-caps alarm language. The old GreenBeans build said "SUSTAINABLE ALTERNATIVES FOUND," which reads like a virus warning.
+- No all-caps alarm language. A banner reading "SUSTAINABLE ALTERNATIVES FOUND" sounds like a virus warning, not a recommendation.
 - Never render a bare number with no explanation — every figure carries its unit and its framing.
 - A skeleton while loading. A blank flash on someone else's page is worse than not appearing.
 - Dismissible, and it stays dismissed for that product.
@@ -262,7 +262,7 @@ Starter set for the `CATEGORY_GUIDANCE` table. This is the most quietly valuable
 
 ### Manifest V2 is dead — don't port the old repo
 
-Chrome has disabled MV2 extensions; the 2022 GreenBeans build cannot load in a current browser. The service worker model, the manifest, and the background plumbing all differ. The React screens are worth referencing; the shell is not worth porting.
+Chrome has disabled MV2 extensions, so most extension tutorials and boilerplate you find will not load in a current browser. The service worker model, the manifest format, and the background plumbing all differ from MV2. Check the manifest version on anything you copy from, and start from an MV3 scaffold rather than adapting older code.
 
 ### The eBay secret cannot live in the extension
 

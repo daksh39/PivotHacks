@@ -1,10 +1,11 @@
 /* ---------------------------------------------------------------------------
- * Manifest V3.  verte-plan.md §08: MV2 is dead — Chrome has disabled it, and
- * the 2022 GreenBeans build cannot load in a current browser. This is a fresh
- * MV3 scaffold, not a port.
+ * Manifest V3.  verte-plan.md §08: MV2 is dead — Chrome has disabled it, so
+ * MV2 boilerplate will not load in a current browser. This is a fresh MV3
+ * scaffold.
  *
- * Amazon only until it works (§04, §11). Adding a retailer = one match
- * pattern here plus selectors in src/contentScript/extract.ts.
+ * Adding a retailer is a match pattern here plus an adapter in
+ * src/contentScript/extract.ts. Both hosts below were verified live: neither
+ * publishes JSON-LD or og: tags, so both need an adapter.
  * ------------------------------------------------------------------------- */
 
 import { defineManifest } from '@crxjs/vite-plugin'
@@ -27,7 +28,13 @@ export default defineManifest({
 
   content_scripts: [
     {
-      matches: ['https://www.amazon.com/*', 'https://www.amazon.co.uk/*'],
+      matches: [
+        'https://www.amazon.com/*',
+        'https://www.amazon.ca/*',
+        'https://www.amazon.co.uk/*',
+        'https://www.bestbuy.com/*',
+        'https://www.bestbuy.ca/*',
+      ],
       js: ['src/contentScript/index.tsx'],
       run_at: 'document_idle',
     },

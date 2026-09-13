@@ -96,8 +96,15 @@ is actually green — run it, don't assume it.
 
 ## Things that will cost you hours (§08)
 
-- **MV2 is dead.** Don't port the 2022 GreenBeans repo. This is a fresh MV3
-  scaffold. The React screens are worth referencing; the shell is not.
+- **MV2 is dead.** Chrome has disabled it, so MV2 boilerplate and most
+  extension tutorials will not load. Scaffold fresh, and check the manifest
+  version on anything you copy from.
+- **Amazon and Best Buy publish no JSON-LD and no `og:` tags.** Verified live
+  on both. Structured data is the fallback for *other* retailers; these two
+  need the site adapters in `src/contentScript/extract.ts`.
+- **Never assume the currency.** amazon.com serves `CAD73.54` to a browser in
+  Canada. `parsePrice()` reads the currency out of the string; defaulting to
+  USD misreports the price and corrupts every saving computed from it.
 - **The eBay secret cannot live in the extension.** Credentials in a content
   script are readable by anyone who opens the bundle *and* blocked by CORS.
   The service worker talks to the proxy; the proxy holds the secret. This is

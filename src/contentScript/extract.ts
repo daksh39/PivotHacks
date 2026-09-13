@@ -1,153 +1,336 @@
 /* ---------------------------------------------------------------------------
- * Reading the product off the page.  verte-plan.md §08.
+ * Reading the product off the page.  verte-plan.md §08.  Owned by lane/extension.
  *
- * Order matters and it is not negotiable:
- *   1. application/ld+json Product block  — structured, stable, everywhere
- *   2. og: / twitter: meta tags           — still structured
- *   3. CSS selectors                      — last resort; these rot
+ * The original version put JSON-LD first on the grounds that it is "structured,
+ * stable, everywhere". Probing the live sites showed that it is not: neither
+ * amazon.com nor bestbuy.ca emits a JSON-LD Product block OR an og:title. On
+ * both, DOM selectors are the only thing that fires.
  *
- * Retail markup churns constantly. Hand-picked selectors are the thing that
- * breaks at hour nine. Owned by lane/extension.
+ * So the order is now: a site adapter when we have one, and structured data as
+ * the generic fallback for every other retailer (plenty of them do publish it).
+ *
+ * Currency is read from the price string rather than assumed. amazon.com serves
+ * "CAD73.54" to a browser in Canada; defaulting to USD misreports the price and
+ * corrupts every saving computed against it.
  * ------------------------------------------------------------------------- */
 
 import type { ProductContext } from '../types'
 
-type Partial_ = { title?: string; price?: number; currency?: string; imageUrl?: string }
+export type ParsedPrice = { amount: number; currency: string }
 
-/* --- 1. JSON-LD ---------------------------------------------------------- */
+type Draft = { title?: string; price?: number; currency?: string; imageUrl?: string }
 
-function walk(node: unknown, out: Record<string, unknown>[]): void {
-  if (Array.isArray(node)) {
-    node.forEach((n) => walk(n, out))
-    return
+/* --- price + currency ---------------------------------------------------- */
+
+/**
+ * Only UNAMBIGUOUS markers live here. A bare "$" is deliberately absent: it is
+ * used by at least a dozen countries, and bestbuy.ca renders Canadian prices
+ * as plain "$125.99". When nothing here matches, the storefront's domain
+ * decides — see currencyForUrl.
+ */
+const CURRENCY_RULES: [RegExp, string][] = [
+  [/CAD|C\$/i, 'CAD'],
+  [/US\$|USD/i, 'USD'],
+  [/AUD|A\$/i, 'AUD'],
+  [/£|GBP/i, 'GBP'],
+  [/€|EUR/i, 'EUR'],
+  [/¥|JPY/i, 'JPY'],
+]
+
+/** Longest suffix first, so ".co.uk" is tested before ".uk". */
+const TLD_CURRENCY: [string, string][] = [
+  ['.co.uk', 'GBP'],
+  ['.com.au', 'AUD'],
+  ['.co.jp', 'JPY'],
+  ['.ca', 'CAD'],
+  ['.uk', 'GBP'],
+  ['.au', 'AUD'],
+  ['.jp', 'JPY'],
+  ['.de', 'EUR'],
+  ['.fr', 'EUR'],
+  ['.es', 'EUR'],
+  ['.it', 'EUR'],
+  ['.nl', 'EUR'],
+  ['.ie', 'EUR'],
+]
+
+/**
+ * What a bare currency symbol most likely means on this storefront.
+ * amazon.ca and bestbuy.ca quote Canadian dollars with a plain "$".
+ */
+export function currencyForUrl(url: string): string {
+  let host: string
+  try {
+    host = new URL(url).hostname.toLowerCase()
+  } catch {
+    return 'USD'
   }
-  if (node && typeof node === 'object') {
-    const obj = node as Record<string, unknown>
-    const t = obj['@type']
-    const types = Array.isArray(t) ? t : [t]
-    if (types.includes('Product')) out.push(obj)
-    if (obj['@graph']) walk(obj['@graph'], out)
+  for (const [suffix, code] of TLD_CURRENCY) {
+    if (host.endsWith(suffix)) return code
   }
+  return 'USD'
 }
 
-function fromJsonLd(): Partial_ | null {
-  const blocks = document.querySelectorAll('script[type="application/ld+json"]')
-  const products: Record<string, unknown>[] = []
-
-  for (const block of blocks) {
-    try {
-      walk(JSON.parse(block.textContent ?? ''), products)
-    } catch {
-      /* malformed JSON-LD is common in the wild — skip it, don't throw */
-    }
+function detectCurrency(raw: string, fallback: string): string {
+  for (const [pattern, code] of CURRENCY_RULES) {
+    if (pattern.test(raw)) return code
   }
-  if (!products.length) return null
-
-  const p = products[0]
-  const offersRaw = p.offers
-  const offer = (Array.isArray(offersRaw) ? offersRaw[0] : offersRaw) as
-    | Record<string, unknown>
-    | undefined
-  const image = Array.isArray(p.image) ? p.image[0] : p.image
-
-  return {
-    title: typeof p.name === 'string' ? p.name : undefined,
-    price: offer ? toNumber(offer.price ?? offer.lowPrice) : undefined,
-    currency: typeof offer?.priceCurrency === 'string' ? offer.priceCurrency : undefined,
-    imageUrl: typeof image === 'string' ? image : undefined,
-  }
+  return fallback
 }
 
-/* --- 2. meta tags -------------------------------------------------------- */
+/**
+ * Handles both "1,299.00" (comma thousands) and "45,00" (comma decimal).
+ * Whichever separator appears last is the decimal one — unless more than two
+ * digits follow it, which makes it a thousands separator instead.
+ */
+function parseAmount(raw: string): number | null {
+  const cleaned = raw.replace(/[^0-9.,]/g, '')
+  if (!cleaned || !/\d/.test(cleaned)) return null
 
-function meta(...names: string[]): string | undefined {
-  for (const name of names) {
-    const el =
-      document.querySelector(`meta[property="${name}"]`) ??
-      document.querySelector(`meta[name="${name}"]`)
-    const content = el?.getAttribute('content')
-    if (content) return content
+  const lastDot = cleaned.lastIndexOf('.')
+  const lastComma = cleaned.lastIndexOf(',')
+
+  let normalized: string
+  if (lastComma > lastDot && cleaned.length - lastComma - 1 <= 2) {
+    normalized = cleaned.replace(/\./g, '').replace(',', '.')
+  } else {
+    normalized = cleaned.replace(/,/g, '')
   }
-  return undefined
+
+  const value = Number.parseFloat(normalized)
+  return Number.isFinite(value) ? value : null
 }
 
-function fromMeta(): Partial_ {
-  return {
-    title: meta('og:title', 'twitter:title'),
-    price: toNumber(meta('product:price:amount', 'og:price:amount')),
-    currency: meta('product:price:currency', 'og:price:currency'),
-    imageUrl: meta('og:image', 'twitter:image'),
-  }
+/**
+ * Null when the text carries no price at all ("Currently unavailable").
+ *
+ * `fallbackCurrency` is used only when the string carries no unambiguous
+ * marker. An explicit "CAD", "US$" or "£" always wins over it.
+ */
+export function parsePrice(
+  raw: string | null | undefined,
+  fallbackCurrency = 'USD',
+): ParsedPrice | null {
+  if (!raw) return null
+  const amount = parseAmount(raw)
+  if (amount === null) return null
+  return { amount, currency: detectCurrency(raw, fallbackCurrency) }
 }
 
-/* --- 3. selectors (Amazon only for now — §11 cut list) ------------------- */
+/* --- small DOM helpers --------------------------------------------------- */
 
-const SELECTORS = {
-  title: ['#productTitle', '#title span', 'h1[data-automation-id="product-title"]'],
-  price: [
-    '.a-price .a-offscreen',
-    '#corePrice_feature_div .a-offscreen',
-    '#priceblock_ourprice',
-  ],
-  image: ['#landingImage', '#imgBlkFront', '#main-image'],
-}
-
-function text(selectors: string[]): string | undefined {
-  for (const sel of selectors) {
-    const el = document.querySelector(sel)
-    const value = el?.textContent?.trim()
+function textOf(...selectors: string[]): string | undefined {
+  for (const selector of selectors) {
+    const value = document.querySelector(selector)?.textContent?.trim()
     if (value) return value
   }
   return undefined
 }
 
-function fromSelectors(): Partial_ {
-  const img = SELECTORS.image.map((s) => document.querySelector(s)).find(Boolean)
-  return {
-    title: text(SELECTORS.title),
-    price: toNumber(text(SELECTORS.price)),
-    imageUrl: img?.getAttribute('src') ?? undefined,
+function attrOf(attribute: string, ...selectors: string[]): string | undefined {
+  for (const selector of selectors) {
+    const value = document.querySelector(selector)?.getAttribute(attribute)
+    if (value) return value
   }
+  return undefined
 }
 
-/* --- helpers ------------------------------------------------------------- */
+function applyPrice(draft: Draft, raw: string | undefined, fallback: string): void {
+  const parsed = parsePrice(raw, fallback)
+  if (!parsed) return
+  draft.price = parsed.amount
+  draft.currency = parsed.currency
+}
 
-function toNumber(value: unknown): number | undefined {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value !== 'string') return undefined
-  const cleaned = value.replace(/[^0-9.]/g, '')
-  const n = Number.parseFloat(cleaned)
-  return Number.isFinite(n) ? n : undefined
+/* --- site adapters ------------------------------------------------------- */
+
+function fromAmazon(fallback: string): Draft {
+  const draft: Draft = {
+    title: textOf('#productTitle', '#title span'),
+    imageUrl: attrOf('src', '#landingImage', '#imgBlkFront', '#main-image'),
+  }
+  applyPrice(
+    draft,
+    textOf('#corePrice_feature_div .a-offscreen', '.a-price .a-offscreen', '#priceblock_ourprice'),
+    fallback,
+  )
+  return draft
+}
+
+function fromBestBuy(fallback: string): Draft {
+  const draft: Draft = { title: textOf('h1') }
+
+  /* Best Buy ships hashed CSS-module classnames that change every deploy, so
+   * match on the stable prefix rather than the full name. Several prices sit
+   * on the page — recommended products, bundles — and the product's own price
+   * is the first one in document order. */
+  for (const node of document.querySelectorAll('[class*="screenReaderOnly"]')) {
+    const parsed = parsePrice(node.textContent, fallback)
+    if (parsed) {
+      draft.price = parsed.amount
+      draft.currency = parsed.currency
+      break
+    }
+  }
+  return draft
+}
+
+/* --- generic: structured data, for retailers that publish it ------------- */
+
+function collectProducts(node: unknown, found: Record<string, unknown>[]): void {
+  if (Array.isArray(node)) {
+    node.forEach((child) => collectProducts(child, found))
+    return
+  }
+  if (!node || typeof node !== 'object') return
+
+  const object = node as Record<string, unknown>
+  const rawType = object['@type']
+  const types = Array.isArray(rawType) ? rawType : [rawType]
+  if (types.includes('Product')) found.push(object)
+  if (object['@graph']) collectProducts(object['@graph'], found)
+}
+
+function fromJsonLd(): Draft | null {
+  const found: Record<string, unknown>[] = []
+
+  for (const block of document.querySelectorAll('script[type="application/ld+json"]')) {
+    try {
+      collectProducts(JSON.parse(block.textContent ?? ''), found)
+    } catch {
+      /* Malformed JSON-LD is common in the wild. Skip it, never throw. */
+    }
+  }
+  if (!found.length) return null
+
+  const product = found[0]
+  const rawOffers = product.offers
+  const offer = (Array.isArray(rawOffers) ? rawOffers[0] : rawOffers) as
+    | Record<string, unknown>
+    | undefined
+  const image = Array.isArray(product.image) ? product.image[0] : product.image
+
+  const draft: Draft = {
+    title: typeof product.name === 'string' ? product.name : undefined,
+    imageUrl: typeof image === 'string' ? image : undefined,
+  }
+
+  const price = offer?.price ?? offer?.lowPrice
+  if (price != null) {
+    const amount = parseAmount(String(price))
+    if (amount !== null) draft.price = amount
+  }
+  if (typeof offer?.priceCurrency === 'string') draft.currency = offer.priceCurrency
+
+  return draft
+}
+
+function metaOf(...names: string[]): string | undefined {
+  for (const name of names) {
+    const element =
+      document.querySelector(`meta[property="${name}"]`) ??
+      document.querySelector(`meta[name="${name}"]`)
+    const content = element?.getAttribute('content')
+    if (content) return content
+  }
+  return undefined
+}
+
+function fromMeta(): Draft {
+  const draft: Draft = {
+    title: metaOf('og:title', 'twitter:title'),
+    imageUrl: metaOf('og:image', 'twitter:image'),
+  }
+  const amount = parseAmount(metaOf('product:price:amount', 'og:price:amount') ?? '')
+  if (amount !== null) draft.price = amount
+  draft.currency = metaOf('product:price:currency', 'og:price:currency')
+  return draft
+}
+
+/* --- site dispatch ------------------------------------------------------- */
+
+type Site = 'amazon' | 'bestbuy' | 'generic'
+
+function siteOf(url: string): Site {
+  let host: string
+  try {
+    host = new URL(url).hostname
+  } catch {
+    return 'generic'
+  }
+  if (/(^|\.)amazon\./i.test(host)) return 'amazon'
+  if (/(^|\.)bestbuy\./i.test(host)) return 'bestbuy'
+  return 'generic'
+}
+
+/** Merge order: later sources only fill gaps the earlier ones left. */
+function merge(...drafts: (Draft | null)[]): Draft {
+  const out: Draft = {}
+  for (const draft of drafts) {
+    if (!draft) continue
+    for (const [key, value] of Object.entries(draft)) {
+      if (value !== undefined && out[key as keyof Draft] === undefined) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(out as any)[key] = value
+      }
+    }
+  }
+  return out
 }
 
 /* --- public -------------------------------------------------------------- */
 
 /**
- * Returns null when this does not look like a product page, which is the
- * signal to render nothing at all. A card on a search results page is worse
- * than no card.
+ * Returns null when there is no product to be found, which is the signal to
+ * render nothing. A card on a search results page is worse than no card.
  *
- * NOTE: `category` is left empty here on purpose. Classification lives in the
- * proxy (proxy/categories.ts) so it can be fixed in five seconds without
- * anyone reloading an extension.
+ * `category` is left empty on purpose: classification lives in the proxy so it
+ * can be fixed without anyone reloading an extension.
+ *
+ * The URL is a parameter rather than a read of `location` so this is a pure
+ * function of (DOM, url) and can be tested.
  */
-export function extractProduct(): ProductContext | null {
-  const merged: Partial_ = { ...fromSelectors(), ...fromMeta(), ...(fromJsonLd() ?? {}) }
+export function extractProduct(url: string = location.href): ProductContext | null {
+  const site = siteOf(url)
+
+  const fallbackCurrency = currencyForUrl(url)
+
+  const adapter =
+    site === 'amazon'
+      ? fromAmazon(fallbackCurrency)
+      : site === 'bestbuy'
+        ? fromBestBuy(fallbackCurrency)
+        : null
+  const merged = merge(adapter, fromJsonLd(), fromMeta())
 
   if (!merged.title) return null
 
   return {
     title: merged.title.replace(/\s+/g, ' ').trim(),
     price: merged.price ?? null,
-    currency: merged.currency ?? 'USD',
+    currency: merged.currency ?? fallbackCurrency,
     category: '',
     imageUrl: merged.imageUrl ?? null,
-    sourceUrl: location.href,
+    sourceUrl: url,
   }
 }
 
 /** Cheap gate before we bother extracting anything. */
-export function looksLikeProductPage(): boolean {
-  if (/\/(dp|gp\/product)\//.test(location.pathname)) return true
-  return document.querySelector('script[type="application/ld+json"]') != null
+export function looksLikeProductPage(url: string = location.href): boolean {
+  let path: string
+  try {
+    path = new URL(url).pathname
+  } catch {
+    return false
+  }
+
+  switch (siteOf(url)) {
+    case 'amazon':
+      return /\/(dp|gp\/product)\//.test(path)
+    case 'bestbuy':
+      return /\/product\//.test(path)
+    default:
+      /* Unknown retailer: only proceed if it publishes a Product block. */
+      return fromJsonLd() !== null
+  }
 }
