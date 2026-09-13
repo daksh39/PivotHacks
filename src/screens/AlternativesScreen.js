@@ -1,6 +1,4 @@
 import './styles/AlternativesScreen.css';
-import GeneralButton from '../components/GeneralButton';
-import { LINKS } from '../config';
 
 /*
  * The popup's view of the same answer the card is showing on the page.
@@ -54,11 +52,6 @@ function AlternativesScreen({ result }) {
                     </div>
                 </>
             )}
-
-            <div className="alt-action">
-                <GeneralButton text={"How we pick these"} height={"34px"} width={"150px"} isOutline={true}
-                               handleClick={() => window.open(LINKS.methodology, "_blank")} />
-            </div>
         </div>
     );
 }

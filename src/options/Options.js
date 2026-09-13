@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './Options.css';
 import VerteMark from '../components/VerteMark';
-import { BRAND, LINKS } from '../config';
+import { BRAND } from '../config';
 
 /*
  * Options page, and the place microphone permission gets granted.
@@ -48,14 +48,6 @@ function Options() {
         <p className="verte-options-thesis">{BRAND.thesis}</p>
         <p className="verte-options-tagline">{BRAND.tagline}</p>
         <MicPermission />
-        <a
-          className="verte-options-link"
-          href={LINKS.methodology}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          How we pick listings, and where the carbon figures come from
-        </a>
       </header>
     </div>
   );

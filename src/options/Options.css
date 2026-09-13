@@ -49,15 +49,9 @@ body {
   margin: 0 0 24px;
 }
 
-.verte-options-link {
-  color: var(--verte-accent-text);
-  font-size: 14px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
 
 .verte-options-mic {
-  margin: 0 0 24px;
+  margin: 0;
 }
 
 .verte-options-button {

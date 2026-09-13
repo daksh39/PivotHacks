@@ -27,10 +27,3 @@ export const ENDPOINTS = {
   voice: `${API_BASE}/voice`,
 };
 
-export const LINKS = {
-  // How we decide what is safe to buy used, and where the carbon figures
-  // come from. Both are documented in the repo README.
-  methodology:
-    process.env.REACT_APP_METHODOLOGY_URL ||
-    'https://github.com/verte-extension/verte#methodology',
-};
