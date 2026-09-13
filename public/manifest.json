@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Verte",
-  "version": "1.0.0",
-  "description": "The greenest product is the one that already exists. Verte shows you the secondhand option before you buy new.",
+  "version": "4.0.0",
+  "description": "Your sustainability assistant. Tell Verte what you're buying, or open a product page, and see lower-carbon alternatives.",
   "icons": {
     "16": "icons/16.png",
     "48": "icons/48.png",
@@ -11,8 +11,14 @@
   "background": {
     "service_worker": "background.bundle.js"
   },
-  "permissions": ["storage", "tabs", "activeTab"],
-  "host_permissions": ["http://localhost:8787/*"],
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://localhost:8787/*"
+  ],
   "options_page": "options.html",
   "action": {
     "default_icon": {
@@ -31,7 +37,9 @@
         "https://www.amazon.co.uk/*",
         "https://www.bestbuy.com/*"
       ],
-      "js": ["contentScript.bundle.js"],
+      "js": [
+        "contentScript.bundle.js"
+      ],
       "run_at": "document_idle"
     }
   ]

@@ -1,7 +1,7 @@
 {
   "name": "verte",
-  "description": "Verte — a Chrome extension that surfaces the secondhand option at the moment you are about to buy new.",
-  "version": "0.1.0",
+  "description": "Verte — a sustainability assistant Chrome extension that suggests lower-carbon alternatives, by voice or on product pages.",
+  "version": "4.0.0",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.2",
