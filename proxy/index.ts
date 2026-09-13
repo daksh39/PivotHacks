@@ -16,10 +16,11 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
-import type { BuyerContext, ProductContext, UsedOption, VerteResult } from '../src/types'
+import type { BuyerContext, ProductContext, UsedOption } from '../src/types'
 import { classify } from './categories'
 import { getCategoryGuidance, logImpact } from './snowflake'
-import { DEFAULT_CONTEXT, rank } from './rank'
+import { DEFAULT_CONTEXT } from './rank'
+import { buildResult } from '../src/result'
 
 const PORT = Number(process.env.PORT ?? 8787)
 
@@ -63,10 +64,7 @@ app.post('/lookup', async (req, res) => {
       return
     }
 
-    /* Show nothing secondhand when we are telling them to buy it new. */
-    const usable = guidance.verdict === 'avoid' ? [] : found
-
-    res.json(assemble(product, guidance, usable, ctx))
+    res.json(buildResult(product, guidance, found, ctx))
     if (guidance.verdict !== 'avoid') void logImpact(category, guidance.embodiedCo2Kg)
   } catch (error) {
     console.error('[verte] lookup failed:', error)
@@ -74,73 +72,8 @@ app.post('/lookup', async (req, res) => {
   }
 })
 
-/** The only place a VerteResult is built. Keep it that way. */
-/**
- * Listings we can legitimately compare against this product.
- *
- * eBay is asked for the product's own marketplace, so a mismatch should be
- * rare — but "rare" is not "never", and a CAD price minus a USD price is not
- * a saving, it is a wrong number rendered with total confidence. We would
- * rather show fewer listings than invent arithmetic.
- */
-function sameCurrency(options: VerteResult['options'], currency: string): VerteResult['options'] {
-  const kept = options.filter((option) => option.currency === currency)
-  const dropped = options.length - kept.length
-  if (dropped) {
-    console.warn(`[verte] dropped ${dropped} listing(s) not priced in ${currency}`)
-  }
-  return kept
-}
-
-function savingsFor(
-  product: ProductContext,
-  options: VerteResult['options'],
-  reason: VerteResult['reason'],
-): number | null {
-  /* Against the RECOMMENDED option, not the cheapest one. If context pushed us
-   * to a pricier listing, the saving we advertise has to be the one they'd
-   * actually get. Quoting the cheap listing's saving would be a lie.
-   *
-   * And if nothing is usable, there is no saving to advertise at all — a card
-   * reading "nothing arrives in time" beside "save $61" is a contradiction a
-   * judge will catch in the first ten seconds. */
-  if (reason === 'nothing-arrives-in-time' || reason === 'nothing-in-budget') return null
-  const recommended = options[0]?.price ?? null
-  return product.price != null && recommended != null && product.price > recommended
-    ? Math.round(product.price - recommended)
-    : null
-}
-
-function assemble(
-  product: ProductContext,
-  guidance: Awaited<ReturnType<typeof getCategoryGuidance>>,
-  options: VerteResult['options'],
-  ctx: BuyerContext,
-): VerteResult {
-  const comparable = sameCurrency(options, product.currency)
-  const ranked = rank(comparable, ctx, guidance!)
-  const savingsUsd = savingsFor(product, ranked.options, ranked.reason)
-
-  return {
-    product: { ...product, category: guidance!.category },
-    guidance: guidance!,
-    options: ranked.options,
-    context: ctx,
-    reason: ranked.reason,
-    passedOver: ranked.passedOver,
-    savingsUsd,
-    /* We only claim avoided manufacturing if they actually have something to
-     * buy instead. No listings, no claim. */
-    /* Only claim avoided manufacturing if they have something they can
-     * actually buy instead. Nothing viable, no claim. */
-    co2AvoidedKg:
-      ranked.options.length &&
-      ranked.reason !== 'nothing-arrives-in-time' &&
-      ranked.reason !== 'nothing-in-budget'
-        ? guidance!.embodiedCo2Kg
-        : null,
-  }
-}
+/* Building the result moved to src/result.ts, so the proxy and the extension
+ * cannot drift apart on what the card receives. See the note at its top. */
 
 app.listen(PORT, () => {
   console.log(`[verte] proxy on http://localhost:${PORT}`)
