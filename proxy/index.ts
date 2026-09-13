@@ -57,7 +57,17 @@ app.post('/lookup', async (req, res) => {
     /* Re-rank the fixture against the requested context so mock mode
      * demonstrates the pivot rather than serving one frozen ordering. */
     const ranked = rank(base.options, ctx, base.guidance)
-    res.json({ ...base, ...ranked, context: ctx, savingsUsd: savingsFor(base.product, ranked.options) })
+    res.json({
+      ...base,
+      ...ranked,
+      context: ctx,
+      savingsUsd: savingsFor(base.product, ranked.options, ranked.reason),
+      /* Recompute, don't inherit: the fixture's co2 assumes a usable option. */
+      co2AvoidedKg:
+        ranked.options.length && ranked.reason !== 'nothing-arrives-in-time'
+          ? base.guidance.embodiedCo2Kg
+          : null,
+    })
     return
   }
 
@@ -89,10 +99,19 @@ app.post('/lookup', async (req, res) => {
 })
 
 /** The only place a VerteResult is built. Keep it that way. */
-function savingsFor(product: ProductContext, options: VerteResult['options']): number | null {
+function savingsFor(
+  product: ProductContext,
+  options: VerteResult['options'],
+  reason: VerteResult['reason'],
+): number | null {
   /* Against the RECOMMENDED option, not the cheapest one. If context pushed us
    * to a pricier listing, the saving we advertise has to be the one they'd
-   * actually get. Quoting the cheap listing's saving would be a lie. */
+   * actually get. Quoting the cheap listing's saving would be a lie.
+   *
+   * And if nothing is usable, there is no saving to advertise at all — a card
+   * reading "nothing arrives in time" beside "save $61" is a contradiction a
+   * judge will catch in the first ten seconds. */
+  if (reason === 'nothing-arrives-in-time') return null
   const recommended = options[0]?.price ?? null
   return product.price != null && recommended != null && product.price > recommended
     ? Math.round(product.price - recommended)
@@ -106,7 +125,7 @@ function assemble(
   ctx: BuyerContext,
 ): VerteResult {
   const ranked = rank(options, ctx, guidance!)
-  const savingsUsd = savingsFor(product, ranked.options)
+  const savingsUsd = savingsFor(product, ranked.options, ranked.reason)
 
   return {
     product: { ...product, category: guidance!.category },
