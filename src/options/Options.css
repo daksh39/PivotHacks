@@ -55,3 +55,30 @@ body {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+.verte-options-mic {
+  margin: 0 0 24px;
+}
+
+.verte-options-button {
+  background: var(--verte-moss);
+  border: 1px solid transparent;
+  border-radius: var(--verte-radius-pill);
+  color: var(--verte-accent-text);
+  cursor: pointer;
+  font-family: var(--verte-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px;
+}
+
+.verte-options-button:hover {
+  background: var(--verte-moss-tint);
+  border-color: var(--verte-moss-shade);
+}
+
+.verte-options-mic-note {
+  color: var(--verte-ink-soft);
+  font-size: 13px;
+  margin: 10px 0 0;
+}

@@ -2,4 +2,26 @@
   background-color: var(--verte-base);
   color: var(--verte-ink);
   font-family: var(--verte-font-body);
+  position: relative;
+  width: 400px;
+}
+
+.verte-app-header {
+  padding: 0 24px 12px;
+}
+
+/* Header now lives on the app, so screens start straight into content. */
+.verte-app .message-container,
+.verte-app .alt-container {
+  height: auto;
+  padding-bottom: 18px;
+  width: auto;
+}
+
+.verte-app .message-content {
+  margin-top: 14px;
+}
+
+.verte-app .alt-product {
+  margin-top: 12px;
 }

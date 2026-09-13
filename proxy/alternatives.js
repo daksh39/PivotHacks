@@ -54,7 +54,9 @@ async function alternativesFor(product, guidance) {
   if (!key) return [];
 
   const prompt = [
-    `Product: ${product.title}`,
+    product.spoken
+      ? `The person said out loud what they want to buy: "${product.title}". Work out the product they mean first.`
+      : `Product: ${product.title}`,
     product.price ? `Price: ${product.currency || 'USD'} ${product.price}` : '',
     guidance ? `Category: ${guidance.category}` : '',
     guidance && guidance.embodiedCo2Kg

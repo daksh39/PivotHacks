@@ -13,6 +13,7 @@ const cors = require('cors');
 
 const { lookup } = require('./lookup');
 const { guidanceTable } = require('./guidance');
+const { transcribe, isHeard } = require('./voice');
 
 const app = express();
 const PORT = Number(process.env.PORT || 8787);
@@ -43,6 +44,43 @@ app.post('/lookup', async (req, res) => {
   } catch (error) {
     console.error('[verte] lookup failed:', error);
     return res.status(500).json({ error: 'lookup failed' });
+  }
+});
+
+/**
+ * Voice: the user says what they're about to buy. Raw audio in,
+ * { transcript, result } out — the transcript runs through the same lookup the
+ * inline card uses, so speaking produces the same answer as browsing.
+ */
+app.post('/voice', express.raw({ type: 'audio/*', limit: '10mb' }), async (req, res) => {
+  if (!Buffer.isBuffer(req.body) || !req.body.length) {
+    return res.status(400).json({ error: 'No audio received' });
+  }
+
+  try {
+    const transcript = await transcribe(req.body, req.get('content-type'));
+    // Whisper fills silence with stock phrases ("you", "thank you").
+    if (!isHeard(transcript)) {
+      return res.status(422).json({ error: "Didn't catch that — try again" });
+    }
+
+    const result = await lookup(
+      {
+        title: transcript,
+        price: null,
+        currency: 'USD',
+        category: '',
+        imageUrl: null,
+        sourceUrl: 'https://www.amazon.com/',
+        spoken: true,
+      },
+      []
+    );
+    return res.json({ transcript, result });
+  } catch (error) {
+    if (error.status) return res.status(error.status).json({ error: error.message });
+    console.error('[verte] voice failed:', error);
+    return res.status(500).json({ error: 'Voice lookup failed' });
   }
 });
 

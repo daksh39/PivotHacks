@@ -71,6 +71,18 @@ showing something it can't stand behind.
 
 `npm test` runs the extraction, listings and card tests in jsdom.
 
+## Voice
+
+Open the popup, click the mic, and say what you're about to buy: "a laptop for
+college". The recording goes to the proxy (`POST /voice`), which transcribes it
+with OpenAI and runs the transcript through the same lookup the inline card
+uses. The popup shows what it heard and the lower-carbon alternatives.
+
+Chrome can't show the microphone prompt inside an extension popup, so the first
+time, Verte opens its options page: click **Enable microphone** once and the
+popup mic works from then on. A typed field sits under the mic in case a venue
+mic fails.
+
 ## Where the data comes from
 
 The card shows two tiers of information, kept visibly separate because they

@@ -45,7 +45,8 @@ const RULES = [
  * all. A wrong verdict is far worse than no verdict.
  */
 function classify(title) {
-  const haystack = String(title || '').toLowerCase();
+  // Hyphens become spaces so spoken transcripts ("mini-fridge") match too.
+  const haystack = String(title || '').toLowerCase().replace(/-/g, ' ');
   for (const rule of RULES) {
     if (rule.keywords.some((k) => haystack.includes(k))) return rule.slug;
   }

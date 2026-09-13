@@ -3,7 +3,8 @@
     color: var(--verte-ink);
     font-family: var(--verte-font-body);
     height: 139px;
-    padding-left: 30px;
+    padding-left: 24px;
+    padding-right: 24px;
     width: 392px;
 }
 

@@ -3,17 +3,21 @@ import './App.css';
 import { useEffect, useState } from "react";
 import AlternativesScreen from './screens/AlternativesScreen';
 import StatusScreen from './screens/StatusScreen';
+import VerteHeader from './components/VerteHeader';
+import VoiceButton from './components/VoiceButton';
+import { useVoiceLookup } from './voice/useVoiceLookup';
 
 /*
  * Verte popup.
  *
- * The inline card is the product; this is a second window onto the same
- * answer. The content script stores what it rendered — or why it didn't —
- * keyed by page, and the popup reports that rather than running its own
- * lookup and inventing a second source of truth.
+ * Two ways in to the same answer. The inline card stores what it rendered for
+ * the current page; the voice bar lets you say what you're buying from
+ * anywhere. A spoken result takes over the popup, since it's what you just
+ * asked for.
  */
 function App() {
   const [state, setState] = useState(null);
+  const voice = useVoiceLookup();
 
   useEffect(() => {
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
@@ -26,14 +30,23 @@ function App() {
     });
   }, []);
 
-  if (!state) return <div className="verte-app" />;
-  if (state.status !== 'ok' || !state.result) {
-    return <div className="verte-app"><StatusScreen status={state.status} /></div>;
-  }
+  let body = null;
+  if (voice.result) body = <AlternativesScreen result={voice.result} />;
+  else if (state && state.status === 'ok' && state.result) body = <AlternativesScreen result={state.result} />;
+  else if (state) body = <StatusScreen status={state.status} />;
 
   return (
     <div className="verte-app">
-      <AlternativesScreen result={state.result} />
+      <div className="verte-app-header"><VerteHeader isSmall={true} /></div>
+      <VoiceButton
+        state={voice.state}
+        transcript={voice.transcript}
+        error={voice.error}
+        onStart={voice.start}
+        onStop={voice.stop}
+        onSubmitText={voice.submitText}
+      />
+      {body}
     </div>
   );
 }

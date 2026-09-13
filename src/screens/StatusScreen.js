@@ -1,5 +1,4 @@
 import './styles/MessageScreen.css';
-import VerteHeader from '../components/VerteHeader';
 import VerteMark from '../components/VerteMark';
 
 /*
@@ -39,7 +38,6 @@ function StatusScreen({ status }) {
 
   return (
     <div className="message-container">
-      <VerteHeader isSmall={true} />
       <div className="message-content">
         <VerteMark height={28} />
         <div className="message-text">

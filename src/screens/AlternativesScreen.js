@@ -1,5 +1,4 @@
 import './styles/AlternativesScreen.css';
-import VerteHeader from '../components/VerteHeader';
 import GeneralButton from '../components/GeneralButton';
 import { LINKS } from '../config';
 
@@ -15,8 +14,6 @@ function AlternativesScreen({ result }) {
 
     return (
         <div className="alt-container">
-            <VerteHeader isSmall={true} />
-
             <div className="alt-product">{product.title}</div>
 
             {embodiedCo2Kg > 0 ? (

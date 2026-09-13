@@ -14,7 +14,7 @@
 export const BRAND = {
   name: 'Verte',
   thesis: 'The greenest product is the one that already exists.',
-  tagline: 'Shows you the secondhand option before you buy new.',
+  tagline: 'Tell it what you are buying, and it shows you the lower-carbon choice.',
 };
 
 // Our own proxy. The original Bubble backend is gone — its API returns 401
@@ -24,6 +24,7 @@ export const API_BASE = process.env.REACT_APP_VERTE_API_BASE || 'http://localhos
 export const ENDPOINTS = {
   health: `${API_BASE}/health`,
   lookup: `${API_BASE}/lookup`,
+  voice: `${API_BASE}/voice`,
 };
 
 export const LINKS = {
