@@ -2,8 +2,10 @@
  * First on the cut list after multi-retailer (§11) — keep it cheap.
  * Owned by lane/ui. */
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { BuyerContext } from '../types'
+import type { StatusRequest, VerteStatus } from '../status'
+import { describeStatus } from '../status'
 import {
   BUDGET_CHOICES,
   DEADLINE_CHOICES,
@@ -16,9 +18,35 @@ import { Leaf } from '../components/Skeleton'
 
 type Impact = { co2Kg: number; usd: number; seen: number }
 
+/**
+ * Ask the tab in front of them what Verte is doing there.
+ *
+ * A tab with no content script — Walmart, a settings page, a new tab — throws
+ * rather than replying, and that silence is itself the answer: we do not run
+ * there. Reporting that plainly is the whole point of this; "nothing happened"
+ * was the bug.
+ */
+async function askActiveTab(message: StatusRequest): Promise<VerteStatus> {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    if (!tab?.id) return { state: 'unsupported-site' }
+    const reply = (await chrome.tabs.sendMessage(tab.id, message)) as VerteStatus | undefined
+    return reply ?? { state: 'unsupported-site' }
+  } catch {
+    return { state: 'unsupported-site' }
+  }
+}
+
 export function Popup() {
   const [impact, setImpact] = useState<Impact>({ co2Kg: 0, usd: 0, seen: 0 })
   const [context, setContext] = useState<BuyerContext>(DEFAULT_CONTEXT)
+  const [status, setStatus] = useState<VerteStatus | null>(null)
+
+  const refresh = useCallback(() => {
+    void askActiveTab({ type: 'VERTE_STATUS' }).then(setStatus)
+  }, [])
+
+  useEffect(refresh, [refresh])
 
   useEffect(() => {
     try {
@@ -94,6 +122,12 @@ export function Popup() {
             * no switch. It comes back with real pickup data. */}
         </fieldset>
 
+        {/* What is happening on the page in front of them, right now. The card
+          * lives on the page, not in here — so when there is no card, this is
+          * the only surface that can explain why. */}
+        <hr className="verte__rule" />
+        <Status status={status} onReshow={() => void askActiveTab({ type: 'VERTE_RESHOW' }).then(setStatus)} />
+
         {impact.seen > 0 ? (
           <>
             <hr className="verte__rule" />
@@ -111,15 +145,45 @@ export function Popup() {
               Across {impact.seen} {impact.seen === 1 ? 'product' : 'products'} this term.
             </p>
           </>
-        ) : (
-          <>
-            <hr className="verte__rule" />
-            <p className="verte__note">
-              Open a product page and Verte will look for it secondhand.
-            </p>
-          </>
-        )}
+        ) : null}
       </div>
     </div>
+  )
+}
+
+function Status({ status, onReshow }: { status: VerteStatus | null; onReshow: () => void }) {
+  if (!status) return <p className="verte__note">Checking this page…</p>
+
+  const { head, sub } = describeStatus(status)
+
+  /* The good case leads with the money, the same way the card does — the
+   * popup should not restate a win in flat prose. */
+  if (status.state === 'showing') {
+    return (
+      <>
+        {status.savings != null && (
+          <div className="verte__price">
+            <span className="verte__price-now">{formatUsd(status.savings, status.currency)}</span>
+            <span className="verte__save">to save here</span>
+          </div>
+        )}
+        <p className="verte__note">
+          {status.count} secondhand {status.count === 1 ? 'listing' : 'listings'} on this page —
+          the card sits next to the buy button.
+        </p>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <p className="verte__blocked-head">{head}</p>
+      {sub && <p className="verte__blocked-sub">{sub}</p>}
+      {status.state === 'dismissed' && (
+        <button type="button" className="verte__chip" onClick={onReshow}>
+          Show it again
+        </button>
+      )}
+    </>
   )
 }

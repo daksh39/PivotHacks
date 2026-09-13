@@ -56,7 +56,10 @@ export default defineManifest({
     },
   ],
 
-  permissions: ['storage'],
+  /* activeTab lets the popup ask the tab in front of the user what Verte is
+   * doing there. It is granted only on click, and only for that tab — no
+   * standing access to browsing history. */
+  permissions: ['storage', 'activeTab'],
 
   /* The service worker is the only thing that talks to the proxy. Add the
    * deployed origin here when lane/proxy ships it. */
