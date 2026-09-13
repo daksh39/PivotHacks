@@ -217,6 +217,54 @@ describe('page gating', () => {
     expect(looksLikeProductPage('https://www.amazon.com/s')).toBe(false)
   })
 
+  /* ---   /* --- the shapes that were being rejected ------------------------------- */
+
+  test('a bestbuy.com /site/<slug>/<sku>.p path is a product page', () => {
+    /* The US storefront does not use /product/ at all, so every bestbuy.com
+     * page was skipped even though the manifest matches the domain. */
+    expect(
+      looksLikeProductPage(
+        'https://www.bestbuy.com/site/sony-wh-ch720n-headphones/6535815.p?skuId=6535815',
+      ),
+    ).toBe(true)
+  })
+
+  test('a bestbuy.com URL carrying only skuId is a product page', () => {
+    expect(looksLikeProductPage('https://www.bestbuy.com/site/x.p?skuId=6535815')).toBe(true)
+  })
+
+  test('an amazon mobile /gp/aw/d/ path is a product page', () => {
+    expect(looksLikeProductPage('https://www.amazon.com/gp/aw/d/B0771S9XT8')).toBe(true)
+  })
+
+  test('an amazon.ca bilingual /-/en/dp/ path is a product page', () => {
+    expect(looksLikeProductPage('https://www.amazon.ca/-/en/dp/B0CHW317SG')).toBe(true)
+  })
+
+  test('an unrecognised amazon URL still counts when the page has a product title', () => {
+    /* Retail URL shapes churn. The URL is a fast path, not the authority. */
+    setPage('<span id="productTitle">Dell S2421HS Monitor</span>')
+    expect(looksLikeProductPage('https://www.amazon.com/some/new/shape')).toBe(true)
+  })
+
+  test('an unrecognised best buy URL counts when there is an add-to-cart', () => {
+    setPage('<h1>Sony WH-CH720N</h1><button data-testid="add-to-cart-button">Add</button>')
+    expect(looksLikeProductPage('https://www.bestbuy.ca/en-ca/whatever')).toBe(true)
+  })
+
+  test('a best buy search page has prices but no add-to-cart, so it is not one', () => {
+    setPage('<h1>Results</h1><span class="screenReaderOnly">$129.99</span>')
+    expect(looksLikeProductPage('https://www.bestbuy.ca/en-ca/search?q=fridge')).toBe(false)
+  })
+
+  test('an amazon page with no product title is not one', () => {
+    setPage('<h1>Your Orders</h1>')
+    expect(looksLikeProductPage('https://www.amazon.com/gp/css/order-history')).toBe(false)
+  })
+
+  test('another retailer counts when it declares og:type=product', () => {
+  })
+
   test('returns null when there is no title to be found', () => {
     setPage('<div>nothing here</div>')
     expect(extractProduct('https://example.com/random')).toBeNull()

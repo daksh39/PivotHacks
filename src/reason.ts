@@ -31,5 +31,9 @@ export function explainReason(reason: RecommendationReason, ctx: BuyerContext): 
         : 'Nothing secondhand reaches you in time'
     case 'nothing-in-budget':
       return 'Nothing secondhand is within your budget'
+    case 'low-carbon-payoff':
+      /* Verte arguing against itself. Making one of these costs almost
+       * nothing, so a few dollars off is not a reason to buy a stranger's. */
+      return 'Buying this one new is fine'
   }
 }
