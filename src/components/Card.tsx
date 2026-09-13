@@ -12,8 +12,9 @@
  * when a lane pivots.  Owned by lane/ui.
  * ------------------------------------------------------------------------- */
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { UsedOption, VerteResult } from '../types'
+import { explainReason } from '../reason'
 import { formatCo2, formatUsd, milesDrivenEquivalent } from '../carbon'
 import { Verdict } from './Verdict'
 import { Empty } from './Empty'
@@ -30,12 +31,14 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded)
   const [tab, setTab] = useState<UsedOption['source']>('ebay')
 
-  const { product, guidance, options, savingsUsd, co2AvoidedKg } = result
+  const { product, guidance, options, savingsUsd, co2AvoidedKg, reason, passedOver, context } =
+    result
 
-  const cheapest = useMemo(
-    () => options.reduce<UsedOption | null>((a, b) => (a && a.price <= b.price ? a : b), null),
-    [options],
-  )
+  /* options[0] is the RECOMMENDATION, already ranked against the buyer's
+   * context by proxy/rank.ts. It is not necessarily the cheapest listing,
+   * and the card must never quietly substitute the cheapest for it. */
+  const recommended: UsedOption | null = options[0] ?? null
+  const unusable = reason === 'nothing-arrives-in-time'
   const ebay = options.filter((o) => o.source === 'ebay')
   const campus = options.filter((o) => o.source === 'campus')
   const shown = tab === 'ebay' ? ebay : campus
@@ -45,14 +48,16 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
       <div className="verte verte--collapsed">
         <button className="verte__strip" onClick={() => setExpanded(true)}>
           <Leaf />
-          {cheapest && savingsUsd ? (
+          {recommended && savingsUsd && !unusable ? (
             <span>
-              <strong>{formatUsd(cheapest.price, product.currency)}</strong> used
-              {cheapest.source === 'campus' ? ' nearby' : ''} — save{' '}
+              <strong>{formatUsd(recommended.price, product.currency)}</strong> used
+              {recommended.source === 'campus' ? ' nearby' : ''} — save{' '}
               <strong>{formatUsd(savingsUsd, product.currency)}</strong>
             </span>
           ) : guidance.verdict === 'avoid' ? (
             <span>Verte suggests buying this one new</span>
+          ) : unusable ? (
+            <span>Nothing secondhand reaches you in time</span>
           ) : (
             <span>No secondhand listings right now</span>
           )}
@@ -76,24 +81,52 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
 
       <div className="verte__body">
         {/* 1 — money leads */}
-        {cheapest && (
-          <div className="verte__price">
-            {product.price != null && (
-              <>
-                <span className="verte__price-was">
-                  {formatUsd(product.price, product.currency)}
-                </span>
-                <span className="verte__price-arrow" aria-hidden="true">→</span>
-              </>
-            )}
-            <span className="verte__price-now">
-              {formatUsd(cheapest.price, product.currency)}
-            </span>
-            {savingsUsd != null && (
-              <span className="verte__save">
-                Save {formatUsd(savingsUsd, product.currency)}
+        {recommended && !unusable && (
+          <>
+            <div className="verte__price">
+              {product.price != null && (
+                <>
+                  <span className="verte__price-was">
+                    {formatUsd(product.price, product.currency)}
+                  </span>
+                  <span className="verte__price-arrow" aria-hidden="true">→</span>
+                </>
+              )}
+              <span className="verte__price-now">
+                {formatUsd(recommended.price, product.currency)}
               </span>
+              {savingsUsd != null && (
+                <span className="verte__save">
+                  Save {formatUsd(savingsUsd, product.currency)}
+                </span>
+              )}
+            </div>
+
+            {/* Why THIS one. A recommendation you can't interrogate is one you
+              * won't trust, and after pivot 03 the winner is frequently not
+              * the cheapest listing on the card. */}
+            <p className="verte__reason">{explainReason(reason, context)}</p>
+
+            {/* What context cost them. Never truncated — the ui-ux guidance on
+              * essential text is explicit that you don't clamp meaning just to
+              * keep cards uniform. It wraps instead. */}
+            {passedOver && (
+              <p className="verte__passed">
+                Skipped {formatUsd(passedOver.option.price, product.currency)}
+                {passedOver.option.source === 'campus' ? ' nearby' : ' on eBay'} — {passedOver.why}
+              </p>
             )}
+          </>
+        )}
+
+        {/* Context made everything unreachable. Say so and stop selling. */}
+        {unusable && (
+          <div className="verte__blocked">
+            <p className="verte__blocked-head">{explainReason(reason, context)}</p>
+            <p className="verte__blocked-sub">
+              {options.length} listing{options.length === 1 ? '' : 's'} exist, but none get to you
+              by then. Buying new is the honest answer today.
+            </p>
           </div>
         )}
 
@@ -101,7 +134,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
           <Empty result={result} />
         ) : (
           <>
-            {cheapest && <hr className="verte__rule" />}
+            <hr className="verte__rule" />
 
             {/* 2 — the verdict */}
             <Verdict guidance={guidance} />

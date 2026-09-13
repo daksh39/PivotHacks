@@ -123,6 +123,99 @@ export const cardStyles = /* css */ `
 
 /* --- carbon: present, never preachy. the tilde stays (§06) --------------- */
 
+/* --- pivot 03: why this one won ----------------------------------------- */
+
+.verte__reason {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: ${color.accentText};
+}
+
+/* Essential meaning, so it wraps rather than truncating (ui-ux: don't clamp
+ * meaning to keep cards uniform). Content-driven height, unitless leading. */
+.verte__passed {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: ${color.inkSoft};
+  overflow-wrap: anywhere;
+}
+
+.verte__blocked {
+  background: ${verdictColor.avoid.bg};
+  border-radius: ${radius.block};
+  padding: 12px 14px;
+}
+.verte__blocked-head {
+  font-family: ${font.heading};
+  font-size: 15px;
+  font-weight: 600;
+  color: ${verdictColor.avoid.text};
+}
+.verte__blocked-sub {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: ${color.ink};
+}
+
+/* --- popup: the two context questions ------------------------------------ */
+
+.verte__ctx { border: 0; display: block; }
+.verte__ctx-legend {
+  font-size: 12px;
+  font-weight: 600;
+  color: ${color.accentText};
+  margin-bottom: 8px;
+}
+.verte__ctx-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* 44px min target (ui-ux priority 2), 8px spacing, visible pressed state. */
+.verte__chip {
+  font: inherit;
+  font-size: 12.5px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: ${radius.pill};
+  border: 1px solid ${color.shade};
+  background: transparent;
+  color: ${color.ink};
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.verte__chip:hover { background: ${color.tint}; }
+.verte__chip[aria-checked='true'] {
+  background: ${color.moss};
+  border-color: ${color.moss};
+  color: ${color.accentText};
+  font-weight: 600;
+}
+.verte__chip:focus-visible { outline: 2px solid ${color.accentText}; outline-offset: 2px; }
+
+.verte__ctx-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  min-height: 44px;
+  font-size: 13px;
+  color: ${color.ink};
+  cursor: pointer;
+}
+.verte__ctx-check input { width: 16px; height: 16px; accent-color: ${color.accentText}; }
+
+.verte__ctx-help {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: ${color.inkSoft};
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verte__chip { transition: none; }
+}
+
 .verte__carbon { font-size: 13.5px; color: ${color.ink}; }
 .verte__carbon-eq { color: ${color.inkSoft}; }
 

@@ -14,7 +14,12 @@ import { createRoot } from 'react-dom/client'
 import { Card } from '../components/Card'
 import { Skeleton } from '../components/Skeleton'
 import { cardStyles } from '../components/styles'
-import { MOCK_EMPTY, MOCK_MATTRESS, MOCK_MINI_FRIDGE } from '../mocks'
+import {
+  MOCK_EMPTY,
+  MOCK_MATTRESS,
+  MOCK_MINI_FRIDGE,
+  MOCK_MINI_FRIDGE_DEADLINE,
+} from '../mocks'
 import { pageGround } from '../tokens'
 
 /** Renders children into a real shadow root, exactly like the content script. */
@@ -77,6 +82,10 @@ function Preview() {
       <Panel label="expanded — safe">
         <Card result={MOCK_MINI_FRIDGE} defaultExpanded onDismiss={() => {}} />
       </Panel>
+      <Panel label="expanded — deadline changed the winner">
+        <Card result={MOCK_MINI_FRIDGE_DEADLINE} defaultExpanded onDismiss={() => {}} />
+      </Panel>
+
       <Panel label="expanded — buy new">
         <Card result={MOCK_MATTRESS} defaultExpanded onDismiss={() => {}} />
       </Panel>

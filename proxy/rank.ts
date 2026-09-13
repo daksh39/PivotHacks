@@ -29,6 +29,10 @@ import type {
   UsedOption,
 } from '../src/types'
 
+/* The wording lives in src/reason.ts so the card can render it without
+ * importing from the proxy. Re-exported here for the smoke test. */
+export { explainReason } from '../src/reason'
+
 export type RankOutcome = {
   /** Ranked, never filtered. options[0] is the recommendation. */
   options: UsedOption[]
@@ -96,20 +100,4 @@ export function rank(
       : 'cheapest-in-time'
 
   return { options, reason, passedOver: { option: cheapest, why } }
-}
-
-/** Card copy, kept beside the logic so the two cannot drift apart. */
-export function explainReason(reason: RecommendationReason, ctx: BuyerContext): string {
-  switch (reason) {
-    case 'cheapest':
-      return 'Cheapest option available'
-    case 'cheapest-in-time':
-      return `Cheapest option that arrives within ${ctx.needInDays} days`
-    case 'only-option-in-time':
-      return 'The only option that arrives in time'
-    case 'cheaper-option-needs-car':
-      return 'A cheaper one is nearby, but it needs a car to collect'
-    case 'nothing-arrives-in-time':
-      return 'Nothing secondhand gets to you in time, so buying new is the honest answer'
-  }
 }
