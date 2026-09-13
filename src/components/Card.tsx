@@ -30,6 +30,7 @@ function arrival(days: number): string {
 /** Why this particular listing doesn't work for them, or null if it does. */
 function blockedReason(o: UsedOption, result: VerteResult): string | null {
   const { context, guidance } = result
+  if (context.budgetCap !== null && o.price > context.budgetCap) return 'Over budget'
   if (o.pickup && guidance.bulky && !context.hasCar) return 'Needs a car'
   if (context.needInDays != null && o.daysToHand > context.needInDays) {
     return `${arrival(o.daysToHand)} · too late`
@@ -55,7 +56,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
    * context by proxy/rank.ts. It is not necessarily the cheapest listing,
    * and the card must never quietly substitute the cheapest for it. */
   const recommended: UsedOption | null = options[0] ?? null
-  const unusable = reason === 'nothing-arrives-in-time'
+  const unusable = reason === 'nothing-arrives-in-time' || reason === 'nothing-in-budget'
 
   /* One source per page now — you are on Amazon or you are on Best Buy, and
    * the listings are that retailer's own. There is nothing to switch between,
@@ -76,7 +77,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
           ) : guidance.verdict === 'avoid' ? (
             <span>Verte suggests buying this one new</span>
           ) : unusable ? (
-            <span>Nothing secondhand reaches you in time</span>
+            <span>{explainReason(reason, context)}</span>
           ) : (
             <span>No secondhand listings right now</span>
           )}
@@ -142,8 +143,9 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
           <div className="verte__blocked">
             <p className="verte__blocked-head">{explainReason(reason, context)}</p>
             <p className="verte__blocked-sub">
-              {options.length} listing{options.length === 1 ? '' : 's'} exist, but none get to you
-              by then. Buying new is the honest answer today.
+              {passedOver
+                ? `${options.length} listing${options.length === 1 ? '' : 's'} found, but ${passedOver.why}.`
+                : `${options.length} listing${options.length === 1 ? '' : 's'} found, but none work for you today.`}
             </p>
           </div>
         )}

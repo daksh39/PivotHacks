@@ -170,6 +170,7 @@ export const cardStyles = /* css */ `
   margin-bottom: 8px;
 }
 .verte__ctx-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.verte__ctx-legend--spaced { margin-top: 14px; }
 
 /* 44px min target (ui-ux priority 2), 8px spacing, visible pressed state. */
 .verte__chip {

@@ -4,7 +4,13 @@
 
 import { useEffect, useState } from 'react'
 import type { BuyerContext } from '../types'
-import { DEADLINE_CHOICES, DEFAULT_CONTEXT, loadContext, saveContext } from '../context'
+import {
+  BUDGET_CHOICES,
+  DEADLINE_CHOICES,
+  DEFAULT_CONTEXT,
+  loadContext,
+  saveContext,
+} from '../context'
 import { formatCo2, formatUsd, milesDrivenEquivalent } from '../carbon'
 import { Leaf } from '../components/Skeleton'
 
@@ -55,6 +61,22 @@ export function Popup() {
                 aria-checked={context.needInDays === choice.value}
                 className="verte__chip"
                 onClick={() => update({ needInDays: choice.value })}
+              >
+                {choice.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="verte__ctx-legend verte__ctx-legend--spaced">What can you spend?</div>
+          <div className="verte__ctx-row" role="radiogroup" aria-label="What can you spend?">
+            {BUDGET_CHOICES.map((choice) => (
+              <button
+                key={String(choice.value)}
+                type="button"
+                role="radio"
+                aria-checked={context.budgetCap === choice.value}
+                className="verte__chip"
+                onClick={() => update({ budgetCap: choice.value })}
               >
                 {choice.label}
               </button>

@@ -41,7 +41,11 @@ export type RankOutcome = {
 }
 
 /** The default when we know nothing: no deadline, no car. */
-export const DEFAULT_CONTEXT: BuyerContext = { needInDays: null, hasCar: false }
+export const DEFAULT_CONTEXT: BuyerContext = {
+  needInDays: null,
+  hasCar: false,
+  budgetCap: null,
+}
 
 /** Can they physically collect it? Only bulky local pickups are ever a problem. */
 function reachable(o: UsedOption, ctx: BuyerContext, g: CategoryGuidance): boolean {
@@ -52,6 +56,12 @@ function reachable(o: UsedOption, ctx: BuyerContext, g: CategoryGuidance): boole
   if (!o.pickup) return true
   if (!g.bulky) return true
   return ctx.hasCar
+}
+
+/** Can they actually pay for it? A ceiling is inclusive — $174 fits a $174 cap. */
+function affordable(o: UsedOption, ctx: BuyerContext): boolean {
+  if (ctx.budgetCap === null) return true
+  return o.price <= ctx.budgetCap
 }
 
 /** Will it be in their hands by the deadline? */
@@ -72,7 +82,27 @@ export function rank(
   }
 
   const cheapest = byPrice[0]
-  const viable = byPrice.filter((o) => reachable(o, ctx, guidance) && inTime(o, ctx))
+
+  /* Budget is checked first and separately. Being unable to pay for something
+   * is a different answer from it arriving late: "nothing you can afford" is
+   * actionable, "nothing arrives in time" is not the same advice. */
+  const withinBudget = byPrice.filter((o) => affordable(o, ctx))
+
+  if (!withinBudget.length) {
+    const over = Math.ceil(cheapest.price - (ctx.budgetCap ?? 0))
+    return {
+      /* Every listing stays on the card. Hiding them would conceal that a
+       * secondhand market exists at all — they are shown, marked over budget. */
+      options: byPrice,
+      reason: 'nothing-in-budget',
+      passedOver: {
+        option: cheapest,
+        why: `the cheapest one is ${over} over your budget`,
+      },
+    }
+  }
+
+  const viable = withinBudget.filter((o) => reachable(o, ctx, guidance) && inTime(o, ctx))
 
   /* Nothing works for them. Hand back the full list untouched and let the card
    * say so — §07, an app willing to argue against itself is the one you trust.
