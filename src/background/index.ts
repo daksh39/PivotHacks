@@ -21,8 +21,20 @@ chrome.runtime.onMessage.addListener((message: LookupRequest, _sender, sendRespo
 
   void (async () => {
     /* Cache key includes the context — the same product under a different
-     * deadline is a genuinely different answer, not a cache hit. */
-    const key = `${message.product.sourceUrl}|${message.context.needInDays}|${message.context.hasCar}`
+     * deadline is a genuinely different answer, not a cache hit.
+     *
+     * It also includes the listings, because they travel with the request and
+     * they are not stable: the used buybox and the open-box search can be
+     * empty on the first pass and populated a second later, once the page has
+     * finished rendering. Keying on the product alone would pin that first
+     * empty answer in the cache for ten minutes and keep re-serving "nothing
+     * listed" at a product that plainly has listings. */
+    const key = [
+      message.product.sourceUrl,
+      message.context.needInDays,
+      message.context.hasCar,
+      fingerprint(message.options),
+    ].join('|')
     const hit = cache.get(key)
     if (hit && Date.now() - hit.at < TTL_MS) {
       sendResponse({ ok: true, result: hit.result } satisfies LookupResponse)
@@ -33,7 +45,16 @@ chrome.runtime.onMessage.addListener((message: LookupRequest, _sender, sendRespo
       const response = await fetch(`${PROXY_URL}/lookup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product: message.product, context: message.context }),
+        /* The listings MUST travel with the request. They were read from the
+         * retailer's own page and frontend API by the content script, which
+         * is the only thing that can read them — this worker is not on that
+         * origin and the proxy is not a browser. Omitting them here is not a
+         * degraded result, it is an empty card on every product. */
+        body: JSON.stringify({
+          product: message.product,
+          context: message.context,
+          options: message.options ?? [],
+        }),
       })
 
       if (!response.ok) {
@@ -59,6 +80,15 @@ chrome.runtime.onMessage.addListener((message: LookupRequest, _sender, sendRespo
   /* Keep the message channel open for the async sendResponse above. */
   return true
 })
+
+/** Cheap, order-independent stand-in for "the same set of listings". */
+function fingerprint(options: LookupRequest['options'] | undefined): string {
+  if (!options?.length) return 'none'
+  return options
+    .map((option) => `${option.source}:${option.price}`)
+    .sort()
+    .join(',')
+}
 
 /** Running avoided-emissions total for the popup (§04 lane C). */
 async function recordImpact(result: VerteResult): Promise<void> {

@@ -74,6 +74,58 @@ check "POST /lookup  mattress (buy new)" "$(lookup '"Zinus 8 Inch Green Tea Memo
 check "POST /lookup  laptop (cited co2)" "$(lookup '"Apple MacBook Air 13-inch M2"' 999)"                          check
 check "POST /lookup  microwave"          "$(lookup '"Toshiba 0.9 Cu Ft Countertop Microwave"' 109)"                 safe
 
+# --- the listings themselves --------------------------------------------
+# A well-formed envelope is not the same as a working card. The service worker
+# once dropped `options` on the floor, everything still typechecked, and every
+# product read "nothing secondhand listed". So assert on content, not shape.
+
+FRIDGE='"Midea 3.1 Cu. Ft. Compact Mini Fridge with Freezer"'
+
+# One listing, priced in the page's currency, no constraints.
+with_listing() {
+  post "{\"product\":{\"title\":$FRIDGE,\"price\":89,\"currency\":\"USD\",\"category\":\"\",
+         \"imageUrl\":null,\"sourceUrl\":\"https://www.amazon.com/dp/SMOKE\"},
+         \"context\":$1,
+         \"options\":[{\"source\":\"amazon\",\"title\":\"Used - Very Good\",\"price\":52,
+           \"currency\":\"USD\",\"url\":\"https://example.test/a\",\"imageUrl\":null,
+           \"condition\":\"Used - Very Good\",\"daysToHand\":7}]}"
+}
+
+assert_json() {
+  local name="$1" body="$2" script="$3"
+  printf '  %-38s' "$name"
+  if node -e "$script" <<<"$body" 2>/tmp/verte-smoke.err; then echo "ok"
+  else echo "FAIL — $(cat /tmp/verte-smoke.err)"; fail=1; fi
+}
+
+assert_json "listings survive the round trip" \
+  "$(with_listing '{"needInDays":null,"hasCar":true,"budgetCap":null}')" '
+  let raw=""; process.stdin.on("data",d=>raw+=d).on("end",()=>{
+    const r=JSON.parse(raw);
+    if (r.options.length !== 1) { console.error("options dropped: got "+r.options.length); process.exit(1) }
+    if (r.savingsUsd !== 37) { console.error("expected savingsUsd 37, got "+r.savingsUsd); process.exit(1) }
+  });'
+
+# Pivot 03: the same product under a deadline nothing meets is a different
+# ANSWER, not the same answer reworded.
+assert_json "a deadline changes the answer" \
+  "$(with_listing '{"needInDays":1,"hasCar":true,"budgetCap":null}')" '
+  let raw=""; process.stdin.on("data",d=>raw+=d).on("end",()=>{
+    const r=JSON.parse(raw);
+    if (r.reason !== "nothing-arrives-in-time") { console.error("reason was "+r.reason); process.exit(1) }
+    if (r.savingsUsd !== null) { console.error("claimed a saving on an unusable option"); process.exit(1) }
+  });'
+
+# ...and so does a budget it cannot meet.
+assert_json "a budget changes the answer" \
+  "$(with_listing '{"needInDays":null,"hasCar":true,"budgetCap":40}')" '
+  let raw=""; process.stdin.on("data",d=>raw+=d).on("end",()=>{
+    const r=JSON.parse(raw);
+    if (r.reason !== "nothing-in-budget") { console.error("reason was "+r.reason); process.exit(1) }
+    if (r.savingsUsd !== null) { console.error("claimed a saving they cannot afford"); process.exit(1) }
+    if (!r.options.length) { console.error("over-budget listings must still be shown"); process.exit(1) }
+  });'
+
 printf '  %-38s' "POST /lookup  unknown → 404"
 code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/lookup" \
   -H 'Content-Type: application/json' \
