@@ -21,6 +21,7 @@ import {
   FIXTURE_MONITOR,
   FIXTURE_OVER_BUDGET,
   FIXTURE_TEXTBOOK,
+  FIXTURE_UNKNOWN,
 } from './fixtures'
 import { pageGround } from '../tokens'
 
@@ -80,6 +81,10 @@ function Preview() {
     >
       <Panel label="THE DEMO — every figure cited">
         <Card result={FIXTURE_MONITOR} defaultExpanded onDismiss={() => {}} />
+      </Panel>
+
+      <Panel label="UNKNOWN CATEGORY — the common case">
+        <Card result={FIXTURE_UNKNOWN} defaultExpanded onDismiss={() => {}} />
       </Panel>
 
       <Panel label="collapsed">

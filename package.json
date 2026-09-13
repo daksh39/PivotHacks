@@ -5,17 +5,13 @@
   "type": "module",
   "description": "Verte \u2014 the greenest product is the one that already exists.",
   "scripts": {
-    "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview:card": "vite --open /src/dev/preview.html",
-    "proxy": "tsx watch proxy/index.ts",
-    "site": "vite --config site/vite.config.ts",
-    "site:build": "vite build --config site/vite.config.ts",
-    "smoke": "bash proxy/smoke.sh",
-    "typecheck": "tsc --noEmit",
-    "all": "concurrently -n proxy,ext -c green,cyan \"npm:proxy\" \"npm:dev\"",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "preview:card": "vite --config vite.preview.config.ts",
+    "site": "vite --config site/vite.config.ts",
+    "site:build": "vite build --config site/vite.config.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

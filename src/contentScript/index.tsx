@@ -6,50 +6,54 @@
  * ------------------------------------------------------------------------- */
 
 import { StrictMode } from 'react'
-import type { LookupRequest, LookupResponse, VerteResult } from '../types'
+import { buildResult } from '../assemble'
+import { classify } from '../categories'
+import { guidanceFor } from '../guidance'
+import type { ProductContext } from '../types'
 import { loadContext } from '../context'
 import { Card } from '../components/Card'
 import { Skeleton } from '../components/Skeleton'
 import { extractProduct, looksLikeProductPage } from './extract'
 import { findUsedListings } from './listings'
 import { mountCard, unmountCard } from './mount'
+import { waitFor } from './wait'
 
-/** Dismissed stays dismissed for that product (§06). */
-const dismissKey = (url: string) => `verte:dismissed:${url}`
-
-async function isDismissed(url: string): Promise<boolean> {
-  const key = dismissKey(url)
-  const stored = await chrome.storage.local.get(key)
-  return Boolean(stored[key])
-}
+/**
+ * Dismissal lasts for this page view, not forever.
+ *
+ * It used to be written to chrome.storage.local keyed by URL, which meant one
+ * accidental click on the × hid the card on that product permanently — no
+ * reload, revisit, or reinstall brought it back, and nothing told the user
+ * why. In-memory is the behaviour people expect from a close button: gone
+ * now, back on reload.
+ */
+const dismissed = new Set<string>()
 
 async function run(): Promise<void> {
   if (!looksLikeProductPage()) return
 
-  const product = extractProduct()
+  /* Wait for the product to actually render. Calling extractProduct() once at
+   * document_idle and returning on null is what made the card appear only
+   * after repeated refreshes: these pages fill in their title well after the
+   * content script runs, and nothing ever looked a second time. */
+  const product = await waitFor(() => extractProduct())
   if (!product) return
+  if (dismissed.has(product.sourceUrl)) return
 
-  if (await isDismissed(product.sourceUrl)) return
+  /* Decide BEFORE mounting. The old order mounted a skeleton, then discovered
+   * there was nothing to show, then unmounted — which the user saw as the card
+   * appearing once and vanishing. Nothing is mounted now unless it stays. */
+  const result = await buildCard(product)
+  if (!result) return
 
   const root = mountCard()
-  root.render(
-    <StrictMode>
-      <Skeleton />
-    </StrictMode>,
-  )
-
-  const result = await lookup(product)
-  if (!result) {
-    unmountCard()
-    return
-  }
 
   root.render(
     <StrictMode>
       <Card
         result={result}
         onDismiss={() => {
-          void chrome.storage.local.set({ [dismissKey(product.sourceUrl)]: true })
+          dismissed.add(product.sourceUrl)
           unmountCard()
         }}
       />
@@ -57,32 +61,17 @@ async function run(): Promise<void> {
   )
 }
 
-async function lookup(product: LookupRequest['product']): Promise<VerteResult | null> {
-  /* Pivot 03: the buyer's situation travels with the request, because it
-   * decides which option comes back first. */
+async function buildCard(product: ProductContext) {
+  /* Everything below is local. The category table is static, ranking is a pure
+   * function, and the listings were read out of this very page. Routing any of
+   * it through a localhost service meant the extension showed nothing whenever
+   * that service was not running — which is most of the time, on most
+   * machines, including every machine we would demo on. */
   const context = await loadContext()
-
-  /* Read the retailer's own secondhand listings here, in the page. Both
-   * sources are same-origin — Amazon's used buybox is in this DOM, and Best
-   * Buy's search API only answers requests from its own origin. The service
-   * worker could not fetch either. */
   const options = await findUsedListings(product.title, product.sourceUrl)
+  const guidance = guidanceFor(product.category || classify(product.title))
 
-  try {
-    const response: LookupResponse = await chrome.runtime.sendMessage({
-      type: 'VERTE_LOOKUP',
-      product,
-      context,
-      options,
-    } satisfies LookupRequest)
-
-    if (response?.ok) return response.result
-    console.warn('[verte] lookup failed:', response?.error)
-  } catch (error) {
-    console.warn('[verte] service worker unreachable:', error)
-  }
-
-  return null
+  return buildResult(product, guidance, options, context)
 }
 
 void run()

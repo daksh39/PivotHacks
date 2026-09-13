@@ -263,6 +263,20 @@ export const cardStyles = /* css */ `
 .verte__carbon { font-size: 13.5px; color: ${color.ink}; }
 .verte__carbon-eq { color: ${color.inkSoft}; }
 
+/* The citation marker. Present only when the figure is quantified, so its
+ * absence is itself information: no marker means a qualitative claim. */
+.verte__carbon-src {
+  margin-left: 6px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${color.accentText};
+  background: ${color.tint};
+  border-radius: 100px;
+  padding: 2px 7px;
+  cursor: help;
+}
+
 /* --- listings ------------------------------------------------------------ */
 
 .verte__routes { display: flex; gap: 10px; flex-wrap: wrap; }

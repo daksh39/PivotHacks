@@ -12,7 +12,7 @@
  * ------------------------------------------------------------------------- */
 
 import { describe, expect, test } from 'vitest'
-import type { BuyerContext, CategoryGuidance, UsedOption } from '../src/types'
+import type { BuyerContext, CategoryGuidance, UsedOption } from './types'
 import { rank } from './rank'
 
 const guidance = (over: Partial<CategoryGuidance> = {}): CategoryGuidance => ({

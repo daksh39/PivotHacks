@@ -199,3 +199,37 @@ export const FIXTURE_OVER_BUDGET: VerteResult = {
   savingsUsd: null,
   co2AvoidedKg: null,
 }
+
+/**
+ * The common case now: a product we could not classify. No verdict, no cited
+ * carbon figure — and the card still has to carry the argument. This is the
+ * state that used to render nothing at all.
+ */
+export const FIXTURE_UNKNOWN: VerteResult = {
+  product: {
+    title: 'Logitech MX Master 3S Wireless Mouse',
+    price: 129,
+    currency: 'CAD',
+    category: '',
+    imageUrl: null,
+    sourceUrl: 'https://www.amazon.com/dp/B09HM94VDS',
+  },
+  guidance: null,
+  options: [
+    {
+      source: 'amazon',
+      title: 'Logitech MX Master 3S (Renewed)',
+      price: 79,
+      currency: 'CAD',
+      url: 'https://www.amazon.com/dp/B09HM94VDS',
+      imageUrl: null,
+      condition: 'Renewed',
+      daysToHand: 7,
+    },
+  ],
+  context: { needInDays: null, hasCar: false, budgetCap: null },
+  reason: 'cheapest',
+  passedOver: null,
+  savingsUsd: 50,
+  co2AvoidedKg: null,
+}

@@ -27,11 +27,11 @@ import type {
   CategoryGuidance,
   RecommendationReason,
   UsedOption,
-} from '../src/types'
+} from './types'
 
 /* The wording lives in src/reason.ts so the card can render it without
  * importing from the proxy. Re-exported here for the smoke test. */
-export { explainReason } from '../src/reason'
+export { explainReason } from './reason'
 
 export type RankOutcome = {
   /** Ranked, never filtered. options[0] is the recommendation. */

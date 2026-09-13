@@ -94,7 +94,14 @@ export type CategoryGuidance = {
 /** The one object the UI renders. Nothing else reaches a component. */
 export type VerteResult = {
   product: ProductContext
-  guidance: CategoryGuidance
+  /**
+   * Null when we could not classify the product.
+   *
+   * The category supplies the verdict and the carbon figure; it does not
+   * supply the price saving, which is the product. Treating an unknown
+   * category as fatal is what made the card mount and then vanish.
+   */
+  guidance: CategoryGuidance | null
   /** RANKED. options[0] is the recommendation, not merely the cheapest. */
   options: UsedOption[]
   /** The context that produced this ranking. */

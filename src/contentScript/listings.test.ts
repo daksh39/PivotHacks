@@ -16,7 +16,13 @@
  * ------------------------------------------------------------------------- */
 
 import { beforeEach, describe, expect, test } from 'vitest'
-import { bestBuyOpenBox, modelTokens, sameProduct, usedFromAmazonPage } from './listings'
+import {
+  amazonRenewed,
+  bestBuyOpenBox,
+  modelTokens,
+  sameProduct,
+  usedFromAmazonPage,
+} from './listings'
 
 beforeEach(() => {
   document.head.innerHTML = ''
@@ -85,10 +91,32 @@ describe('modelTokens', () => {
     expect(modelTokens('Dell 24 Monitor - S2421HS, 1920 x 1080, IPS')).toContain('s2421hs')
   })
 
-  test('ignores plain words and bare numbers', () => {
+  test('treats a purely numeric model number as a model number', () => {
+    /* Caught live: "Dell Latitude 7420" has no letters-and-digits token, so it
+     * fell through to word overlap and matched a Latitude 7430 — a different
+     * machine at a different price. */
+    expect(modelTokens('Dell Latitude 7420 Laptop')).toContain('7420')
+  })
+
+  test('prefers an alphanumeric model over incidental numbers', () => {
+    /* 1920 and 1080 are a resolution, not a model. */
+    const tokens = modelTokens('Dell 24 Monitor - S2421HS, 1920 x 1080, IPS')
+    expect(tokens[0]).toBe('s2421hs')
+  })
+
+  test('ignores plain words and short numbers', () => {
     const tokens = modelTokens('Sony WH-CH720N Over-Ear Headphones - Black')
     expect(tokens).not.toContain('headphones')
     expect(tokens).not.toContain('black')
+  })
+
+  test('rejects a neighbouring model number', () => {
+    expect(sameProduct('Dell Latitude 7420 Laptop', 'Dell Latitude 7430 Laptop (Renewed)')).toBe(
+      false,
+    )
+    expect(sameProduct('Dell Latitude 7420 Laptop', 'Dell Latitude 7420 Laptop (Renewed)')).toBe(
+      true,
+    )
   })
 })
 
@@ -230,6 +258,73 @@ describe('bestBuyOpenBox', () => {
   test('never throws when the endpoint fails — the card just shows no listings', async () => {
     const offers = await bestBuyOpenBox('Sony', 'https://www.bestbuy.ca/en-ca/product/x/1', {
       fetchImpl: fakeFetch({}, false),
+    })
+    expect(offers).toEqual([])
+  })
+})
+
+/* --- amazon renewed: the coverage fix ------------------------------------ */
+
+describe('amazonRenewed', () => {
+  /* Measured across 8 real product pages, only ONE had a used buybox — it is
+   * mostly a books-and-media feature. Amazon Renewed is where the refurbished
+   * electronics live, and a same-origin search reaches it with no credential.
+   * "renewed airpods" returned 11 real listings when this was written. */
+  const page = (cards: { title: string; price: string; asin?: string }[]) => `
+    <div>
+      ${cards
+        .map(
+          (c, i) => `
+        <div data-asin="${c.asin ?? `B00000000${i}`}">
+          <h2>${c.title}</h2>
+          <span class="a-price"><span class="a-offscreen">${c.price}</span></span>
+        </div>`,
+        )
+        .join('')}
+    </div>`
+
+  const fakeFetch = (html: string, ok = true) =>
+    (async () => ({ ok, status: ok ? 200 : 500, text: async () => html }) as unknown as Response) as
+      unknown as typeof fetch
+
+  test('keeps only renewed or refurbished listings', async () => {
+    const html = page([
+      { title: 'Sony WH-CH720N Wireless Headphones - Black', price: 'CAD249.99' },
+      { title: 'Sony WH-CH720N Wireless Headphones (Renewed)', price: 'CAD149.00' },
+    ])
+    const offers = await amazonRenewed(
+      'Sony WH-CH720N Wireless Headphones - Black',
+      'https://www.amazon.com/dp/B0000',
+      { fetchImpl: fakeFetch(html) },
+    )
+    expect(offers).toHaveLength(1)
+    expect(offers[0].price).toBe(149)
+    expect(offers[0].source).toBe('amazon')
+  })
+
+  test('will not return a different model', async () => {
+    const html = page([
+      { title: 'Sony WH-1000XM5 Headphones (Renewed)', price: 'CAD299.00' },
+      { title: 'Sony WH-CH720N Headphones (Renewed)', price: 'CAD149.00' },
+    ])
+    const offers = await amazonRenewed('Sony WH-CH720N Headphones - Black', 'https://www.amazon.com/dp/B0', {
+      fetchImpl: fakeFetch(html),
+    })
+    expect(offers).toHaveLength(1)
+    expect(offers[0].price).toBe(149)
+  })
+
+  test('reads the currency amazon served', async () => {
+    const html = page([{ title: 'Dell S2421HS Monitor (Renewed)', price: 'CAD180.00' }])
+    const offers = await amazonRenewed('Dell S2421HS Monitor', 'https://www.amazon.com/dp/B0', {
+      fetchImpl: fakeFetch(html),
+    })
+    expect(offers[0].currency).toBe('CAD')
+  })
+
+  test('returns nothing rather than throwing when search fails', async () => {
+    const offers = await amazonRenewed('anything', 'https://www.amazon.com/dp/B0', {
+      fetchImpl: fakeFetch('', false),
     })
     expect(offers).toEqual([])
   })

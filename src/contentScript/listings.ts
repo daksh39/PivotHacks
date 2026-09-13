@@ -78,6 +78,66 @@ export function usedFromAmazonPage(url: string): UsedOption[] {
   ]
 }
 
+/* --- amazon renewed: refurbished stock, found by same-origin search ------- */
+
+/**
+ * Amazon Renewed / refurbished listings for this product.
+ *
+ * The used buybox alone is not enough: across eight real product pages only
+ * one had it, because it is largely a books-and-media feature. Renewed is
+ * where refurbished electronics live — exactly the categories a student buys —
+ * and Amazon's own search reaches it same-origin with no credential.
+ */
+const RENEWED = /\brenewed\b|\brefurbish/i
+
+export async function amazonRenewed(
+  title: string,
+  url: string,
+  options: { fetchImpl?: typeof fetch } = {},
+): Promise<UsedOption[]> {
+  const doFetch = options.fetchImpl ?? fetch
+  const origin = originOf(url, 'https://www.amazon.com')
+  const currency = currencyForUrl(url)
+
+  const models = modelTokens(title)
+  const query = (models.length ? `${title.split(/\s+/)[0]} ${models[0]}` : title).trim().slice(0, 70)
+
+  try {
+    const response = await doFetch(`${origin}/s?k=${encodeURIComponent(`${query} renewed`)}`, {
+      credentials: 'include',
+    })
+    if (!response.ok) return []
+
+    const doc = new DOMParser().parseFromString(await response.text(), 'text/html')
+
+    const found: UsedOption[] = []
+    for (const card of doc.querySelectorAll('[data-asin]')) {
+      const name = card.querySelector('h2')?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+      const priceText = card.querySelector('.a-price .a-offscreen')?.textContent
+      const asin = card.getAttribute('data-asin') ?? ''
+      const parsed = parsePrice(priceText, currency)
+
+      if (!name || !parsed || asin.length !== 10) continue
+      if (!RENEWED.test(name)) continue
+      if (!sameProduct(title, name)) continue
+
+      found.push({
+        source: 'amazon',
+        title: name,
+        price: parsed.amount,
+        currency: parsed.currency,
+        url: `${origin}/dp/${asin}`,
+        imageUrl: card.querySelector('img')?.getAttribute('src') ?? null,
+        condition: 'Renewed',
+        daysToHand: UNKNOWN_DELIVERY_DAYS,
+      })
+    }
+    return found
+  } catch {
+    return []
+  }
+}
+
 /* --- best buy: open-box variants from the storefront's own search --------- */
 
 type BestBuyProduct = {
@@ -106,9 +166,18 @@ const STOPWORDS = new Set(['open', 'box', 'the', 'with', 'and', 'for', 'new'])
  * the wrong product is worse than recommending nothing.
  */
 export function modelTokens(title: string): string[] {
-  return (title.toLowerCase().match(/[a-z0-9][a-z0-9-]{3,}/g) ?? []).filter(
-    (token) => /[a-z]/.test(token) && /[0-9]/.test(token),
-  )
+  const all = title.toLowerCase().match(/[a-z0-9][a-z0-9-]{2,}/g) ?? []
+
+  /* Letters and digits together is the strongest signal: "wh-ch720n",
+   * "s2421hs". Prefer those and stop. */
+  const alphanumeric = all.filter((t) => /[a-z]/.test(t) && /[0-9]/.test(t))
+  if (alphanumeric.length) return alphanumeric
+
+  /* Otherwise a bare number can still BE the model — "Dell Latitude 7420".
+   * Without this, word overlap happily matched a Latitude 7430: a different
+   * machine at a different price. Only consulted when no alphanumeric model
+   * exists, so a resolution like "1920 x 1080" never overrides a real one. */
+  return all.filter((t) => /^\d{3,}$/.test(t))
 }
 
 /** Meaningful words, for products whose names carry no model number. */
@@ -171,11 +240,11 @@ export async function bestBuyOpenBox(
   }
 }
 
-function originOf(url: string): string {
+function originOf(url: string, fallback = 'https://www.bestbuy.ca'): string {
   try {
     return new URL(url).origin
   } catch {
-    return 'https://www.bestbuy.ca'
+    return fallback
   }
 }
 
@@ -210,7 +279,16 @@ export async function findUsedListings(title: string, url: string): Promise<Used
     return []
   }
 
-  if (/(^|\.)amazon\./i.test(host)) return usedFromAmazonPage(url)
+  if (/(^|\.)amazon\./i.test(host)) {
+    /* Both Amazon sources: the buybox offer on this page, plus refurbished
+     * stock that only turns up through search. Deduped by URL. */
+    const [buybox, renewed] = await Promise.all([
+      Promise.resolve(usedFromAmazonPage(url)),
+      amazonRenewed(title, url),
+    ])
+    const seen = new Set<string>()
+    return [...buybox, ...renewed].filter((o) => !seen.has(o.url) && seen.add(o.url))
+  }
   if (/(^|\.)bestbuy\./i.test(host)) return bestBuyOpenBox(title, url)
   return []
 }

@@ -1,36 +1,20 @@
 /* ---------------------------------------------------------------------------
- * Snowflake access.  Layers 2 and 3 (verte-plan.md §03).  Owned by lane/snowflake.
+ * The category knowledge base.
  *
- * ┌─ THE SEAM ────────────────────────────────────────────────────────────┐
- * │ These two exported signatures are FROZEN. lane/snowflake owns the     │
- * │ inside of this file and data/*.sql. lane/proxy only ever CALLS these  │
- * │ two functions and never opens this file. That is the whole reason     │
- * │ neither branch conflicts with the other.                              │
- * │                                                                       │
- * │   getCategoryGuidance(slug) : Promise<CategoryGuidance | null>        │
- * │   getCampusListings(slug)   : Promise<UsedOption[]>                   │
- * └───────────────────────────────────────────────────────────────────────┘
- *
- * Both currently read from the in-file seed below so the proxy runs green
- * with no Snowflake account. Replace the bodies with real queries; do not
- * change the signatures.
- *
- * Queries go through this proxy, never from the extension (§03).
- * ------------------------------------------------------------------------- */
-
-import type { CategoryGuidance, UsedOption } from '../src/types'
-
-/* --- seed: mirrors data/category-guidance.sql ----------------------------
- * Keep these two in sync until the real table is live. §07 is the source of
- * truth for verdicts and tips.
+ * Static data, so it ships inside the extension. It used to live behind the
+ * proxy, which meant the extension could not say anything about a product
+ * unless a localhost server happened to be running — the single reason it
+ * worked on one machine and not another.
  *
  * A category carries a carbon figure ONLY when co2Source names a real
- * reference. Where no defensible source was found, embodiedCo2Kg is 0 and
- * co2Source is empty — isSourced() then suppresses the claim entirely rather
- * than printing a number we cannot stand behind (§09).
- * ----------------------------------------------------------------------- */
+ * reference. Where none was found, embodiedCo2Kg is 0 and co2Source is empty,
+ * and isSourced() suppresses the claim rather than printing an indefensible
+ * number.
+ * ------------------------------------------------------------------------- */
 
-const SEED: Record<string, CategoryGuidance> = {
+import type { CategoryGuidance } from './types'
+
+export const GUIDANCE: Record<string, CategoryGuidance> = {
   /* Every slug proxy/categories.ts can produce needs an entry here, or the
    * lookup 404s and no card ever appears. Verdicts and tips are real advice;
    * carbon stays 0/'' unless a citation exists (§09). */
@@ -316,14 +300,8 @@ const SEED: Record<string, CategoryGuidance> = {
   },
 }
 
-/** Layer 3 — the category knowledge base. §07 is the full starter table. */
-export async function getCategoryGuidance(slug: string): Promise<CategoryGuidance | null> {
-  // TODO lane/snowflake: SELECT * FROM CATEGORY_GUIDANCE WHERE CATEGORY = :1
-  return SEED[slug] ?? null
-}
-
-
-/** Optional: the running total behind the popup. Safe to leave unimplemented. */
-export async function logImpact(_slug: string, _co2Kg: number): Promise<void> {
-  // TODO lane/snowflake: INSERT INTO IMPACT_LOG ...
+/** Null when we could not classify the product — a normal outcome, not an error. */
+export function guidanceFor(category: string | null): CategoryGuidance | null {
+  if (!category) return null
+  return GUIDANCE[category] ?? null
 }

@@ -21,11 +21,6 @@ export default defineManifest({
     default_title: 'Verte',
   },
 
-  background: {
-    service_worker: 'src/background/index.ts',
-    type: 'module',
-  },
-
   content_scripts: [
     {
       matches: [
@@ -40,9 +35,14 @@ export default defineManifest({
     },
   ],
 
+  /*
+   * Storage only, and NO host permissions.
+   *
+   * There is no service worker and no external service. Everything the
+   * extension does happens in the content script, on the page it is already
+   * running on: the listings are same-origin reads, the category table is
+   * bundled, and ranking is a pure function. Nothing to configure, nothing to
+   * start, nothing to be running on the demo machine.
+   */
   permissions: ['storage'],
-
-  /* The service worker is the only thing that talks to the proxy. Add the
-   * deployed origin here when lane/proxy ships it. */
-  host_permissions: ['http://localhost:8787/*'],
 })

@@ -15,7 +15,8 @@
 import { useState } from 'react'
 import type { UsedOption, VerteResult } from '../types'
 import { explainReason } from '../reason'
-import { formatCo2, formatUsd, isSourced, milesDrivenEquivalent } from '../carbon'
+import { formatUsd } from '../carbon'
+import { impactLine } from '../impactLine'
 import { Verdict } from './Verdict'
 import { Empty } from './Empty'
 import { Leaf } from './Skeleton'
@@ -31,7 +32,7 @@ function arrival(days: number): string {
 function blockedReason(o: UsedOption, result: VerteResult): string | null {
   const { context, guidance } = result
   if (context.budgetCap !== null && o.price > context.budgetCap) return 'Over budget'
-  if (o.pickup && guidance.bulky && !context.hasCar) return 'Needs a car'
+  if (o.pickup && guidance?.bulky && !context.hasCar) return 'Needs a car'
   if (context.needInDays != null && o.daysToHand > context.needInDays) {
     return `${arrival(o.daysToHand)} · too late`
   }
@@ -57,6 +58,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
    * and the card must never quietly substitute the cheapest for it. */
   const recommended: UsedOption | null = options[0] ?? null
   const unusable = reason === 'nothing-arrives-in-time' || reason === 'nothing-in-budget'
+  const impact = impactLine(result)
 
   /* One source per page now — you are on Amazon or you are on Best Buy, and
    * the listings are that retailer's own. There is nothing to switch between,
@@ -74,7 +76,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
               {' '}— save{' '}
               <strong>{formatUsd(savingsUsd, product.currency)}</strong>
             </span>
-          ) : guidance.verdict === 'avoid' ? (
+          ) : guidance?.verdict === 'avoid' ? (
             <span>Verte suggests buying this one new</span>
           ) : unusable ? (
             <span>{explainReason(reason, context)}</span>
@@ -150,27 +152,30 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
           </div>
         )}
 
-        {options.length === 0 && guidance.verdict !== 'avoid' ? (
+        {options.length === 0 && guidance?.verdict !== 'avoid' ? (
           <Empty result={result} />
         ) : (
           <>
             {(recommended || unusable) && <hr className="verte__rule" />}
 
             {/* 2 — the verdict */}
-            <Verdict guidance={guidance} />
+            {/* No verdict when we could not classify the product. The saving
+              * still stands on its own — inventing a verdict would be worse. */}
+            {guidance && <Verdict guidance={guidance} />}
 
-            {/* 3 — carbon, framed as avoided manufacturing.
-              * Rendered ONLY when the figure carries a real citation (§09).
-              * An uncited number is the thing that gets picked apart in Q&A,
-              * and showing nothing costs us far less than showing that. */}
-            {co2AvoidedKg != null && co2AvoidedKg > 0 && isSourced(guidance.co2Source) && (
+            {/* 3 — the environmental claim, on every card.
+              * Quantified where a citation exists, qualitative everywhere
+              * else. Never silent, and never a number we cannot defend. */}
+            {impact && (
               <>
                 <hr className="verte__rule" />
                 <p className="verte__carbon">
-                  Avoids {formatCo2(co2AvoidedKg)} of manufacturing{' '}
-                  <span className="verte__carbon-eq">
-                    — about {milesDrivenEquivalent(co2AvoidedKg)} miles driven
-                  </span>
+                  {impact.headline}
+                  {impact.source && (
+                    <span className="verte__carbon-src" title={impact.source}>
+                      source
+                    </span>
+                  )}
                 </p>
               </>
             )}
