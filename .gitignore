@@ -12,7 +12,9 @@
 /dev
 
 # production
-/build
+# build/ IS committed, so teammates can load the extension without building.
+# Ignoring it here made git track the old CSS but silently skip each new
+# hashed CSS file, leaving popup.html pointing at a stylesheet not in the repo.
 
 # misc
 .DS_Store
