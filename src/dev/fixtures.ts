@@ -288,7 +288,7 @@ export const FIXTURE_GREENER: VerteResult = {
       url: 'https://www.amazon.com/dp/B0FN44NCTQ',
       imageUrl: null,
       certification:
-        'Recycled materials. Contains at least 50% recycled material. As certified by Global Recycled Standard',
+        'Recycled materials. Contains at least 50% recycled material. As certified by Global Recycled Standard.',
     },
   ],
 }

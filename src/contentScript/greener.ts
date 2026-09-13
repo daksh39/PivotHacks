@@ -38,6 +38,13 @@ const MAX_CANDIDATES = 4
 const MIN_CERT_LENGTH = 20
 
 /**
+ * Amazon's preamble, which is the same on every certified product and says
+ * nothing. The certifier's name is the only part worth the space.
+ */
+const CERT_BOILERPLATE =
+  /^\s*Sustainability features\s*(This product has sustainability features recognized by trusted certifications\.?)?\s*/i
+
+/**
  * The certification text, verbatim from the retailer.
  *
  * The selector is exactly `#climatePledgeFriendly`. A looser one such as
@@ -48,8 +55,9 @@ export function readCertification(root: Document | Element): string | null {
   const node = root.querySelector('#climatePledgeFriendly')
   if (!node) return null
 
-  const text = (node.textContent ?? '').replace(/\s+/g, ' ').trim()
-  return text.length > MIN_CERT_LENGTH ? text.slice(0, 220) : null
+  const raw = (node.textContent ?? '').replace(/\s+/g, ' ').trim()
+  const text = raw.replace(CERT_BOILERPLATE, '').trim()
+  return text.length > MIN_CERT_LENGTH ? text.slice(0, 200) : null
 }
 
 function originOf(url: string): string {
@@ -88,7 +96,17 @@ export async function findGreener(
 
     for (const card of [...doc.querySelectorAll('[data-asin]')].slice(0, MAX_CANDIDATES)) {
       const asin = card.getAttribute('data-asin') ?? ''
-      const name = card.querySelector('h2')?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+      /* Some search cards put only the brand in the h2 and the full name in
+       * the product link's aria-label or title attribute. Take the longest. */
+      const candidates = [
+        card.querySelector('h2')?.textContent,
+        card.querySelector('h2 a')?.getAttribute('aria-label'),
+        card.querySelector('a[title]')?.getAttribute('title'),
+        card.querySelector('img[alt]')?.getAttribute('alt'),
+      ]
+        .map((value) => (value ?? '').replace(/\s+/g, ' ').trim())
+        .filter((value) => value.length > 2)
+      const name = candidates.sort((a, b) => b.length - a.length)[0] ?? ''
       const parsed = parsePrice(card.querySelector('.a-price .a-offscreen')?.textContent, currency)
       if (asin.length !== 10 || !name || !parsed) continue
 

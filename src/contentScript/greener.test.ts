@@ -39,6 +39,17 @@ describe('readCertification', () => {
     expect(readCertification(doc)).toBeNull()
   })
 
+  test('leads with the certifier, not Amazon boilerplate', () => {
+    /* Live text begins "Sustainability features This product has
+     * sustainability features recognized by trusted certifications." — 80
+     * characters of preamble before the only part that matters. The whole
+     * point of the line is naming who certified it. */
+    const doc = new DOMParser().parseFromString(CERTIFIED, 'text/html')
+    const cert = readCertification(doc)!
+    expect(cert).not.toMatch(/^Sustainability features/)
+    expect(cert).toMatch(/^Recycled materials/)
+  })
+
   test('ignores an empty certification container', () => {
     const doc = new DOMParser().parseFromString('<div id="climatePledgeFriendly"></div>', 'text/html')
     expect(readCertification(doc)).toBeNull()
