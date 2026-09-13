@@ -158,12 +158,36 @@ reintroduce a `dev` script that shares the CRXJS plugin.
 
 ---
 
+## The category table has one source of truth
+
+`src/guidance.ts` holds `GUIDANCE` — plain data, no Node imports, bundled into
+the extension. Everything else is downstream of it:
+
+```
+src/guidance.ts  ──>  proxy/snowflake.ts   (SEED, and the warehouse fallback)
+                 ──>  data/category-guidance.sql   (generated)
+                          └─>  Snowflake CATEGORY_GUIDANCE   (loaded)
+```
+
+```bash
+npx tsx proxy/snowflake.gen.ts     # regenerate the SQL after editing guidance
+npx tsx proxy/snowflake.load.ts    # load it into the warehouse
+npx tsx proxy/snowflake.check.ts   # diagnose a connection
+```
+
+**Add categories in `src/guidance.ts`, then regenerate.** Editing the SQL by
+hand puts the two out of sync, and a test fails when they disagree.
+
+Snowflake is an upgrade, never a dependency: the proxy reads the warehouse when
+`.env` carries credentials and falls back to the seed when it does not. The
+extension itself never talks to either — it bundles the table.
+
 ## Running and testing
 
 ```bash
 npm install
 npm run build          # writes dist/ — load this as an unpacked extension
-npm test               # 119 tests
+npm test               # 242 tests (extension + warehouse tooling)
 npm run typecheck
 npm run preview:card   # every card state, no extension needed
 ```
