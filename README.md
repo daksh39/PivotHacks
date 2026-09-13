@@ -37,16 +37,26 @@ Product page
     v
 Proxy service
     |
-    +---> eBay Browse API      (live used listings)
-    +---> Snowflake            (campus listings, category knowledge base)
+    +---> Amazon used buybox   (read from the page DOM)
+    +---> Best Buy open box    (their own storefront search API)
     |
     v
 Card injected back into the page
 ```
 
-The content script reads the product off the page, preferring the JSON-LD product block over CSS selectors since retail markup changes constantly. It sends that to a small proxy service, which is also where the eBay credentials live. They cannot go in the extension itself, both because the bundle is readable by anyone and because the browser blocks the request on CORS.
+The content script reads the product off the page. Amazon and Best Buy publish
+no JSON-LD and no og: tags, so each gets a small adapter; structured data is the
+fallback for other retailers.
 
-The proxy queries eBay for used listings, looks up the category guidance and any nearby campus listings in Snowflake, and returns a single object. The card renders from that object and nothing else, which keeps the UI independent of where the data came from.
+It then reads the secondhand listings from the retailer itself. On Amazon that
+is the used buybox already sitting in the page. On Best Buy it is the open-box
+search their own storefront calls. Both are same-origin requests made from the
+page, which is why no API key and no approval process is involved.
+
+Product and listings go to a small local service that adds the category
+guidance, ranks the options, and returns a single object. The card renders from
+that object and nothing else, which keeps the UI independent of where the data
+came from.
 
 Everything is injected into a shadow root so the host page's stylesheet cannot reach it.
 
@@ -54,13 +64,13 @@ Everything is injected into a shadow root so the host page's stylesheet cannot r
 
 - React 18 and Vite, with CRXJS for the extension build
 - Manifest V3
-- Snowflake for the category knowledge base and campus listings
-- eBay Browse API for live secondhand listings
+- Snowflake for the category knowledge base (optional; falls back to a built-in table)
+- No third-party listings API, and no credentials
 - A thin proxy service for credentials and data access
 
 ## Running it locally
 
-You will need a Snowflake account and an eBay developer account with Browse API access.
+No credentials are needed to run it.
 
 ```bash
 git clone https://github.com/daksh39/PivotHacks.git
@@ -68,23 +78,7 @@ cd PivotHacks
 npm install
 ```
 
-Copy the example environment file and fill in your own credentials:
-
-```bash
-cp .env.example .env
-```
-
-```
-EBAY_CLIENT_ID=
-EBAY_CLIENT_SECRET=
-SNOWFLAKE_ACCOUNT=
-SNOWFLAKE_USER=
-SNOWFLAKE_PASSWORD=
-SNOWFLAKE_DATABASE=
-SNOWFLAKE_WAREHOUSE=
-```
-
-Then run the proxy and build the extension:
+Then run the local service and build the extension:
 
 ```bash
 npm run proxy
@@ -98,7 +92,6 @@ To load it in Chrome, open `chrome://extensions`, turn on Developer mode, choose
 ```
 src/
   types.ts              shared types, everything is built against these
-  mocks.ts              shared fixtures, so no one is blocked on anyone
   tokens.ts             design system
   carbon.ts             CO2 formatting and the miles-driven equivalence
   contentScript/        page detection, product extraction, shadow root
@@ -108,8 +101,8 @@ src/
   dev/preview.html      the card alone, every state, in a plain page
 proxy/
   index.ts              the one endpoint, POST /lookup
-  ebay.ts               Browse API, OAuth, caching
-  snowflake.ts          campus listings and the category knowledge base
+  rank.ts               context-aware ranking
+  snowflake.ts          the category knowledge base
   categories.ts         title to category classification
   smoke.sh              proves the proxy returns a well-formed VerteResult
 data/
@@ -119,9 +112,15 @@ site/                   landing page
 
 ## A note on the data
 
-The eBay listings are live. The campus listings are seeded, because the places students actually buy and sell secondhand locally are Facebook groups and GroupMe chats with no API to read from. We would rather say that plainly than imply otherwise.
+Every listing shown comes from the retailer whose page you are on: Amazon's own
+used offer, or Best Buy's own open-box listings. There is no seeded or invented
+listing data anywhere in the product.
 
-The carbon figures are published embodied carbon estimates by product category, not anything we calculated ourselves. Each one is stored with its source alongside it, and the interface shows them as approximate because that is what they are. We were more interested in having a number we could defend than a number that looked impressive.
+Carbon figures appear only where we have a citation. Monitors use Dell's
+published product carbon footprint datasheet, laptops use Apple's Product
+Environmental Report, and the miles-driven conversion uses the US EPA's figure
+for a typical passenger vehicle. Categories we could not source show no carbon
+figure at all rather than a number we cannot defend.
 
 ## Team
 
@@ -133,7 +132,9 @@ Built during a 12 hour hackathon, so treat it accordingly. It currently works on
 
 Things we would do next, roughly in order:
 
-- More retailers, since right now coverage is narrow
-- A real ingestion path for local listings instead of seeded data
+- Real delivery estimates. Both sources currently report the same placeholder
+  number of days, which means the deadline-aware ranking cannot yet tell two
+  listings apart.
+- More retailers, since right now coverage is Amazon and Best Buy
+- Carbon citations for more categories
 - Better category classification, currently keyword rules
-- Price history so you can tell whether a used listing is actually a good deal
