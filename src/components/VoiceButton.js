@@ -3,7 +3,7 @@ import './styles/VoiceButton.css';
 
 const LABEL = {
   idle: "Tell Verte what you're buying",
-  listening: 'Listening… tap to stop',
+  listening: 'Listening… just stop talking when done',
   thinking: 'Thinking…',
   done: 'Ask about something else',
   error: 'Try again',

@@ -51,7 +51,7 @@ test('speaking drives a real lookup: listening → thinking → result', async (
   render(<Harness />);
 
   await act(async () => { fireEvent.click(screen.getByRole('button')); });
-  expect(screen.getByRole('button')).toHaveTextContent('Listening… tap to stop');
+  expect(screen.getByRole('button')).toHaveTextContent('Listening… just stop talking when done');
 
   await act(async () => { fireEvent.click(screen.getByRole('button')); });
 
