@@ -74,8 +74,42 @@ function mount() {
   return shadow;
 }
 
+/* Collapsed is a preference, not a per-product state: fold it once and it
+ * stays folded on the next product page too. */
+const COLLAPSED_KEY = 'verte:collapsed';
+
+function prefersCollapsed() {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setCollapsed(card, toggle, collapsed) {
+  card.classList.toggle('collapsed', collapsed);
+  toggle.setAttribute('aria-expanded', String(!collapsed));
+  toggle.title = collapsed ? 'Expand' : 'Collapse';
+}
+
 function render(shadow, html, product) {
   shadow.lastChild.innerHTML = html;
+
+  const card = shadow.querySelector('.verte');
+  const toggle = shadow.querySelector('.toggle');
+  if (card && toggle) {
+    setCollapsed(card, toggle, prefersCollapsed());
+    toggle.addEventListener('click', () => {
+      const collapsed = !card.classList.contains('collapsed');
+      setCollapsed(card, toggle, collapsed);
+      try {
+        localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0');
+      } catch {
+        /* storage blocked — it still toggles, it just won't be remembered */
+      }
+    });
+  }
+
   const close = shadow.querySelector('.x');
   if (close) {
     close.addEventListener('click', () => {

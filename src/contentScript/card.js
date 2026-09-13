@@ -32,14 +32,23 @@ const TOKENS = `
     overflow: hidden;
     max-width: 420px;
   }
-  .head {
-    align-items:center; background: var(--tint); display:flex; gap:8px;
-    padding:10px 16px; position:relative;
+  .head { background: var(--tint); position:relative; }
+  .toggle {
+    align-items:center; background:none; border:0; color:inherit; cursor:pointer;
+    display:flex; font:inherit; gap:8px; padding:10px 44px 10px 16px;
+    text-align:left; width:100%;
   }
+  .toggle:focus-visible { outline:2px solid var(--shade); outline-offset:-4px; border-radius:20px; }
+  .summary { color:var(--soft); font-size:12px; margin-left:auto;
+             overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .chev { color:var(--soft); flex:none; transition:transform .15s ease; }
+  .verte.collapsed .chev { transform:rotate(-90deg); }
+  .verte.collapsed .body { display:none; }
+  @media (prefers-reduced-motion: reduce) { .chev { transition:none; } }
   .word { color: var(--mark); font-family: var(--serif); font-size:16px; font-weight:600; }
   .x {
     background:none; border:0; color:var(--soft); cursor:pointer; font-size:16px;
-    line-height:1; padding:4px; position:absolute; right:10px; top:8px;
+    line-height:1; padding:4px; position:absolute; right:12px; top:50%; transform:translateY(-50%);
   }
   .x:hover { color: var(--ink); }
   .body { padding: 18px 20px 20px; }
@@ -66,12 +75,23 @@ const MARK = `<svg width="26" height="12" viewBox="-132 -114 264 124" aria-hidde
   <g transform="rotate(15) scale(-1 1) translate(-100 -100)"><path d="M 0 0 A 100 100 0 0 1 100 100 A 100 100 0 0 1 0 0 Z" fill="#6FA984" fill-opacity=".88"/></g>
 </svg>`;
 
-function shell(inner) {
+const CHEVRON = `<svg class="chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+  <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+/* The header is the collapse control. `summary` stays visible when collapsed,
+ * so a folded card still says what's inside it. */
+function shell(inner, summary = '') {
   return `<div class="verte">
-    <div class="head">${MARK}<span class="word">Verte</span>
+    <div class="head">
+      <button class="toggle" aria-expanded="true" aria-controls="verte-body" title="Collapse">
+        ${MARK}<span class="word">Verte</span>
+        <span class="summary">${summary}</span>
+        ${CHEVRON}
+      </button>
       <button class="x" title="Dismiss" aria-label="Dismiss">&times;</button>
     </div>
-    <div class="body">${inner}</div>
+    <div class="body" id="verte-body">${inner}</div>
   </div>`;
 }
 
@@ -106,11 +126,17 @@ export function cardHtml(result) {
         guidance.note || 'Nothing here is meaningfully lower-carbon than what you are looking at.'
       }</div>`;
 
+  const summary = alternatives.length
+    ? `${alternatives.length} lower-carbon option${alternatives.length === 1 ? '' : 's'}`
+    : embodiedCo2Kg > 0
+    ? `~${Math.round(embodiedCo2Kg)} kg CO\u2082e to make`
+    : '';
+
   return shell(`
     <div class="title">${product.title}</div>
     ${baseline}
     ${list}
-  `);
+  `, summary);
 }
 
 export { TOKENS };

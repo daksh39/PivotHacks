@@ -158,3 +158,50 @@ describe('card placement', () => {
     expect(document.getElementById('rightCol').firstElementChild.id).toBe('verte-card-host');
   });
 });
+
+describe('collapsing the card', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    localStorage.clear();
+    global.chrome = {
+      runtime: { sendMessage: jest.fn(), lastError: null },
+      storage: { local: { set: jest.fn() } },
+    };
+    document.head.innerHTML = `<script type="application/ld+json">${JSON.stringify({
+      '@type': 'Product', name: 'Dell 24 inch Monitor', offers: { price: '179' },
+    })}</script>`;
+    document.body.innerHTML = '<div id="rightCol"><div id="buybox">Add to cart</div></div>';
+  });
+
+  const shadow = () => document.getElementById('verte-card-host').shadowRoot;
+
+  test('the header folds and unfolds the card, and remembers it', () => {
+    jest.isolateModules(() => require('./index'));
+    const card = shadow().querySelector('.verte');
+    const toggle = shadow().querySelector('.toggle');
+
+    expect(card.classList.contains('collapsed')).toBe(false);
+    toggle.click();
+    expect(card.classList.contains('collapsed')).toBe(true);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(localStorage.getItem('verte:collapsed')).toBe('1');
+
+    toggle.click();
+    expect(card.classList.contains('collapsed')).toBe(false);
+  });
+
+  test('a card on the next page starts folded if you folded the last one', () => {
+    localStorage.setItem('verte:collapsed', '1');
+    jest.isolateModules(() => require('./index'));
+    expect(shadow().querySelector('.verte').classList.contains('collapsed')).toBe(true);
+  });
+
+  test('a folded card still says what is inside it', () => {
+    const html = cardHtml({
+      product: { title: 'x' }, guidance: { co2Source: '', note: '' },
+      alternatives: [{ title: 'a', why: 'b', url: 'https://a' }, { title: 'c', why: 'd', url: 'https://c' }],
+      embodiedCo2Kg: null,
+    });
+    expect(html).toContain('2 lower-carbon options');
+  });
+});
