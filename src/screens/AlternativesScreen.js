@@ -8,7 +8,7 @@ import './styles/AlternativesScreen.css';
  * alternatives are model estimates and say so.
  */
 function AlternativesScreen({ result }) {
-    const { product, guidance, alternatives, embodiedCo2Kg } = result;
+    const { product, guidance, alternatives, embodiedCo2Kg, scarcityReason } = result;
 
     return (
         <div className="alt-container">
@@ -18,6 +18,14 @@ function AlternativesScreen({ result }) {
                 <div className="alt-baseline">
                     <div className="alt-figure">~{Math.round(embodiedCo2Kg)} kg CO₂e to manufacture</div>
                     <div className="alt-cite">{guidance.co2Source}</div>
+                </div>
+            ) : scarcityReason ? (
+                // Few real lower-carbon options for this kind of product: say
+                // why, then still give them something to buy.
+                <div className="alt-baseline">
+                    <div className="alt-figure">Not many lower-carbon options</div>
+                    <div className="alt-reason">{scarcityReason}</div>
+                    <div className="alt-cite">Here's the best pick we found.</div>
                 </div>
             ) : (
                 <div className="alt-baseline">

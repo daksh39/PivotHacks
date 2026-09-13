@@ -1,6 +1,6 @@
 {
   "files": {
-    "app.css": "static/css/app.f87cc640.css",
+    "app.css": "static/css/app.0fc279ec.css",
     "app.js": "app.bundle.js",
     "app.js.map": "app.bundle.js.map",
     "background.js": "background.bundle.js",
@@ -16,11 +16,11 @@
     "options.bundle.js.LICENSE.txt": "options.bundle.js.LICENSE.txt",
     "options.html": "options.html",
     "popup.html": "popup.html",
-    "static/css/app.f87cc640.css.map": "static/css/app.f87cc640.css.map",
+    "static/css/app.0fc279ec.css.map": "static/css/app.0fc279ec.css.map",
     "static/css/options.0053d26e.css.map": "static/css/options.0053d26e.css.map"
   },
   "entrypoints": [
-    "static/css/app.f87cc640.css",
+    "static/css/app.0fc279ec.css",
     "app.bundle.js",
     "static/css/options.0053d26e.css",
     "options.bundle.js",

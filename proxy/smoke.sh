@@ -37,6 +37,7 @@ check "alternatives carry a reason"              "all(a['why'] for a in d['alter
 check "alternatives are marked as estimates"     "all(a['estimated'] is True for a in d['alternatives'])" "$MON"
 check "links are searches, never invented URLs"  "all('/s?k=' in a['url'] or 'searchpage' in a['url'] for a in d['alternatives'])" "$MON"
 check "unknown category still gets a card"      "d['product']['category']=='other' and d['embodiedCo2Kg'] is None" '{"product":{"title":"Sterling silver cufflinks","price":40,"sourceUrl":"https://www.amazon.com/dp/Z"}}'
+check "voice: always at least one pick"          "len(d['alternatives'])>=1" '{"product":{"title":"Find me a hairdryer.","sourceUrl":"https://www.amazon.com/","spoken":true}}'
 check "missing title → 400"                      "d.get('error')=='product.title is required'" '{"product":{}}'
 
 # ── Voice ────────────────────────────────────────────────────────────────────

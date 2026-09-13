@@ -33,6 +33,23 @@ Rules:
 
 Reply with JSON only: {"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"..."}]}`;
 
+/* A spoken request is someone asking for help finding a thing, not someone
+ * already holding one — an empty answer leaves them with nothing. So in voice
+ * mode there is always at least one pick, and when the category genuinely has
+ * few lower-carbon options we say why instead of pretending otherwise. */
+const SPOKEN = `
+
+The person asked for this out loud, so they are looking for something to buy.
+- ALWAYS return at least 1 item, even if nothing is meaningfully lower-carbon.
+- If the category genuinely has few lower-carbon alternatives, set
+  "scarcityReason" to ONE plain sentence explaining why for this kind of product
+  (for example: most of its footprint is electricity used while running, and
+  models differ little). Then return the most efficient or most durable pick in
+  the category.
+- If there are real lower-carbon options, set "scarcityReason" to null.
+
+Reply with JSON only: {"scarcityReason":null,"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"..."}]}`;
+
 const SEARCH_URL = {
   amazon: (q) => `https://www.amazon.com/s?k=${encodeURIComponent(q)}`,
   bestbuy: (q) => `https://www.bestbuy.com/site/searchpage.jsp?st=${encodeURIComponent(q)}`,
@@ -44,14 +61,15 @@ function searchUrlFor(sourceUrl, query) {
   return SEARCH_URL.amazon(query);
 }
 
+const NONE = { alternatives: [], scarcityReason: null };
+
 /**
- * @returns {Promise<Array>} alternatives, or [] when we have no key, the call
- * fails, or the model declines. Failure is always an empty list — never a
- * fabricated one.
+ * @returns {Promise<{alternatives: Array, scarcityReason: string|null}>}
+ * Empty when we have no key or the call fails — never a fabricated list.
  */
 async function alternativesFor(product, guidance) {
   const key = process.env.OPENAI_API_KEY;
-  if (!key) return [];
+  if (!key) return NONE;
 
   const prompt = [
     product.spoken
@@ -75,7 +93,7 @@ async function alternativesFor(product, guidance) {
         temperature: 0.2,
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: SYSTEM },
+          { role: 'system', content: product.spoken ? SYSTEM + SPOKEN : SYSTEM },
           { role: 'user', content: prompt },
         ],
       }),
@@ -83,14 +101,14 @@ async function alternativesFor(product, guidance) {
 
     if (!response.ok) {
       console.warn(`[verte] alternatives HTTP ${response.status}`);
-      return [];
+      return NONE;
     }
 
     const data = await response.json();
     const parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}');
     const list = Array.isArray(parsed.alternatives) ? parsed.alternatives : [];
 
-    return list
+    const alternatives = list
       .filter((a) => a && typeof a.title === 'string' && a.title.trim())
       .slice(0, 3)
       .map((a) => {
@@ -106,9 +124,17 @@ async function alternativesFor(product, guidance) {
           estimated: true,
         };
       });
+
+    const reason = typeof parsed.scarcityReason === 'string' ? parsed.scarcityReason.trim() : '';
+    return {
+      alternatives,
+      // Only meaningful alongside a pick; a reason with nothing under it is
+      // just the empty state again.
+      scarcityReason: reason && alternatives.length ? reason.slice(0, 220) : null,
+    };
   } catch (error) {
     console.warn(`[verte] alternatives unavailable: ${error.message}`);
-    return [];
+    return NONE;
   }
 }
 

@@ -49,7 +49,7 @@ async function lookup(product, listings = []) {
     bulky: false,
   };
 
-  const alternatives = await alternativesFor({ ...product, category }, guidance);
+  const { alternatives, scarcityReason } = await alternativesFor({ ...product, category }, guidance);
   const pageOptions = guidance.verdict === 'avoid' ? [] : rank(listings);
 
   const cheapest = pageOptions.length ? pageOptions[0].price : null;
@@ -67,6 +67,7 @@ async function lookup(product, listings = []) {
     product: { ...product, category },
     guidance,
     alternatives,
+    scarcityReason,
     pageOptions,
     embodiedCo2Kg,
     co2AvoidedKg: pageOptions.length && isSourced(guidance) ? guidance.embodiedCo2Kg : null,

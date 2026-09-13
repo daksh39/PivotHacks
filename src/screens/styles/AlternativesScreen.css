@@ -26,6 +26,13 @@
   font-weight: 700;
 }
 
+.alt-reason {
+  color: var(--verte-ink);
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 6px;
+}
+
 .alt-cite {
   color: var(--verte-ink-soft);
   font-size: 11px;
