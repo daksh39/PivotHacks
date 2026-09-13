@@ -46,10 +46,10 @@ export const DEADLINE_CHOICES: { label: string; value: number | null }[] = [
 
 /** Round numbers a student actually thinks in, plus "no limit". */
 export const BUDGET_CHOICES: { label: string; value: number | null }[] = [
-  { label: 'No limit', value: null },
-  { label: 'Under 50', value: 50 },
-  { label: 'Under 100', value: 100 },
-  { label: 'Under 200', value: 200 },
+  { label: 'Any', value: null },
+  { label: '$50', value: 50 },
+  { label: '$100', value: 100 },
+  { label: '$200', value: 200 },
 ]
 
 export function deadlineLabel(needInDays: number | null): string {

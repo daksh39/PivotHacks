@@ -83,18 +83,15 @@ export function Popup() {
             ))}
           </div>
 
-          <label className="verte__ctx-check">
-            <input
-              type="checkbox"
-              checked={context.hasCar}
-              onChange={(e) => update({ hasCar: e.target.checked })}
-            />
-            <span>I can collect bulky things by car</span>
-          </label>
 
           <p className="verte__ctx-help">
             These change which listing Verte recommends, not just what it shows.
           </p>
+          {/* There is no "can you collect it by car" control here on purpose.
+            * The ranking rule for it exists and is correct, but no source
+            * reports local pickup yet — so the control could not change
+            * anything, and a switch that provably does nothing is worse than
+            * no switch. It comes back with real pickup data. */}
         </fieldset>
 
         {impact.seen > 0 ? (

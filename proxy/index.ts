@@ -104,7 +104,7 @@ function savingsFor(
    * And if nothing is usable, there is no saving to advertise at all — a card
    * reading "nothing arrives in time" beside "save $61" is a contradiction a
    * judge will catch in the first ten seconds. */
-  if (reason === 'nothing-arrives-in-time') return null
+  if (reason === 'nothing-arrives-in-time' || reason === 'nothing-in-budget') return null
   const recommended = options[0]?.price ?? null
   return product.price != null && recommended != null && product.price > recommended
     ? Math.round(product.price - recommended)
@@ -134,7 +134,9 @@ function assemble(
     /* Only claim avoided manufacturing if they have something they can
      * actually buy instead. Nothing viable, no claim. */
     co2AvoidedKg:
-      ranked.options.length && ranked.reason !== 'nothing-arrives-in-time'
+      ranked.options.length &&
+      ranked.reason !== 'nothing-arrives-in-time' &&
+      ranked.reason !== 'nothing-in-budget'
         ? guidance!.embodiedCo2Kg
         : null,
   }
