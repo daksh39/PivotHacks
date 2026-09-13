@@ -30,11 +30,20 @@ export type ImpactLine = {
 export function impactLine(result: VerteResult): ImpactLine | null {
   const { guidance, options, reason, co2AvoidedKg } = result
 
-  /* No claim when we are telling them to buy new, or when nothing on the card
-   * is actually usable. Avoided emissions they cannot obtain are not avoided. */
+  /* Telling them to buy new is the one case with no environmental case to
+   * make, and pretending otherwise would be dishonest. */
   if (guidance?.verdict === 'avoid') return null
-  if (!options.length) return null
   if (reason === 'nothing-arrives-in-time' || reason === 'nothing-in-budget') return null
+
+  /* Nothing listed today. Still true, still the thesis, and this is now the
+   * most common card — leaving it silent is how the product stopped looking
+   * like a sustainability tool. */
+  if (!options.length) {
+    return {
+      headline: 'The greenest one is the one that already exists — worth checking back',
+      source: null,
+    }
+  }
 
   if (co2AvoidedKg && co2AvoidedKg > 0 && isSourced(guidance?.co2Source)) {
     return {

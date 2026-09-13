@@ -50,9 +50,23 @@ describe('unknown category', () => {
   })
 })
 
-describe('nothing worth showing', () => {
-  test('returns null when there is neither a listing nor guidance', () => {
-    expect(buildResult(product, null, [], ctx)).toBeNull()
+describe('always present on a product page', () => {
+  /* Requirement change: the card must appear on every supported product page,
+   * without the user clicking the toolbar icon. Returning null for "no
+   * listings and no category" meant the extension was silently absent on a
+   * large share of pages, which is indistinguishable from being broken. An
+   * honest "nothing secondhand for this one" is information; silence is not. */
+  test('still returns a result with neither listings nor guidance', () => {
+    const out = buildResult(product, null, [], ctx)
+    expect(out).not.toBeNull()
+    expect(out!.options).toEqual([])
+    expect(out!.guidance).toBeNull()
+  })
+
+  test('claims no saving when there is nothing to buy', () => {
+    const out = buildResult(product, null, [], ctx)
+    expect(out!.savingsUsd).toBeNull()
+    expect(out!.co2AvoidedKg).toBeNull()
   })
 
   test('still returns a result with guidance but no listings, so we can say buy new', () => {

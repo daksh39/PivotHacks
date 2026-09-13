@@ -12,8 +12,8 @@ import { guidanceFor } from '../guidance'
 import type { ProductContext } from '../types'
 import { loadContext } from '../context'
 import { Card } from '../components/Card'
-import { Skeleton } from '../components/Skeleton'
 import { extractProduct, looksLikeProductPage, readBreadcrumbs } from './extract'
+import { trace } from './trace'
 import { findUsedListings } from './listings'
 import { mountCard, unmountCard } from './mount'
 import { waitFor } from './wait'
@@ -30,21 +30,40 @@ import { waitFor } from './wait'
 const dismissed = new Set<string>()
 
 async function run(): Promise<void> {
-  if (!looksLikeProductPage()) return
+  trace('injected', { url: location.pathname })
+
+  if (!looksLikeProductPage()) {
+    trace('not-a-product-page')
+    return
+  }
+  trace('waiting-for-product')
 
   /* Wait for the product to actually render. Calling extractProduct() once at
    * document_idle and returning on null is what made the card appear only
    * after repeated refreshes: these pages fill in their title well after the
    * content script runs, and nothing ever looked a second time. */
   const product = await waitFor(() => extractProduct())
-  if (!product) return
-  if (dismissed.has(product.sourceUrl)) return
+  if (!product) {
+    trace('no-product-found')
+    return
+  }
+  if (dismissed.has(product.sourceUrl)) {
+    trace('dismissed', { title: product.title })
+    return
+  }
+  trace('reading-listings', { title: product.title })
 
-  /* Decide BEFORE mounting. The old order mounted a skeleton, then discovered
-   * there was nothing to show, then unmounted — which the user saw as the card
-   * appearing once and vanishing. Nothing is mounted now unless it stays. */
   const result = await buildCard(product)
-  if (!result) return
+  if (!result) {
+    trace('nothing-to-show')
+    return
+  }
+
+  trace('mounted', {
+    category: result.guidance?.category ?? null,
+    listings: result.options.length,
+    reason: result.reason,
+  })
 
   const root = mountCard()
 
@@ -68,7 +87,13 @@ async function buildCard(product: ProductContext) {
    * that service was not running — which is most of the time, on most
    * machines, including every machine we would demo on. */
   const context = await loadContext()
-  const options = await findUsedListings(product.title, product.sourceUrl)
+
+  /* Listings must never take the card down with them. A retailer changing its
+   * markup, or a slow response, is not a reason to show the user nothing. */
+  const options = await findUsedListings(product.title, product.sourceUrl).catch((error) => {
+    trace('failed', { error: String(error).slice(0, 120) })
+    return []
+  })
   /* The retailer's own breadcrumb first, the title only as a fallback. */
   const category = product.category || classify(product.title, readBreadcrumbs())
   const guidance = guidanceFor(category)

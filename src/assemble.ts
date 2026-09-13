@@ -52,18 +52,21 @@ function savingsFor(
 }
 
 /**
- * Returns null only when there is genuinely nothing to say: no listings AND
- * no guidance. Anything else is worth a card.
+ * Always returns a result for a real product.
+ *
+ * It used to return null when there were no listings and no category, which
+ * made the extension silently absent on a large share of pages — and silence
+ * is indistinguishable from broken. "Nothing secondhand for this one" is
+ * information; showing nothing is not. The card is the product's presence, so
+ * it appears on every supported page without anyone clicking a toolbar icon.
  */
 export function buildResult(
   product: ProductContext,
   guidance: CategoryGuidance | null,
   options: UsedOption[],
   context: BuyerContext,
-): VerteResult | null {
+): VerteResult {
   const comparable = sameCurrency(options, product.currency)
-
-  if (!comparable.length && !guidance) return null
 
   /* Nothing secondhand to offer when we are telling them to buy it new. */
   const usable = guidance?.verdict === 'avoid' ? [] : comparable

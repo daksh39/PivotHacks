@@ -233,3 +233,37 @@ export const FIXTURE_UNKNOWN: VerteResult = {
   savingsUsd: 50,
   co2AvoidedKg: null,
 }
+
+/**
+ * The most common card of all: a real product, correctly classified, with no
+ * secondhand listing anywhere today. This used to render nothing at all — the
+ * extension was simply absent, which is indistinguishable from broken.
+ */
+export const FIXTURE_NOTHING_FOUND: VerteResult = {
+  product: {
+    title: 'Cooluli Mini Fridge for Bedroom, 4L/6 Can',
+    price: 73.54,
+    currency: 'CAD',
+    category: 'mini-fridge',
+    imageUrl: null,
+    sourceUrl: 'https://www.amazon.com/dp/B0771S9XT8',
+  },
+  guidance: {
+    category: 'mini-fridge',
+    verdict: 'safe',
+    checkTips: [
+      'Check the door seal for cracks or gaps.',
+      'Confirm it cools within an hour of plugging in.',
+    ],
+    embodiedCo2Kg: 0,
+    co2Source: '',
+    note: 'Compressor appliances last well, and a used one is the cheap option.',
+    bulky: true,
+  },
+  options: [],
+  context: { needInDays: null, hasCar: false, budgetCap: null },
+  reason: 'cheapest',
+  passedOver: null,
+  savingsUsd: null,
+  co2AvoidedKg: null,
+}

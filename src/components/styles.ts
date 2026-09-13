@@ -260,6 +260,34 @@ export const cardStyles = /* css */ `
   color: ${color.accentText};
 }
 
+/* The environmental claim is the argument, not a footnote. It gets its own
+ * surface so it reads at a glance on every card — including the many cards
+ * that have no listing and used to carry nothing at all. */
+.verte__impact {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin-top: 14px;
+  padding: 11px 13px;
+  background: ${color.tint};
+  border-radius: ${radius.block};
+}
+.verte__impact svg { flex: none; margin-top: 2px; }
+.verte__impact-text {
+  font-size: 13px;
+  line-height: 1.45;
+  color: ${color.accentText};
+  font-weight: 500;
+}
+
+.verte__tagline {
+  margin-left: 8px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: ${color.accentText};
+  opacity: 0.75;
+}
+
 .verte__carbon { font-size: 13.5px; color: ${color.ink}; }
 .verte__carbon-eq { color: ${color.inkSoft}; }
 

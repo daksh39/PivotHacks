@@ -19,6 +19,7 @@ import {
   FIXTURE_HEADPHONES,
   FIXTURE_MATTRESS,
   FIXTURE_MONITOR,
+  FIXTURE_NOTHING_FOUND,
   FIXTURE_OVER_BUDGET,
   FIXTURE_TEXTBOOK,
   FIXTURE_UNKNOWN,
@@ -85,6 +86,10 @@ function Preview() {
 
       <Panel label="UNKNOWN CATEGORY — the common case">
         <Card result={FIXTURE_UNKNOWN} defaultExpanded onDismiss={() => {}} />
+      </Panel>
+
+      <Panel label="NOTHING FOUND — now the most common card">
+        <Card result={FIXTURE_NOTHING_FOUND} defaultExpanded onDismiss={() => {}} />
       </Panel>
 
       <Panel label="collapsed">

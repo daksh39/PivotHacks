@@ -97,16 +97,30 @@ describe('with no cited figure', () => {
   })
 })
 
-describe('when there is nothing to claim', () => {
+describe('when there is no secondhand option', () => {
+  /* This became the most common card once it started appearing on every
+   * product page, and it was the one carrying no environmental content at
+   * all — which is how the whole thing stopped reading as a sustainability
+   * project. It still has something true to say. */
+  test('still states the case', () => {
+    const line = impactLine(result({ options: [], savingsUsd: null }))
+    expect(line).not.toBeNull()
+    expect(line!.headline.toLowerCase()).toContain('already exists')
+  })
+
+  test('does not pretend anything was avoided', () => {
+    const line = impactLine(result({ options: [], savingsUsd: null }))
+    expect(line!.headline).not.toMatch(/\bavoids\b/i)
+    expect(line!.source).toBeNull()
+  })
+})
+
+describe('when there is genuinely nothing to claim', () => {
   test('says nothing when we are telling them to buy new', () => {
     expect(impactLine(result({ guidance: guidance({ verdict: 'avoid' }), options: [] }))).toBeNull()
   })
 
-  test('says nothing when there is no secondhand option', () => {
-    expect(impactLine(result({ options: [] }))).toBeNull()
-  })
-
-  test('says nothing when nothing is actually usable', () => {
+  test('says nothing when nothing on the card is usable', () => {
     expect(impactLine(result({ reason: 'nothing-in-budget' }))).toBeNull()
   })
 })

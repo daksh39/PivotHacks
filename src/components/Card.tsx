@@ -94,6 +94,7 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
       <header className="verte__header">
         <Leaf />
         <span className="verte__wordmark">Verte</span>
+        <span className="verte__tagline">the greenest one already exists</span>
         {onDismiss && (
           <button className="verte__dismiss" onClick={onDismiss} aria-label="Dismiss">
             ×
@@ -163,23 +164,6 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
               * still stands on its own — inventing a verdict would be worse. */}
             {guidance && <Verdict guidance={guidance} />}
 
-            {/* 3 — the environmental claim, on every card.
-              * Quantified where a citation exists, qualitative everywhere
-              * else. Never silent, and never a number we cannot defend. */}
-            {impact && (
-              <>
-                <hr className="verte__rule" />
-                <p className="verte__carbon">
-                  {impact.headline}
-                  {impact.source && (
-                    <span className="verte__carbon-src" title={impact.source}>
-                      source
-                    </span>
-                  )}
-                </p>
-              </>
-            )}
-
             {/* 4 — where to actually get it */}
             {options.length > 0 && (
               <>
@@ -218,6 +202,24 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
               </>
             )}
           </>
+        )}
+
+        {/* The environmental claim, rendered for EVERY card — including the
+          * no-listings one, which is the most common of all. It lived inside
+          * the has-listings branch, so the card that most needed the argument
+          * was the one card that carried none of it. */}
+        {impact && (
+          <div className="verte__impact">
+            <Leaf />
+            <p className="verte__impact-text">
+              {impact.headline}
+              {impact.source && (
+                <span className="verte__carbon-src" title={impact.source}>
+                  source
+                </span>
+              )}
+            </p>
+          </div>
         )}
       </div>
     </div>
