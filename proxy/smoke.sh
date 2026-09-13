@@ -134,18 +134,23 @@ if [ "$code" = "404" ]; then echo "ok"; else echo "FAIL (got $code)"; fail=1; fi
 
 # Every slug the classifier can emit must have guidance behind it. Without a
 # row we answer 404 and the card never renders on a page we DID recognise.
-printf '  %-38s' "guidance for all 24 categories"
-missing=""
-for slug in desk bookshelf dresser mini-fridge microwave monitor textbook cookware \
-            bike storage-bin drying-rack fan laptop desk-chair blender kettle \
-            headphones winter-coat mattress pillow bike-helmet non-stick-pan \
-            smoke-detector surge-protector; do
-  c=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/lookup" \
-    -H 'Content-Type: application/json' \
-    -d "{\"product\":{\"title\":\"x\",\"price\":1,\"currency\":\"USD\",\"category\":\"$slug\",\"imageUrl\":null,\"sourceUrl\":\"x\"},\"options\":[]}")
-  [ "$c" = "200" ] || missing="$missing $slug"
-done
-if [ -z "$missing" ]; then echo "ok"; else echo "FAIL — no guidance for:$missing"; fail=1; fi
+# The list comes from the classifier itself — it was hand-written here once and
+# went stale the first time someone widened it.
+printf '  %-38s' "guidance for every classifier slug"
+slugs=$(npx --no-install tsx -e 'import { KNOWN_CATEGORIES } from "./proxy/categories"; console.log(KNOWN_CATEGORIES.join(" "))' 2>/dev/null)
+if [ -z "$slugs" ]; then
+  echo "SKIP (could not read the classifier)"
+else
+  missing=""
+  for slug in $slugs; do
+    c=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/lookup" \
+      -H 'Content-Type: application/json' \
+      -d "{\"product\":{\"title\":\"x\",\"price\":1,\"currency\":\"USD\",\"category\":\"$slug\",\"imageUrl\":null,\"sourceUrl\":\"x\"},\"options\":[]}")
+    [ "$c" = "200" ] || missing="$missing $slug"
+  done
+  n=$(echo $slugs | wc -w | tr -d ' ')
+  if [ -z "$missing" ]; then echo "ok  ($n categories)"; else echo "FAIL — no guidance for:$missing"; fail=1; fi
+fi
 
 echo
 [ "$fail" = 0 ] && echo "all green" || echo "FAILURES — see above"

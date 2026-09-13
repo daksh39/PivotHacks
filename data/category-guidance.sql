@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS IMPACT_LOG (
 );
 
 -- --- §07 starter set -------------------------------------------------------
--- 24 categories, matching proxy/categories.ts one for one.
+-- 58 categories, matching proxy/categories.ts one for one.
 
 INSERT INTO CATEGORY_GUIDANCE
   (CATEGORY, VERDICT, CHECK_TIPS, EMBODIED_CO2_KG, CO2_SOURCE, NOTE, BULKY)
@@ -75,6 +75,20 @@ FROM VALUES
   322,'Dell S2421HS Monitor PCF datasheet — 476 kg CO2e total, 67.7% manufacturing','Most of a display''s footprint is in the making of it, so a used one avoids nearly all of it.',FALSE),
 ('desk','safe','["Check the drawer runners slide cleanly.","Make sure it isn''t particleboard that has been wet."]',
   0,'','Ideal used. Solid wood outlives several owners.',TRUE),
+('keyboard','safe','["Test every key in an online key tester.","Check the cable or the battery, whichever it uses."]',
+  0,'','Mechanical switches outlive several owners and anything broken is obvious in thirty seconds.',FALSE),
+('speaker','safe','["Play something bass-heavy and listen for buzzing from a blown driver.","Check the charging port is not loose."]',
+  0,'','Drivers and cabinets do not age much. A blown speaker announces itself immediately.',FALSE),
+('backpack','safe','["Run every zip end to end.","Check the shoulder strap stitching where it meets the body."]',
+  0,'','Bags are built for years of abuse, and everything that fails is visible from the outside.',FALSE),
+('luggage','safe','["Roll it — wheels and bearings are what wear out.","Extend and retract the handle a few times.","Check the shell for cracks around the corners."]',
+  0,'','A hard case survives far more trips than one owner takes. Wheels and handles are the only real wear points.',TRUE),
+('webcam','safe','["Plug it in and check the autofocus settles.","Confirm the mount still grips a monitor."]',
+  0,'','Nothing inside wears out, and anything broken shows up the first time you open it.',FALSE),
+('microphone','safe','["Record a test clip and listen for crackle on the capsule.","Check the stand thread and the shock mount are included."]',
+  0,'','Microphones are famously durable — studios run the same ones for decades.',FALSE),
+('weights','safe','["Check adjustable dumbbells lock at every setting.","Look for cracks in rubber coating, which is cosmetic but spreads."]',
+  0,'','Cast iron is the strongest secondhand case there is. It does not wear out, and new ones cost a fortune to ship.',TRUE),
 
 -- CHECK -------------------------------------------------------
 ('desk-chair','check','["Sit on it and check the gas cylinder does not sink.","Test that the recline lock holds."]',
@@ -90,6 +104,50 @@ FROM VALUES
 -- SOURCED: Apple 13-inch MacBook Air Product Environmental Report — 161 kg CO2e, 76% production
 ('laptop','check','["Ask for the battery cycle count.","Confirm it powers on and gets past the setup screen.","Check it is not activation locked to the previous owner."]',
   122,'Apple 13-inch MacBook Air Product Environmental Report — 161 kg CO2e, 76% production','Production dominates a laptop''s footprint. Activation lock is the one thing that makes a cheap one worthless.',FALSE),
+('game-controller','check','["Test both sticks in a drift checker before the return window closes.","Press every face and shoulder button — worn switches feel mushy.","Check the battery still holds a charge through a full session."]',
+  0,'','Stick drift is the one failure that makes a cheap controller worthless, and it is easy to test in a minute.',FALSE),
+('game-console','check','["Confirm it is not banned from online play — ask the seller to sign in.","Listen to the fan under load; a screaming fan means dust or dried paste.","Check the disc drive reads and the storage is wiped, not just logged out."]',
+  0,'','Consoles last a decade and hold value. The risks are an account ban and a neglected fan, both checkable.',FALSE),
+('e-reader','check','["Look for cracks under the glass — e-ink screens do not survive a drop.","Confirm it is deregistered from the previous owner''s account.","Ask how long a charge lasts; an old battery is the usual reason for selling."]',
+  0,'','E-ink barely ages, so a used one is close to a new one. A screen crack is the thing that ends it.',FALSE),
+('tablet','check','["Confirm it is not activation locked to the previous owner.","Ask for the battery health percentage.","Check it still receives OS updates — old tablets get dropped quietly."]',
+  0,'','Production dominates a tablet''s footprint. Activation lock is the one thing that makes a cheap one worthless.',FALSE),
+('smart-tv','check','["Have it powered on before you commit — look for lines, dark patches or dead pixels.","Check the panel for pressure marks, which show as clouding on a white screen.","Confirm the stand and remote are included."]',
+  0,'','A panel fault is invisible on a switched-off screen, and it is the only defect that really matters.',FALSE),
+('camera','check','["Ask for the shutter count — it is a camera''s odometer.","Shoot a plain bright surface and look for sensor dust spots.","Check the lens mount and threads for dents."]',
+  0,'','Bodies are built for far more actuations than most owners ever use, so a low shutter count is a genuinely good buy.',FALSE),
+('computer-mouse','check','["Click each button twenty times and listen for double-clicks.","Check the feet and the scroll wheel for wear."]',
+  0,'','Switches wear out before anything else, and a double-clicking mouse is unusable for work.',FALSE),
+('router','check','["Check the manufacturer still ships firmware updates for that model.","Factory reset it before use — never trust an inherited configuration."]',
+  0,'','A router with no security updates is a liability on your network, so the model''s support status matters more than its age.',FALSE),
+('printer','check','["Price the cartridges before you buy — they often cost more than the printer.","Print a test page; a clogged inkjet head is usually unfixable.","Laser printers survive storage far better than inkjets."]',
+  0,'','The purchase price is the small part. A cheap used inkjet with expensive clogged heads is no bargain.',TRUE),
+('multi-cooker','check','["Inspect the sealing ring — it holds smells and is the usual thing that fails.","Confirm the pressure release valve moves freely.","Check the inner pot coating is not scratched through."]',
+  0,'','The body lasts for years and the two parts that do not — the ring and the valve — are cheap to replace.',FALSE),
+('coffee-maker','check','["Ask when it was last descaled; scale is what kills these.","Run a cycle and check for leaks around the seals.","Confirm the basket, carafe and any pods system are all there."]',
+  0,'','A descaled machine lasts a decade. A neglected one is a repair job, and you can tell which you are looking at.',FALSE),
+('vacuum','check','["Check the filter and whether replacements are still sold.","For a cordless, ask how long it runs on a full charge.","Look at the brush roll for hair damage and worn bristles."]',
+  0,'','Motors long outlast batteries and filters. Price the consumables before you decide it is a bargain.',TRUE),
+('air-purifier','check','["Price a replacement filter — assume you will need one immediately.","Check the unit''s filter indicator has been reset, not ignored."]',
+  0,'','The machine is fine used. Always budget for a new filter on day one — the old one is not worth inheriting.',TRUE),
+('fitness-tracker','check','["Confirm it is unpaired and removed from the previous owner''s account.","Ask for battery life in real terms — these degrade fast.","Check whether the strap is a standard size you can replace."]',
+  0,'','Account locks and tired batteries are the two things that turn a cheap tracker into a paperweight.',FALSE),
+('shoes','check','["Look at the sole tread and the midsole for compression creases.","Check the heel counter still holds its shape.","Running shoes lose cushioning well before they look worn out."]',
+  0,'','Fine for casual and fashion pairs. For running, worn midsoles are a genuine injury risk however good they look.',FALSE),
+('toys','check','["Check the piece count against the box — missing pieces are the norm.","Look up the model for a safety recall.","For anything with small parts, check the age rating matches."]',
+  0,'','Toys are one of the strongest secondhand cases: barely used, and children outgrow them long before they wear out.',FALSE),
+('external-drive','check','["Ask for the SMART power-on hours before you buy.","Run a full read test on arrival, while you can still return it.","Never keep your only copy of anything on a used drive."]',
+  0,'','Enclosures and interfaces last, but a drive''s remaining life is the whole question — and SMART data answers it honestly.',FALSE),
+('streaming-stick','check','["Factory reset it so it is off the previous owner''s account.","Check the model still gets app updates — old sticks lose Netflix quietly."]',
+  0,'','The hardware is fine. What dates these is app support, so the model year matters more than the condition.',FALSE),
+('smart-home','check','["Confirm it has been removed from the previous owner''s account — many are useless until it is.","Check the model still receives security updates.","For anything wired, confirm the mounting plate and screws are included."]',
+  0,'','The one thing that bricks these is an account the seller forgot to release, and it is free to check before you pay.',FALSE),
+('hair-dryer','check','["Run it on every heat setting and smell for burning.","Check the cord where it meets the body for kinks.","Look at the plates or filter for scorching and residue."]',
+  0,'','Motors and elements last well. A frayed cord is the one fault worth walking away from.',FALSE),
+('sunglasses','check','["Hold the lenses to the light at an angle to find scratches.","Check the hinges are tight and the frame is not sprung.","Ask whether the lenses are still the original UV-coated ones."]',
+  0,'','Frames outlive lenses. A scratched or relensed pair may no longer block what it claims to.',FALSE),
+('exercise-machine','check','["Run it at speed for five minutes and listen to the belt and bearings.","Check whether the subscription the console depends on is transferable.","Measure your doorway before you commit — these rarely come apart."]',
+  0,'','Bought new with good intentions and sold barely used, so condition is usually excellent. The catch is the subscription and getting it home.',TRUE),
 
 -- BUY NEW -----------------------------------------------------
 ('bike-helmet','avoid','[]',
@@ -103,4 +161,14 @@ FROM VALUES
 ('pillow','avoid','[]',
   0,'','Hygiene, and they are cheap enough new that it does not sting.',FALSE),
 ('mattress','avoid','[]',
-  0,'','Hygiene and pest risk, and compression is permanent. Buy this one new.',TRUE);
+  0,'','Hygiene and pest risk, and compression is permanent. Buy this one new.',TRUE),
+('power-bank','avoid','[]',
+  0,'','Lithium cells degrade with every cycle and with age, and a used pack''s history is unknowable. A damaged cell is a fire risk. Buy this one new.',FALSE),
+('water-bottle','avoid','[]',
+  0,'','You cannot verify how a bottle was cleaned or what was kept in it, and the seal and straw are where that matters. Buy this one new.',FALSE),
+('water-filter','avoid','[]',
+  0,'','A filter''s job is what it has already absorbed. Buying that history secondhand defeats the point. Buy this one new.',FALSE),
+('electric-toothbrush','avoid','[]',
+  0,'','A used toothbrush handle cannot be meaningfully sanitised where it matters, around the head seal. Buy this one new.',FALSE),
+('memory-card','avoid','[]',
+  0,'','Flash memory wears out silently with use, and the secondhand market for cards is full of relabelled fakes. Buy this one new.',FALSE);

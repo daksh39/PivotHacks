@@ -61,7 +61,10 @@ const SQL = readSql()
 
 describe('category coverage', () => {
   it('parses every row out of the SQL', () => {
-    expect(Object.keys(SQL).length).toBe(24)
+    /* Derived from SEED, not hardcoded: the count grew from 24 to 58 the
+     * first time someone widened the classifier, and a literal here just
+     * means a red test that tells you nothing. */
+    expect(Object.keys(SQL).length).toBe(Object.keys(__SEED).length)
   })
 
   it.each(KNOWN_CATEGORIES)('%s has guidance — otherwise the card never renders', async (slug) => {

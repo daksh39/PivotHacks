@@ -14,6 +14,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { splitStatements } from './snowflake.load'
+import { __SEED } from './snowflake'
 
 describe('splitStatements — the hazards', () => {
   it('does not break on a semicolon inside a string literal', () => {
@@ -59,6 +60,7 @@ describe('splitStatements — the real file', () => {
 
   it('keeps the INSERT whole, down to its last row', () => {
     const insert = stmts.find((s) => s.includes('INSERT INTO CATEGORY_GUIDANCE'))!
-    expect((insert.match(/^\('/gm) ?? []).length).toBe(24)
+    /* Every category in SEED, however many that is today. */
+    expect((insert.match(/^\('/gm) ?? []).length).toBe(Object.keys(__SEED).length)
   })
 })
