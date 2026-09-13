@@ -32,6 +32,7 @@ const NO_GUIDANCE: CategoryGuidance = {
   note: '',
   bulky: false,
   useDominant: false,
+  carbonCase: 'materials',
 }
 
 /** Amounts only ever compare like with like. */

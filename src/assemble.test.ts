@@ -79,6 +79,7 @@ describe('always present on a product page', () => {
       note: 'x',
       bulky: false,
       useDominant: false,
+      carbonCase: 'materials' as const,
     }
     expect(buildResult(product, guidance, [], ctx)).not.toBeNull()
   })

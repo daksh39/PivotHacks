@@ -24,6 +24,7 @@ const guidance = (over: Partial<CategoryGuidance> = {}): CategoryGuidance => ({
   note: '',
   bulky: false,
   useDominant: false,
+  carbonCase: 'materials',
   ...over,
 })
 

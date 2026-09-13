@@ -28,7 +28,7 @@ export function generate(): string {
     const cited = g.co2Source ? `\n-- SOURCED: ${g.co2Source}` : ''
     return (
       `${cited}\n(${q(g.category)},${q(g.verdict)},${q(JSON.stringify(g.checkTips))},\n` +
-      `  ${g.embodiedCo2Kg},${q(g.co2Source)},${q(g.note)},${g.bulky ? 'TRUE' : 'FALSE'},${g.useDominant ? 'TRUE' : 'FALSE'})${last ? ';' : ','}`
+      `  ${g.embodiedCo2Kg},${q(g.co2Source)},${q(g.note)},${g.bulky ? 'TRUE' : 'FALSE'},${g.useDominant ? 'TRUE' : 'FALSE'},${q(g.carbonCase)})${last ? ';' : ','}`
     )
   })
 
@@ -76,7 +76,10 @@ CREATE OR REPLACE TABLE CATEGORY_GUIDANCE (
   BULKY            BOOLEAN      NOT NULL,
   -- Lifetime emissions dominated by RUNNING it, not making it. Where this is
   -- true a cheap old unit can be a carbon loss, and the card says so.
-  USE_DOMINANT     BOOLEAN      NOT NULL
+  USE_DOMINANT     BOOLEAN      NOT NULL,
+  -- Where this category's emissions sit, for the qualitative claim shown on
+  -- every card that has no measured figure. See CarbonCase in src/types.ts.
+  CARBON_CASE      VARCHAR      NOT NULL
 );
 
 -- Accumulates across runs — never replaced.
@@ -91,8 +94,8 @@ CREATE TABLE IF NOT EXISTS IMPACT_LOG (
 -- ${order.length} categories, matching proxy/categories.ts one for one.
 
 INSERT INTO CATEGORY_GUIDANCE
-  (CATEGORY, VERDICT, CHECK_TIPS, EMBODIED_CO2_KG, CO2_SOURCE, NOTE, BULKY, USE_DOMINANT)
-SELECT column1, column2, PARSE_JSON(column3), column4, column5, column6, column7, column8
+  (CATEGORY, VERDICT, CHECK_TIPS, EMBODIED_CO2_KG, CO2_SOURCE, NOTE, BULKY, USE_DOMINANT, CARBON_CASE)
+SELECT column1, column2, PARSE_JSON(column3), column4, column5, column6, column7, column8, column9
 FROM VALUES
 ${body}
 `

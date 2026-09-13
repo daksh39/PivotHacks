@@ -40,6 +40,7 @@ export const FIXTURE_TEXTBOOK: VerteResult = {
     note: 'A previous edition is often fine, and usually a fraction of the price.',
     bulky: false,
     useDominant: false,
+    carbonCase: 'manufacturing',
   },
   options: [
     {
@@ -80,6 +81,7 @@ export const FIXTURE_HEADPHONES: VerteResult = {
     note: 'Hygiene is the reason for the caveat, not whether they work.',
     bulky: false,
     useDominant: false,
+    carbonCase: 'manufacturing',
   },
   options: [
     {
@@ -133,6 +135,7 @@ export const FIXTURE_MONITOR: VerteResult = {
     note: "Most of a display's footprint is in the making of it, so a used one avoids nearly all of it.",
     bulky: false,
     useDominant: false,
+    carbonCase: 'manufacturing',
   },
   options: [
     {
@@ -173,6 +176,7 @@ export const FIXTURE_MATTRESS: VerteResult = {
     note: 'Hygiene and pest risk, and foam compression is permanent. Buy this one new.',
     bulky: true,
     useDominant: false,
+    carbonCase: 'manufacturing',
   },
   options: [],
   context: { needInDays: null, hasCar: false, budgetCap: null },
@@ -271,6 +275,7 @@ export const FIXTURE_NOTHING_FOUND: VerteResult = {
     note: 'Compressor appliances last well, and a used one is the cheap option.',
     bulky: true,
     useDominant: false,
+    carbonCase: 'manufacturing',
   },
   options: [],
   context: { needInDays: null, hasCar: false, budgetCap: null },

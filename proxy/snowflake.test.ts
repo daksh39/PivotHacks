@@ -45,7 +45,7 @@ function readSql(): Record<string, SqlRow> {
     const tail = chunk.match(/\]',\s*([\d.]+),'((?:[^']|'')*)'/s)
     /* Two booleans now: BULKY then USE_DOMINANT. Matching only the last one
      * silently read useDominant as bulky and every bulky category failed. */
-    const flags = chunk.match(/,(TRUE|FALSE),(TRUE|FALSE)\)[,;]/)
+    const flags = chunk.match(/,(TRUE|FALSE),(TRUE|FALSE),'[a-z]+'\)[,;]/)
     const bulky = flags?.[1]
     if (!slug || !verdict || !tail || !bulky || tips === undefined) continue
 

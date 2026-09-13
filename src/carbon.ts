@@ -10,6 +10,8 @@
  * an answer is worth more than having a bigger number."
  * ------------------------------------------------------------------------- */
 
+import type { CarbonCase } from './types'
+
 /**
  * US EPA: a typical passenger vehicle emits about 400 g CO2 per mile
  * (8,887 g per gallon at 22.2 mpg).
@@ -78,15 +80,66 @@ export type CarbonPayoff = 'high' | 'moderate' | 'low' | 'unknown'
 export const PAYOFF_HIGH_KG = 100
 export const PAYOFF_MODERATE_KG = 25
 
+/**
+ * Where a category with no measured figure lands.
+ *
+ * This is a statement about WHERE the emissions sit, not how many there are,
+ * so it needs no per-product citation — and the basis for the strongest claim
+ * is the two documents we already cite: Dell puts 67.7% of that monitor's
+ * lifetime emissions in manufacturing, Apple 76% of that laptop's. That
+ * pattern is what "manufacturing" means here.
+ */
+const CASE_PAYOFF: Record<CarbonCase, CarbonPayoff> = {
+  manufacturing: 'high',
+  materials: 'moderate',
+  minimal: 'low',
+  /* Nothing to claim. A used sponge is not a sustainability story. */
+  consumable: 'unknown',
+}
+
 export function carbonPayoff(
-  guidance: { embodiedCo2Kg: number; co2Source: string } | null | undefined,
+  guidance:
+    | { embodiedCo2Kg: number; co2Source: string; carbonCase?: CarbonCase }
+    | null
+    | undefined,
 ): CarbonPayoff {
   if (!guidance) return 'unknown'
-  if (!isSourced(guidance.co2Source) || guidance.embodiedCo2Kg <= 0) return 'unknown'
-  if (guidance.embodiedCo2Kg >= PAYOFF_HIGH_KG) return 'high'
-  if (guidance.embodiedCo2Kg >= PAYOFF_MODERATE_KG) return 'moderate'
-  return 'low'
+
+  /* A measured figure always wins. */
+  if (isSourced(guidance.co2Source) && guidance.embodiedCo2Kg > 0) {
+    if (guidance.embodiedCo2Kg >= PAYOFF_HIGH_KG) return 'high'
+    if (guidance.embodiedCo2Kg >= PAYOFF_MODERATE_KG) return 'moderate'
+    return 'low'
+  }
+
+  return guidance.carbonCase ? CASE_PAYOFF[guidance.carbonCase] : 'unknown'
 }
+
+/**
+ * The qualitative claim, for the categories with no measured figure — which is
+ * most of them, and always will be. True by construction, so it never
+ * overstates and never needs a number to stand up.
+ */
+export function carbonCaseLine(c: CarbonCase): string | null {
+  switch (c) {
+    case 'manufacturing':
+      return 'Almost all of the emissions happen before you switch it on. Buying one that already exists skips them.'
+    case 'materials':
+      return 'The footprint is the material and the making. Using it emits nothing, and it outlasts several owners.'
+    case 'minimal':
+      return 'Small and light, so the footprint is small either way. Buy it used to save money, not the planet.'
+    case 'consumable':
+      return null
+  }
+}
+
+/**
+ * What the qualitative claim rests on, shown where we make the strongest
+ * version of it. Both documents are already cited elsewhere on their own
+ * categories, so this is checkable rather than assertion.
+ */
+export const MANUFACTURING_BASIS =
+  'Basis: manufacturer footprint reports put production at most of lifetime emissions — Dell S2421HS 67.7%, Apple MacBook Air 76%.'
 
 /** The band across the top of the card. Null when we have nothing to claim. */
 export function payoffHeadline(payoff: CarbonPayoff): string | null {
