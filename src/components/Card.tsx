@@ -15,7 +15,16 @@
 import { useState } from 'react'
 import type { UsedOption, VerteResult } from '../types'
 import { explainReason } from '../reason'
-import { formatUsd } from '../carbon'
+import {
+  USE_DOMINANT_WARNING,
+  carbonPayoff,
+  formatCo2,
+  formatUsd,
+  isSourced,
+  milesDrivenEquivalent,
+  payoffHeadline,
+  payoffMeaning,
+} from '../carbon'
 import { impactLine } from '../impactLine'
 import { Verdict } from './Verdict'
 import { Empty } from './Empty'
@@ -59,7 +68,16 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
    * and the card must never quietly substitute the cheapest for it. */
   const recommended: UsedOption | null = options[0] ?? null
   const unusable = reason === 'nothing-arrives-in-time' || reason === 'nothing-in-budget'
-  const impact = impactLine(result)
+
+  /* How much buying THIS one used actually matters. It decides what the card
+   * leads with, and whether Verte recommends buying used at all. */
+  const payoff = carbonPayoff(guidance)
+  const lowPayoff = reason === 'low-carbon-payoff'
+  /* The band prints the figure when we have one, so the line below must not
+   * print it again. */
+  const quantified =
+    payoff !== 'unknown' && !!guidance && isSourced(guidance.co2Source) && guidance.embodiedCo2Kg > 0
+  const impact = impactLine(result, quantified)
 
   /* One source per page now — you are on Amazon or you are on Best Buy, and
    * the listings are that retailer's own. There is nothing to switch between,
@@ -104,8 +122,50 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
       </header>
 
       <div className="verte__body">
-        {/* 1 — money leads */}
-        {recommended && !unusable && (
+        {/* 1 — why this purchase is worth anyone's attention.
+          * Rendered only where a real citation backs the figure (§09); an
+          * uncited category shows no band and makes no claim. The qualitative
+          * case for those still comes through impactLine below. */}
+        {payoff !== 'unknown' && guidance && (
+          <div className={`verte__payoff verte__payoff--${payoff}`}>
+            <p className="verte__payoff-head">{payoffHeadline(payoff)}</p>
+            {isSourced(guidance.co2Source) && guidance.embodiedCo2Kg > 0 && (
+              <p className="verte__payoff-figure">
+                {formatCo2(guidance.embodiedCo2Kg)} to make one
+                <span className="verte__carbon-eq">
+                  {' '}— about {milesDrivenEquivalent(guidance.embodiedCo2Kg)} miles driven
+                </span>
+              </p>
+            )}
+            <p className="verte__payoff-meaning">{payoffMeaning(payoff)}</p>
+            {/* §09: the figure never appears without the document behind it. */}
+            {quantified && (
+              <p className="verte__payoff-src" title={guidance.co2Source}>
+                {guidance.co2Source}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* The honest catch: where running it outweighs making it, a cheap old
+          * one can be a carbon loss. Say so even though it undercuts us. */}
+        {guidance?.useDominant && <p className="verte__caveat">{USE_DOMINANT_WARNING}</p>}
+
+        {/* Verte declining to sell. Low-impact category, small saving — there
+          * is no reason to send a student across town for this. */}
+        {lowPayoff && (
+          <div className="verte__blocked">
+            <p className="verte__blocked-head">{explainReason(reason, context)}</p>
+            <p className="verte__blocked-sub">
+              Making one of these costs almost nothing, and you would save{' '}
+              {savingsUsd != null ? formatUsd(savingsUsd, product.currency) : 'very little'}. Not
+              worth the trip.
+            </p>
+          </div>
+        )}
+
+        {/* 2 — money */}
+        {recommended && !unusable && !lowPayoff && (
           <>
             <div className="verte__price">
               {product.price != null && (
