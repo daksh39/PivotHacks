@@ -52,3 +52,78 @@ export function formatUsd(amount: number, currency = 'USD'): string {
     maximumFractionDigits: 0,
   }).format(amount)
 }
+
+/* --- how much buying used here actually matters -------------------------- */
+
+/**
+ * How much carbon buying this category used actually avoids.
+ *
+ * The thesis is that buying secondhand matters. It does not matter equally:
+ * a used laptop avoids about 122 kg of manufacturing, a used paperback under
+ * three. Treating those as the same story is how a sustainability pitch stops
+ * being believed — so this bands the cited figure, and the band decides
+ * whether Verte pushes towards used at all (see assemble.ts).
+ *
+ * The bands are OUR banding of published figures, not an external standard,
+ * and they are anchored to the one equivalence already cited above: EPA's
+ * 0.4 kg CO2e per mile driven.
+ *
+ *   high      >= 100 kg   — 250+ miles of driving. Worth going out of your way.
+ *   moderate   25-99 kg   —  60+ miles. Worth it if the price is right.
+ *   low         < 25 kg   — under 60 miles. Saves money, not much carbon.
+ *   unknown      no cited figure — we say nothing rather than guess (§09).
+ */
+export type CarbonPayoff = 'high' | 'moderate' | 'low' | 'unknown'
+
+export const PAYOFF_HIGH_KG = 100
+export const PAYOFF_MODERATE_KG = 25
+
+export function carbonPayoff(
+  guidance: { embodiedCo2Kg: number; co2Source: string } | null | undefined,
+): CarbonPayoff {
+  if (!guidance) return 'unknown'
+  if (!isSourced(guidance.co2Source) || guidance.embodiedCo2Kg <= 0) return 'unknown'
+  if (guidance.embodiedCo2Kg >= PAYOFF_HIGH_KG) return 'high'
+  if (guidance.embodiedCo2Kg >= PAYOFF_MODERATE_KG) return 'moderate'
+  return 'low'
+}
+
+/** The band across the top of the card. Null when we have nothing to claim. */
+export function payoffHeadline(payoff: CarbonPayoff): string | null {
+  switch (payoff) {
+    case 'high':
+      return 'High impact — worth buying used'
+    case 'moderate':
+      return 'Worth buying used'
+    case 'low':
+      return 'Low impact either way'
+    case 'unknown':
+      return null
+  }
+}
+
+/**
+ * What the number MEANS for the decision. §06 forbids a bare figure with no
+ * framing, and this is the framing.
+ */
+export function payoffMeaning(payoff: CarbonPayoff): string | null {
+  switch (payoff) {
+    case 'high':
+      return 'Making one of these is the expensive part. Buying it used skips nearly all of that.'
+    case 'moderate':
+      return 'A real saving in emissions, if the price and timing work for you.'
+    case 'low':
+      return 'Buying this used saves money more than it saves carbon. No pressure either way.'
+    case 'unknown':
+      return null
+  }
+}
+
+/**
+ * The honest catch, where lifetime emissions are mostly electricity rather
+ * than manufacturing: an old, inefficient secondhand unit can burn more carbon
+ * in a year of running than was ever saved by not building a new one. We would
+ * rather say this than not, even though it undercuts the pitch.
+ */
+export const USE_DOMINANT_WARNING =
+  'Most of a fridge\u2019s lifetime emissions come from running it, not making it. Check the energy rating — an old one can cost more to run than it saved to skip.'

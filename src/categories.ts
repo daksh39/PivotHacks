@@ -55,6 +55,8 @@ const RULES: Rule[] = [
   { slug: 'kettle', keywords: ['kettle'] },
   { slug: 'headphones', keywords: ['headphone', 'earbud', 'earphone', 'headset'] },
   { slug: 'winter-coat', keywords: ['winter coat', 'parka', 'puffer', 'down jacket'] },
+  { slug: 'game-console', keywords: ['playstation', 'nintendo switch', 'xbox', 'game console', 'ps5'] },
+  { slug: 'tablet', keywords: ['ipad', 'tablet', 'galaxy tab'] },
 ]
 
 /* --- the retailer's own category ----------------------------------------

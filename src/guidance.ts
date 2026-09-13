@@ -31,6 +31,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
       'Published smartphone LCAs — ~55 kg CO2e manufacturing, 85-95% of lifetime footprint',
     note: 'Manufacturing is almost the entire footprint of a phone, so a used one avoids nearly all of it.',
     bulky: false,
+    useDominant: false,
   },
   'pressure-cooker': {
     category: 'pressure-cooker',
@@ -43,6 +44,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "The pot outlives several gaskets, and gaskets are cheap.",
     bulky: false,
+    useDominant: false,
   },
   'air-fryer': {
     category: 'air-fryer',
@@ -55,6 +57,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A flaking basket is the one thing worth walking away from.",
     bulky: false,
+    useDominant: false,
   },
   toaster: {
     category: 'toaster',
@@ -66,6 +69,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Almost nothing to go wrong.",
     bulky: false,
+    useDominant: false,
   },
   'rice-cooker': {
     category: 'rice-cooker',
@@ -78,6 +82,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Inner pots can usually be replaced separately.",
     bulky: false,
+    useDominant: false,
   },
   vacuum: {
     category: 'vacuum',
@@ -90,6 +95,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Filters and belts are consumables, not faults.",
     bulky: false,
+    useDominant: false,
   },
   humidifier: {
     category: 'humidifier',
@@ -102,6 +108,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Hygiene is the thing to inspect, not the motor.",
     bulky: false,
+    useDominant: false,
   },
   lamp: {
     category: 'lamp',
@@ -114,6 +121,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Nothing meaningful degrades. Ideal used.",
     bulky: false,
+    useDominant: false,
   },
   mouse: {
     category: 'mouse',
@@ -126,6 +134,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Switches wear before anything else does.",
     bulky: false,
+    useDominant: false,
   },
   keyboard: {
     category: 'keyboard',
@@ -138,6 +147,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Mechanical keyboards in particular outlast several owners.",
     bulky: false,
+    useDominant: false,
   },
   speaker: {
     category: 'speaker',
@@ -150,6 +160,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Drivers last a long time; batteries do not.",
     bulky: false,
+    useDominant: false,
   },
   'coffee-maker': {
     category: 'coffee-maker',
@@ -162,6 +173,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Limescale is cosmetic. Cracked seals leak.",
     bulky: false,
+    useDominant: false,
   },
   backpack: {
     category: 'backpack',
@@ -174,6 +186,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Excellent used. Straps and zips tell you everything.",
     bulky: false,
+    useDominant: false,
   },
   /* Every slug proxy/categories.ts can produce needs an entry here, or the
    * lookup 404s and no card ever appears. Verdicts and tips are real advice;
@@ -186,6 +199,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Single-impact protection, and a helmet that has already been dropped looks identical to one that has not.",
     bulky: false,
+    useDominant: false,
   },
   'desk-chair': {
     category: 'desk-chair',
@@ -194,10 +208,12 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
       "Sit on it and check the gas cylinder does not sink.",
       "Test that the recline lock holds.",
     ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
+    embodiedCo2Kg: 85,
+    co2Source:
+      "Herman Miller Aeron Chair Environmental Product Declaration (2016) — 85.3 kg CO2e cradle-to-gate, A1–A3",
     note: "A failed gas cylinder is a real repair, not a quirk.",
     bulky: true,
+    useDominant: false,
   },
   'non-stick-pan': {
     category: 'non-stick-pan',
@@ -207,6 +223,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "The coating degrades and scratches. Buy cast iron or stainless used instead.",
     bulky: false,
+    useDominant: false,
   },
   'smoke-detector': {
     category: 'smoke-detector',
@@ -216,6 +233,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Sensors expire on a fixed schedule from manufacture.",
     bulky: false,
+    useDominant: false,
   },
   'surge-protector': {
     category: 'surge-protector',
@@ -225,6 +243,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Protection components wear out invisibly with every surge absorbed.",
     bulky: false,
+    useDominant: false,
   },
   'drying-rack': {
     category: 'drying-rack',
@@ -236,6 +255,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Nothing to go wrong. Always worth checking used first.",
     bulky: false,
+    useDominant: false,
   },
   'storage-bin': {
     category: 'storage-bin',
@@ -247,6 +267,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "No meaningful risk. Never buy these new.",
     bulky: false,
+    useDominant: false,
   },
   pillow: {
     category: 'pillow',
@@ -256,6 +277,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Hygiene, and they are cheap enough new that it does not sting.",
     bulky: false,
+    useDominant: false,
   },
   bookshelf: {
     category: 'bookshelf',
@@ -268,6 +290,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Very little that can go wrong.",
     bulky: true,
+    useDominant: false,
   },
   dresser: {
     category: 'dresser',
@@ -280,6 +303,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Heavy, so favour local pickup over shipping.",
     bulky: true,
+    useDominant: false,
   },
   microwave: {
     category: 'microwave',
@@ -292,6 +316,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A damaged door seal is the one real safety concern.",
     bulky: false,
+    useDominant: false,
   },
   textbook: {
     category: 'textbook',
@@ -300,10 +325,12 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
       "Confirm the edition matches the syllabus.",
       "Ask whether an access code is required and still unused.",
     ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
+    embodiedCo2Kg: 3,
+    co2Source:
+      "Wells et al. 2012, Journal of Industrial Ecology — 2.71 kg CO2e per paperback, cradle-to-gate",
     note: "A previous edition is often fine, and usually a fraction of the price.",
     bulky: false,
+    useDominant: false,
   },
   cookware: {
     category: 'cookware',
@@ -316,6 +343,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Cast iron and stainless are effectively indestructible.",
     bulky: false,
+    useDominant: false,
   },
   bike: {
     category: 'bike',
@@ -325,10 +353,12 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
       "Spin both wheels and check they run true.",
       "Chain, brakes and tyres are cheap to replace.",
     ],
-    embodiedCo2Kg: 0,
-    co2Source: '',
+    embodiedCo2Kg: 116,
+    co2Source:
+      "Trek Bicycle 2021 Sustainability Report — Marlin hardtail, 116 kg CO2e per bike manufactured",
     note: "Frame condition is the only thing that really matters.",
     bulky: false,
+    useDominant: false,
   },
   fan: {
     category: 'fan',
@@ -341,6 +371,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "No meaningful risk.",
     bulky: false,
+    useDominant: false,
   },
   blender: {
     category: 'blender',
@@ -353,6 +384,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Seals perish long before motors do.",
     bulky: false,
+    useDominant: false,
   },
   kettle: {
     category: 'kettle',
@@ -366,6 +398,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "A failed auto shut-off is the one thing to avoid.",
     bulky: false,
+    useDominant: false,
   },
   headphones: {
     category: 'headphones',
@@ -378,6 +411,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Hygiene is the reason for the caveat, not whether they work.",
     bulky: false,
+    useDominant: false,
   },
   'winter-coat': {
     category: 'winter-coat',
@@ -390,6 +424,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: "Excellent value used. Flattened insulation cannot be restored.",
     bulky: false,
+    useDominant: false,
   },
   'mini-fridge': {
     category: 'mini-fridge',
@@ -400,8 +435,9 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     ],
     embodiedCo2Kg: 0,
     co2Source: '',
-    note: 'Compressor appliances last well. Buying used avoids nearly all of the footprint.',
+    note: 'Compressor appliances last well, but the electricity is the real cost here — a cheap old one is not automatically the greener choice.',
     bulky: true,
+    useDominant: true,
   },
   mattress: {
     category: 'mattress',
@@ -411,6 +447,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: 'Hygiene and pest risk, and compression is permanent. Buy this one new.',
     bulky: true,
+    useDominant: false,
   },
   /* SOURCED. Dell publishes a per-product carbon footprint datasheet for the
    * S2421HS 24" monitor: 476 kg CO2e over the full life cycle, of which
@@ -428,6 +465,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: 'Dell S2421HS Monitor PCF datasheet — 476 kg CO2e total, 67.7% manufacturing',
     note: 'Most of a display\'s footprint is in the making of it, so a used one avoids nearly all of it.',
     bulky: false,
+    useDominant: false,
   },
 
   /* SOURCED. Apple's Product Environmental Report for the 13-inch MacBook Air
@@ -444,6 +482,7 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: 'Apple 13-inch MacBook Air Product Environmental Report — 161 kg CO2e, 76% production',
     note: 'Production dominates a laptop\'s footprint. Activation lock is the one thing that makes a cheap one worthless.',
     bulky: false,
+    useDominant: false,
   },
 
   desk: {
@@ -457,6 +496,37 @@ export const GUIDANCE: Record<string, CategoryGuidance> = {
     co2Source: '',
     note: 'Ideal used. Solid wood outlives several owners.',
     bulky: true,
+    useDominant: false,
+  },
+  tablet: {
+    category: 'tablet',
+    verdict: 'check',
+    checkTips: [
+      'Confirm it is not activation locked to the previous owner.',
+      'Ask for the battery health percentage.',
+      'Check it still receives OS updates — old tablets get dropped quietly.',
+    ],
+    embodiedCo2Kg: 59,
+    co2Source:
+      'Apple iPad (9th generation) Product Environmental Report — 75 kg CO2e life cycle, 78% production',
+    note: 'Production dominates a tablet\u2019s footprint. Activation lock is the one thing that makes a cheap one worthless.',
+    bulky: false,
+    useDominant: false,
+  },
+  'game-console': {
+    category: 'game-console',
+    verdict: 'check',
+    checkTips: [
+      'Confirm it is not banned from online play — ask the seller to sign in.',
+      'Listen to the fan under load; a screaming fan means dust or dried paste.',
+      'Check the storage is wiped, not just logged out.',
+    ],
+    embodiedCo2Kg: 89,
+    co2Source:
+      'University of Cambridge study of the PlayStation 4 — ~89 kg CO2e to manufacture and ship one unit',
+    note: 'Consoles last a decade and hold value. The risks are an account ban and a neglected fan, both checkable.',
+    bulky: false,
+    useDominant: false,
   },
 }
 
