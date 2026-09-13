@@ -1,0 +1,202 @@
+{
+  "_README": {
+    "purpose": "Seed data for CATEGORY_GUIDANCE. Load into Snowflake, or import directly to mock against before the backend is up.",
+    "WARNING_co2": "Every embodiedCo2Kg below is an UNVERIFIED PLACEHOLDER, in the right order of magnitude but not cited. Replace each one with a published figure and fill in co2Source before the demo. Do not show an uncited number on screen.",
+    "shape": "Each entry matches the CategoryGuidance type in src/types.ts"
+  },
+
+  "categories": [
+    {
+      "category": "desk",
+      "verdict": "safe",
+      "checkTips": ["Check the drawer runners slide freely", "Avoid particleboard that has been water damaged, it swells and never recovers"],
+      "embodiedCo2Kg": 42,
+      "co2Source": "PLACEHOLDER",
+      "note": "Ideal used purchase. Solid wood desks last decades."
+    },
+    {
+      "category": "bookshelf",
+      "verdict": "safe",
+      "checkTips": ["Check shelves are not sagging", "Confirm the wall anchor hardware is included"],
+      "embodiedCo2Kg": 28,
+      "co2Source": "PLACEHOLDER",
+      "note": "Very little that can go wrong."
+    },
+    {
+      "category": "dresser",
+      "verdict": "safe",
+      "checkTips": ["Open every drawer", "Check the back panel is still attached"],
+      "embodiedCo2Kg": 55,
+      "co2Source": "PLACEHOLDER",
+      "note": "Heavy, so favour local pickup over shipping."
+    },
+    {
+      "category": "mini-fridge",
+      "verdict": "safe",
+      "checkTips": ["Check the door seal grips a sheet of paper", "Confirm it cools within an hour of plugging in", "Look for rust inside the cooling compartment"],
+      "embodiedCo2Kg": 46,
+      "co2Source": "PLACEHOLDER",
+      "note": "Canonical demo product. Common in student move-out sales every May."
+    },
+    {
+      "category": "microwave",
+      "verdict": "safe",
+      "checkTips": ["Check the door latch closes firmly", "Interior should not be scorched or rusted"],
+      "embodiedCo2Kg": 38,
+      "co2Source": "PLACEHOLDER",
+      "note": "A damaged door seal is the one real safety concern."
+    },
+    {
+      "category": "monitor",
+      "verdict": "safe",
+      "checkTips": ["Display a white image and look for dead pixels", "Check for backlight bleed in a dark room", "Confirm which cables are included"],
+      "embodiedCo2Kg": 180,
+      "co2Source": "PLACEHOLDER",
+      "note": "High embodied carbon, so buying used here saves a lot."
+    },
+    {
+      "category": "textbook",
+      "verdict": "safe",
+      "checkTips": ["Confirm the edition matches the syllabus", "Ask whether an access code is required and unused"],
+      "embodiedCo2Kg": 3,
+      "co2Source": "PLACEHOLDER",
+      "note": "Previous editions are often fine. Ask the instructor before paying for the newest."
+    },
+    {
+      "category": "cookware-durable",
+      "verdict": "safe",
+      "checkTips": ["Surface rust on cast iron is cosmetic and scrubs off", "Check stainless pans sit flat on a counter"],
+      "embodiedCo2Kg": 18,
+      "co2Source": "PLACEHOLDER",
+      "note": "Cast iron and stainless are effectively indestructible. Distinct from non-stick."
+    },
+    {
+      "category": "bike",
+      "verdict": "safe",
+      "checkTips": ["Inspect the frame for cracks near the welds", "Spin both wheels and check they run true", "Chain, brake pads and tyres are cheap to replace, do not let them put you off"],
+      "embodiedCo2Kg": 96,
+      "co2Source": "PLACEHOLDER",
+      "note": "Frame condition is the only thing that really matters."
+    },
+    {
+      "category": "storage-bins",
+      "verdict": "safe",
+      "checkTips": ["Check for cracks along the base"],
+      "embodiedCo2Kg": 6,
+      "co2Source": "PLACEHOLDER",
+      "note": "No meaningful risk. Never buy these new."
+    },
+    {
+      "category": "drying-rack",
+      "verdict": "safe",
+      "checkTips": ["Confirm the hinges lock open"],
+      "embodiedCo2Kg": 8,
+      "co2Source": "PLACEHOLDER",
+      "note": "No meaningful risk."
+    },
+    {
+      "category": "fan",
+      "verdict": "safe",
+      "checkTips": ["Run it on every speed setting", "Check the cage is not bent into the blades"],
+      "embodiedCo2Kg": 14,
+      "co2Source": "PLACEHOLDER",
+      "note": "No meaningful risk."
+    },
+    {
+      "category": "laptop",
+      "verdict": "check",
+      "checkTips": ["Ask for the battery cycle count", "Confirm it powers on and passes the setup screen", "Verify it is not activation locked to a previous owner's account"],
+      "embodiedCo2Kg": 320,
+      "co2Source": "PLACEHOLDER",
+      "note": "The highest impact saving on this list, but activation lock makes a cheap laptop worthless."
+    },
+    {
+      "category": "desk-chair",
+      "verdict": "check",
+      "checkTips": ["Sit on it and check the gas cylinder does not sink", "Test that the recline lock holds"],
+      "embodiedCo2Kg": 62,
+      "co2Source": "PLACEHOLDER",
+      "note": "A failed gas cylinder is a genuine repair, not a quirk."
+    },
+    {
+      "category": "blender",
+      "verdict": "check",
+      "checkTips": ["Inspect the seal and gasket around the blade assembly", "Cracked plastic near the base means leaks"],
+      "embodiedCo2Kg": 22,
+      "co2Source": "PLACEHOLDER",
+      "note": "Seals perish before motors do."
+    },
+    {
+      "category": "kettle",
+      "verdict": "check",
+      "checkTips": ["Limescale is cosmetic and descales off", "Check the flex and plug for fraying", "Confirm the auto shut off works"],
+      "embodiedCo2Kg": 16,
+      "co2Source": "PLACEHOLDER",
+      "note": "A failed auto shut off is the one thing to avoid."
+    },
+    {
+      "category": "headphones",
+      "verdict": "check",
+      "checkTips": ["Budget for replacement ear pads", "Test both channels before paying"],
+      "embodiedCo2Kg": 12,
+      "co2Source": "PLACEHOLDER",
+      "note": "Hygiene is the reason for the caveat, not function."
+    },
+    {
+      "category": "winter-coat",
+      "verdict": "check",
+      "checkTips": ["Run every zip fully up and down", "Check the insulation still lofts rather than sitting flat"],
+      "embodiedCo2Kg": 34,
+      "co2Source": "PLACEHOLDER",
+      "note": "Excellent value used. Flattened insulation cannot be restored."
+    },
+    {
+      "category": "mattress",
+      "verdict": "avoid",
+      "checkTips": [],
+      "embodiedCo2Kg": 92,
+      "co2Source": "PLACEHOLDER",
+      "note": "Hygiene and pest risk, and compression is permanent. Use this one in the demo to show Verte will argue against itself."
+    },
+    {
+      "category": "pillow",
+      "verdict": "avoid",
+      "checkTips": [],
+      "embodiedCo2Kg": 7,
+      "co2Source": "PLACEHOLDER",
+      "note": "Same reasoning as a mattress, and cheap enough that it does not sting."
+    },
+    {
+      "category": "bike-helmet",
+      "verdict": "avoid",
+      "checkTips": [],
+      "embodiedCo2Kg": 9,
+      "co2Source": "PLACEHOLDER",
+      "note": "Single impact protection. A helmet that has been dropped looks identical to one that has not."
+    },
+    {
+      "category": "cookware-nonstick",
+      "verdict": "avoid",
+      "checkTips": [],
+      "embodiedCo2Kg": 15,
+      "co2Source": "PLACEHOLDER",
+      "note": "The coating degrades and scratches. Point them at cast iron or stainless used instead."
+    },
+    {
+      "category": "smoke-detector",
+      "verdict": "avoid",
+      "checkTips": [],
+      "embodiedCo2Kg": 4,
+      "co2Source": "PLACEHOLDER",
+      "note": "Sensors expire on a fixed schedule from manufacture."
+    },
+    {
+      "category": "surge-protector",
+      "verdict": "avoid",
+      "checkTips": [],
+      "embodiedCo2Kg": 5,
+      "co2Source": "PLACEHOLDER",
+      "note": "Protection components wear out invisibly with every surge absorbed."
+    }
+  ]
+}
