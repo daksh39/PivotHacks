@@ -49,8 +49,34 @@ function contextRules(context) {
     : '';
 }
 
+/*
+ * Same question, same answer. The model varies its picks from call to call, so
+ * "give me university essentials" spoken, typed, or tapped would each show a
+ * different kit. The first answer for a given context is kept and reused;
+ * a failed or empty answer is not kept, so the next request tries again.
+ */
+const answers = new Map();
+
+function contextKey(context) {
+  if (!context) return 'none';
+  const { budget = null, deadline = null, noCar = false, country = null } = context;
+  return JSON.stringify([budget, deadline, Boolean(noCar), country]);
+}
+
 /** @returns {Promise<Array<{item:string, alternative:object|null}>>} */
-async function essentialsFor(context, searchUrlFor) {
+function essentialsFor(context, searchUrlFor) {
+  const key = contextKey(context);
+  if (!answers.has(key)) {
+    const answer = askModel(context, searchUrlFor);
+    answers.set(key, answer);
+    answer.then((list) => {
+      if (!list.some((e) => e.alternative)) answers.delete(key);
+    });
+  }
+  return answers.get(key);
+}
+
+async function askModel(context, searchUrlFor) {
   const key = process.env.OPENAI_API_KEY;
   if (!key) return ESSENTIALS.map((item) => ({ item, alternative: null }));
 
@@ -60,7 +86,7 @@ async function essentialsFor(context, searchUrlFor) {
       headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-        temperature: 0.2,
+        temperature: 0,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: SYSTEM + contextRules(context) },
@@ -110,4 +136,4 @@ async function essentialsFor(context, searchUrlFor) {
   }
 }
 
-module.exports = { ESSENTIALS, isEssentialsRequest, essentialsFor };
+module.exports = { ESSENTIALS, isEssentialsRequest, essentialsFor, contextKey };

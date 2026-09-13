@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { parseResults, bestMatch, closestMatch, resolveLink, resolveAll, withExactLinks } from './amazonLinks';
+import { parseResults, bestMatch, closestMatch, resolveLink, resolveAll, withExactLinks, clearResolved } from './amazonLinks';
+
+beforeEach(clearResolved);
 
 // Real Amazon search results for "Acer Aspire 5 laptop", trimmed.
 const html = fs.readFileSync(path.join(__dirname, '__fixtures__/amazon-search.html'), 'utf8');
@@ -72,6 +74,7 @@ test('the budget is checked against the real price, not the estimate', async () 
   expect(cheap).toHaveLength(1);
   expect(cheap[0].livePrice).toBe(39.98);
 
+  clearResolved();   // the same kettle, now listed at a different price
   const pricey = await resolveAll([alt], { budget: 60, fetchImpl: jest.fn().mockResolvedValue({ ok: true, text: async () => page('89.99') }) });
   expect(pricey).toHaveLength(0);
 });
@@ -131,4 +134,15 @@ test('no product name, no lookup', async () => {
   const alt = { title: null, url: 'https://www.amazon.ca/s?k=null' };
   expect(await resolveLink(alt, fetchImpl)).toBe(alt);
   expect(fetchImpl).not.toHaveBeenCalled();
+});
+
+test('the same pick resolves once and shows the same listing every time', async () => {
+  const fetchImpl = jest.fn().mockResolvedValue({ ok: true, text: async () => html });
+  const laptop = parseResults(html)[2];
+  const alt = () => ({ title: laptop.title.split(',')[0], url: 'https://www.amazon.ca/s?k=laptop' });
+
+  const first = await resolveLink(alt(), fetchImpl);
+  const second = await resolveLink(alt(), fetchImpl);
+  expect(second).toEqual(first);
+  expect(fetchImpl).toHaveBeenCalledTimes(1);
 });

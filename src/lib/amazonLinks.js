@@ -128,8 +128,35 @@ async function fetchText(url, fetchImpl) {
   }
 }
 
+/*
+ * The same pick resolves to the same listing every time it's shown, so the
+ * button and a spoken request can't disagree on a link or a price.
+ */
+const resolved = new Map();
+
+/** For tests: forget every resolved listing. */
+export function clearResolved() {
+  resolved.clear();
+}
+
 /** One alternative → the same alternative, with an exact link when found. */
-export async function resolveLink(alternative, fetchImpl = fetch) {
+export function resolveLink(alternative, fetchImpl = fetch) {
+  if (!alternative || !alternative.title) return Promise.resolve(alternative);
+  const key = `${alternative.url}|${alternative.title}|${alternative.typicalPriceCad || ''}`;
+  if (!resolved.has(key)) {
+    const pending = lookupListing(alternative, fetchImpl);
+    resolved.set(key, pending);
+    // Only a found listing is worth remembering; a miss may be a network blip.
+    pending.then((out) => { if (out === alternative) resolved.delete(key); });
+  }
+  return resolved.get(key).then((out) => (out === alternative ? out : { ...alternative, ...pick(out) }));
+}
+
+function pick({ title, url, searchUrl, exact, livePrice, image }) {
+  return { title, url, searchUrl, exact, livePrice, image };
+}
+
+async function lookupListing(alternative, fetchImpl) {
   if (!alternative || !alternative.title || !/amazon\.[a-z.]+\/s\?k=/.test(alternative.url || '')) return alternative;
   try {
     const url = new URL(alternative.url);

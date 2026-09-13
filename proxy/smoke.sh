@@ -44,6 +44,14 @@ check "context: voice never guesses a location"  "d['context'] is None" '{"produ
 check "context alone asks for a product"        "d.get('code')=='needs-product'" '{"product":{"title":"i dont have a car","spoken":true}}'
 check "essentials: the whole set in one answer"  "d.get('kind')=='essentials' and len(d['essentials'])==8 and sum(1 for e in d['essentials'] if e['alternative'])>=6" '{"product":{"title":"give me university essentials","spoken":true}}'
 check "essentials: budget applies to every item"  "d['context']['budget']==200 and all((e['alternative']['typicalPriceCad'] or 0)<=200 for e in d['essentials'] if e['alternative'])" '{"product":{"title":"university essentials, under $200","spoken":true}}'
+# The button sends "university essentials"; someone says "Give me university essentials."
+ESS_A=$(curl -s -m 90 -X POST "$BASE/lookup" -H 'content-type: application/json' -d '{"product":{"title":"university essentials","spoken":true}}')
+ESS_B=$(curl -s -m 90 -X POST "$BASE/lookup" -H 'content-type: application/json' -d '{"product":{"title":"Give me University Essentials.","spoken":true}}')
+if [ -n "$ESS_A" ] && python3 -c "import json,sys; a,b=(json.loads(x)['essentials'] for x in sys.argv[1:]); sys.exit(0 if a==b else 1)" "$ESS_A" "$ESS_B" 2>/dev/null; then
+  printf '  %-40s ok\n' "essentials: button and voice match"; pass=$((pass+1))
+else
+  printf '  %-40s FAILED\n' "essentials: button and voice match"; fail=$((fail+1))
+fi
 check "links go to Amazon.ca"                     "all('amazon.ca/' in a['url'] for a in d['alternatives'])" '{"product":{"title":"a kettle","spoken":true}}'
 check "missing title → 400"                      "d.get('error')=='product.title is required'" '{"product":{}}'
 
