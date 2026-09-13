@@ -1,0 +1,66 @@
+.essentials {
+  margin-top: 12px;
+}
+
+.essentials-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.essentials-title {
+  color: var(--verte-ink);
+  font-family: var(--verte-font-heading);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.essentials-context {
+  align-items: center;
+  background: var(--verte-moss-tint);
+  border-radius: var(--verte-radius-pill);
+  color: var(--verte-accent-text);
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 4px;
+  padding: 2px 4px 2px 10px;
+}
+
+.essentials-context button {
+  background: none;
+  border: 0;
+  color: var(--verte-accent-text);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.essentials-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.essential {
+  background: transparent;
+  border: 1px solid var(--verte-moss-shade);
+  border-radius: var(--verte-radius-pill);
+  color: var(--verte-accent-text);
+  cursor: pointer;
+  font-family: var(--verte-font-body);
+  font-size: 12px;
+  padding: 5px 11px;
+}
+
+.essential:hover:not(:disabled) {
+  background: var(--verte-moss-tint);
+}
+
+.essential:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}

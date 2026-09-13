@@ -22,7 +22,7 @@ function MicIcon() {
  * The voice bar: one mic button, its status, what we heard, and a typed
  * fallback. Presentational — all behaviour comes from useVoiceLookup.
  */
-function VoiceButton({ state, transcript, error, onStart, onStop, onSubmitText, standalone }) {
+function VoiceButton({ state, transcript, error, onStart, onStop, onSubmitText, standalone, children }) {
   const [text, setText] = useState('');
   const listening = state === 'listening';
   const busy = state === 'thinking';
@@ -43,7 +43,7 @@ function VoiceButton({ state, transcript, error, onStart, onStop, onSubmitText, 
       <div className="voice-status" aria-live="polite">
         {error ? <span className="voice-error">{error}</span>
           : transcript ? <span>You said: “{transcript}”</span>
-          : <span>Try “a laptop for college”</span>}
+          : <span>Say what you need, or add context like “under $200”</span>}
       </div>
 
       <form
@@ -61,6 +61,8 @@ function VoiceButton({ state, transcript, error, onStart, onStop, onSubmitText, 
           disabled={busy || listening}
         />
       </form>
+
+      {children}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ENDPOINTS } from '../config';
 import { watchForSilence } from './silence';
+import { withExactLinks } from '../lib/amazonLinks';
 
 // Recording ends when the person stops talking; this is only a backstop.
 const MAX_RECORDING_MS = 15000;
@@ -59,7 +60,27 @@ export function useVoiceLookup() {
   // The last thing successfully looked up, so "I don't have a car" said next
   // refines that product instead of starting from nothing.
   const lastRequest = useRef('');
+  // Context said on its own ("under $200") that keeps applying to everything
+  // asked next, including the university essentials, until cleared.
+  const [standing, setStandingState] = useState('');
+  const standingRef = useRef('');
+  const setStanding = useCallback((value) => {
+    standingRef.current = value;
+    setStandingState(value);
+  }, []);
   const discard = useRef(false);
+  // Only the newest answer may be upgraded with exact links.
+  const shown = useRef(0);
+
+  /* Show the answer straight away with search links, then swap in exact
+   * product pages as they resolve. */
+  const show = useCallback((body) => {
+    const id = ++shown.current;
+    setResult(body);
+    withExactLinks(body)
+      .then((exact) => { if (id === shown.current) setResult(exact); })
+      .catch(() => {});   // the search links already on screen still work
+  }, []);
 
   const fail = useCallback((err) => {
     setError(describeError(err));
@@ -70,53 +91,81 @@ export function useVoiceLookup() {
     }
   }, []);
 
-  const lookupText = useCallback(async (title, heard) => {
+  const lookupText = useCallback(async (request, heard) => {
+    const extra = standingRef.current;
+    const title = extra && !request.includes(extra) ? `${request}, ${extra}` : request;
     setState('thinking');
     const body = await post(ENDPOINTS.lookup, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        product: { title, price: null, currency: 'USD', category: '', imageUrl: null,
-                   sourceUrl: 'https://www.amazon.com/', spoken: true },
+        product: { title, price: null, currency: 'CAD', category: '', imageUrl: null,
+                   sourceUrl: 'https://www.amazon.ca/', spoken: true },
       }),
     });
-    lastRequest.current = title;
+    // "University essentials" isn't a product later context can refine.
+    lastRequest.current = body.kind === 'essentials' ? '' : title;
     setTranscript(heard);
-    setResult(body);
+    show(body);
     setState('done');
-  }, []);
+  }, [show]);
 
   /* Context on its own ("under $500", "I don't have a car") refines the last
    * product when there is one; with nothing to refine, the user is asked. */
   const refineOrAsk = useCallback(async (err, heard) => {
-    if (err.code === 'needs-product' && lastRequest.current) {
-      return lookupText(`${lastRequest.current}, ${heard}`, heard);
+    if (err.code !== 'needs-product') throw err;
+
+    // Context on its own becomes standing context either way.
+    const extra = standingRef.current ? `${standingRef.current}, ${heard}` : heard;
+    setStanding(extra);
+
+    if (lastRequest.current) {
+      const product = lastRequest.current.split(', ')[0];
+      return lookupText(`${product}, ${extra}`, heard);
     }
-    throw err;
-  }, [lookupText]);
+    // Nothing to refine yet: keep it, and let the essentials use it.
+    setTranscript(heard);
+    setResult(null);
+    setState('idle');
+  }, [lookupText, setStanding]);
+
+  /* University essentials: one tap shows the whole set, one pick per item. */
+  const showEssentials = useCallback(async () => {
+    setError('');
+    setTranscript('University essentials');
+    try {
+      await lookupText('university essentials', 'University essentials');
+    } catch (err) {
+      fail(err);
+    }
+  }, [fail, lookupText]);
+
+  const clearStanding = useCallback(() => setStanding(''), [setStanding]);
 
   const send = useCallback(async (blob) => {
     setState('thinking');
     try {
       let body;
       try {
+        const headers = { 'content-type': blob.type || 'audio/webm' };
+        if (standingRef.current) headers['x-verte-context'] = standingRef.current;
         body = await post(ENDPOINTS.voice, {
           method: 'POST',
-          headers: { 'content-type': blob.type || 'audio/webm' },
+          headers,
           body: blob,
         });
       } catch (err) {
         if (err.transcript) setTranscript(err.transcript);
         return await refineOrAsk(err, err.transcript || '');
       }
-      lastRequest.current = body.transcript;
+      lastRequest.current = body.result && body.result.kind === 'essentials' ? '' : body.transcript;
       setTranscript(body.transcript);
-      setResult(body.result);
+      show(body.result);
       setState('done');
     } catch (err) {
       fail(err);
     }
-  }, [fail, refineOrAsk]);
+  }, [fail, refineOrAsk, show]);
 
   const submitText = useCallback(async (text) => {
     const title = String(text || '').trim();
@@ -180,5 +229,5 @@ export function useVoiceLookup() {
     if (recorder.current && recorder.current.state === 'recording') recorder.current.stop();
   }, []);
 
-  return { state, transcript, result, error, start, stop, submitText };
+  return { state, transcript, result, error, start, stop, submitText, standing, clearStanding, showEssentials };
 }

@@ -5,10 +5,15 @@ import AlternativesScreen from './screens/AlternativesScreen';
 import StatusScreen from './screens/StatusScreen';
 import VerteHeader from './components/VerteHeader';
 import VoiceButton from './components/VoiceButton';
+import Essentials from './components/Essentials';
 import { useVoiceLookup } from './voice/useVoiceLookup';
 
 /*
  * Verte popup.
+ *
+ * Built for a university student living on their own for the first time:
+ * one tap shows every university essential with a pick each, and context they give
+ * ("under $200") keeps applying.
  *
  * Two ways in to the same answer. The inline card stores what it rendered for
  * the current page; the voice bar lets you say what you're buying from
@@ -49,7 +54,14 @@ function App() {
         onStart={voice.start}
         onStop={voice.stop}
         onSubmitText={voice.submitText}
-      />
+      >
+        <Essentials
+          standing={voice.standing}
+          onShowAll={voice.showEssentials}
+          onClearStanding={voice.clearStanding}
+          busy={voice.state === 'thinking' || voice.state === 'listening'}
+        />
+      </VoiceButton>
       {body}
     </div>
   );

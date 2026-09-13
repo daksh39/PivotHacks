@@ -17,9 +17,9 @@ const DOMAIN_COUNTRY = [['amazon.ca', 'CA'], ['bestbuy.ca', 'CA'], ['amazon.co.u
 
 function budgetFrom(text) {
   const patterns = [
-    /(?:under|below|less than|max(?:imum)?|at most|up to|budget(?: of| is)?|no more than)\s*(?:\$|usd\s*|cad\s*)?(\d[\d,]*)/i,
+    /(?:under|below|less than|max(?:imum)?|at most|up to|budget(?: of| is)?|no more than)\s*(?:ca\$|c\$|\$|usd\s*|cad\s*)?(\d[\d,]*)/i,
     /\$\s?(\d[\d,]*)/,
-    /(\d[\d,]*)\s*(?:dollars|bucks|usd|cad)\b/i,
+    /(\d[\d,]*)\s*(?:dollars|bucks|usd|cad|canadian)\b/i,
   ];
   for (const pattern of patterns) {
     const match = text.match(pattern);
@@ -71,7 +71,8 @@ function hasContext(context) {
 function contextTags(context) {
   if (!context) return [];
   return [
-    context.budget ? `under $${context.budget}` : null,
+    // Every budget is Canadian dollars, however it was said.
+    context.budget ? `under CA$${context.budget}` : null,
     context.deadline ? context.deadline : null,
     context.noCar ? 'no car' : null,
     context.country ? `in ${context.country}` : null,

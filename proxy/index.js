@@ -67,14 +67,17 @@ app.post('/voice', express.raw({ type: 'audio/*', limit: '10mb' }), async (req, 
       return res.status(422).json({ error: "Didn't catch that — try again" });
     }
 
+    // Context the popup is already holding ("under $200") applies to what's
+    // said next, so a spoken "a desk lamp" still respects it.
+    const standing = String(req.get('x-verte-context') || '').trim().slice(0, 200);
     const result = await lookup(
       {
-        title: transcript,
+        title: standing ? `${transcript}, ${standing}` : transcript,
         price: null,
-        currency: 'USD',
+        currency: 'CAD',
         category: '',
         imageUrl: null,
-        sourceUrl: 'https://www.amazon.com/',
+        sourceUrl: 'https://www.amazon.ca/',
         spoken: true,
       },
       []

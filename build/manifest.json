@@ -17,7 +17,8 @@
     "activeTab"
   ],
   "host_permissions": [
-    "http://localhost:8787/*"
+    "http://localhost:8787/*",
+    "https://www.amazon.ca/*"
   ],
   "options_page": "options.html",
   "action": {

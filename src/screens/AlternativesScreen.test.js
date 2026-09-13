@@ -39,13 +39,34 @@ test('shows the context that shaped the picks, with each pick\'s price and fit',
     scarcityReason: null,
     contextTags: ['under $500', 'by friday', 'no car'],
     alternatives: [{ ...pick, title: 'Acer Aspire 5', url: 'https://www.amazon.com/s?k=Acer',
-                     typicalPriceUsd: 499, fitsContext: 'Affordable and widely available' }],
+                     typicalPriceCad: 499, fitsContext: 'Affordable and widely available' }],
   }} />);
   expect(screen.getByText('Recommended for: under $500 · by friday · no car')).toBeInTheDocument();
-  expect(screen.getByText('~$499 · Affordable and widely available')).toBeInTheDocument();
+  expect(screen.getByText('~CA$499 · Affordable and widely available')).toBeInTheDocument();
 });
 
 test('no context, no context line', () => {
   render(<AlternativesScreen result={{ ...base, alternatives: [pick], scarcityReason: null }} />);
   expect(screen.queryByText(/Recommended for/)).not.toBeInTheDocument();
+});
+
+test('university essentials show every item, with a pick or an honest gap', () => {
+  render(<AlternativesScreen result={{
+    kind: 'essentials',
+    product: { title: 'university essentials' },
+    contextTags: ['under CA$200'],
+    essentials: [
+      { item: 'Kettle', alternative: { ...pick, title: 'Hamilton Beach Kettle', url: 'https://www.amazon.ca/dp/B000000001',
+                                       livePrice: 39.99, typicalPriceCad: 45 } },
+      { item: 'Laptop', alternative: null },
+    ],
+  }} />);
+
+  expect(screen.getByText('University essentials')).toBeInTheDocument();
+  expect(screen.getByText('Recommended for: under CA$200')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Hamilton Beach Kettle' }))
+    .toHaveAttribute('href', 'https://www.amazon.ca/dp/B000000001');
+  expect(screen.getByText('CA$39.99')).toBeInTheDocument();          // the real price wins
+  expect(screen.getByText('Laptop')).toBeInTheDocument();
+  expect(screen.getByText('No pick found that fits.')).toBeInTheDocument();
 });

@@ -1,5 +1,67 @@
 import './styles/AlternativesScreen.css';
 
+/* The real Amazon.ca price once the exact listing is found; the model's
+ * estimate, marked "~", until then. */
+function priceLabel(alternative) {
+    if (alternative.livePrice) {
+        const p = alternative.livePrice;
+        return `CA$${Number.isInteger(p) ? p : p.toFixed(2)}`;
+    }
+    if (alternative.typicalPriceCad) return `~CA$${alternative.typicalPriceCad}`;
+    return null;
+}
+
+function Pick({ alternative }) {
+    const price = priceLabel(alternative);
+    return (
+        <>
+            <a href={alternative.url} target="_blank" rel="noopener noreferrer">
+                {alternative.title}
+            </a>
+            <div className="alt-why">{alternative.why}</div>
+            {(price || alternative.fitsContext) && (
+                <div className="alt-fit">
+                    {[price, alternative.fitsContext].filter(Boolean).join(' · ')}
+                </div>
+            )}
+            {alternative.co2SavingKgPerYear ? (
+                <div className="alt-delta">
+                    ~{alternative.co2SavingKgPerYear} kg CO₂e/year less
+                </div>
+            ) : null}
+        </>
+    );
+}
+
+/* "University essentials": every item a student needs, one pick each. */
+function EssentialsScreen({ result }) {
+    const { essentials = [], contextTags = [] } = result;
+    return (
+        <div className="alt-container">
+            {contextTags.length > 0 && (
+                <div className="alt-context">Recommended for: {contextTags.join(' · ')}</div>
+            )}
+            <div className="alt-baseline">
+                <div className="alt-figure">University essentials</div>
+                <div className="alt-cite">One lower-carbon pick for everything you need to move out.</div>
+            </div>
+            <ul className="alt-list">
+                {essentials.map(({ item, alternative }) => (
+                    <li key={item} className="alt-item">
+                        <div className="alt-essential">{item}</div>
+                        {alternative
+                            ? <Pick alternative={alternative} />
+                            : <div className="alt-why">No pick found that fits.</div>}
+                    </li>
+                ))}
+            </ul>
+            <div className="alt-foot">
+                Picked by Verte AI from energy use, certifications and lifespan.
+            </div>
+        </div>
+    );
+}
+
 /*
  * The popup's view of the same answer the card is showing on the page.
  *
@@ -8,6 +70,7 @@ import './styles/AlternativesScreen.css';
  * alternatives are model estimates and say so.
  */
 function AlternativesScreen({ result }) {
+    if (result.kind === 'essentials') return <EssentialsScreen result={result} />;
     const { product, guidance, alternatives, embodiedCo2Kg, scarcityReason, contextTags = [] } = result;
 
     return (
@@ -48,21 +111,7 @@ function AlternativesScreen({ result }) {
                     <ul className="alt-list">
                         {alternatives.map((alternative) => (
                             <li key={alternative.url} className="alt-item">
-                                <a href={alternative.url} target="_blank" rel="noopener noreferrer">
-                                    {alternative.title}
-                                </a>
-                                <div className="alt-why">{alternative.why}</div>
-                                {(alternative.typicalPriceUsd || alternative.fitsContext) && (
-                                    <div className="alt-fit">
-                                        {[alternative.typicalPriceUsd ? `~$${alternative.typicalPriceUsd}` : null,
-                                          alternative.fitsContext].filter(Boolean).join(' · ')}
-                                    </div>
-                                )}
-                                {alternative.co2SavingKgPerYear ? (
-                                    <div className="alt-delta">
-                                        ~{alternative.co2SavingKgPerYear} kg CO₂e/year less
-                                    </div>
-                                ) : null}
+                                <Pick alternative={alternative} />
                             </li>
                         ))}
                     </ul>

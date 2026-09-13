@@ -39,9 +39,12 @@ check "links are searches, never invented URLs"  "all('/s?k=' in a['url'] or 'se
 check "unknown category still gets a card"      "d['product']['category']=='other' and d['embodiedCo2Kg'] is None" '{"product":{"title":"Sterling silver cufflinks","price":40,"sourceUrl":"https://www.amazon.com/dp/Z"}}'
 check "voice: always at least one pick"          "len(d['alternatives'])>=1" '{"product":{"title":"Find me a hairdryer.","sourceUrl":"https://www.amazon.com/","spoken":true}}'
 check "context: parsed from what was said"       "d['context']['budget']==500 and d['context']['noCar'] is True and d['context']['deadline']=='by friday'" '{"product":{"title":"a laptop under $500, I need it by Friday and I don'"'"'t have a car","spoken":true}}'
-check "context: every pick is within budget"     "d['alternatives'] and all((a['typicalPriceUsd'] or 0)<=500 for a in d['alternatives'])" '{"product":{"title":"a laptop under $500","spoken":true}}'
+check "context: every pick is within budget"     "d['alternatives'] and all((a['typicalPriceCad'] or 0)<=500 for a in d['alternatives'])" '{"product":{"title":"a laptop under $500","spoken":true}}'
 check "context: voice never guesses a location"  "d['context'] is None" '{"product":{"title":"a laptop for college","sourceUrl":"https://www.amazon.com/","spoken":true}}'
 check "context alone asks for a product"        "d.get('code')=='needs-product'" '{"product":{"title":"i dont have a car","spoken":true}}'
+check "essentials: the whole set in one answer"  "d.get('kind')=='essentials' and len(d['essentials'])==8 and sum(1 for e in d['essentials'] if e['alternative'])>=6" '{"product":{"title":"give me university essentials","spoken":true}}'
+check "essentials: budget applies to every item"  "d['context']['budget']==200 and all((e['alternative']['typicalPriceCad'] or 0)<=200 for e in d['essentials'] if e['alternative'])" '{"product":{"title":"university essentials, under $200","spoken":true}}'
+check "links go to Amazon.ca"                     "all('amazon.ca/' in a['url'] for a in d['alternatives'])" '{"product":{"title":"a kettle","spoken":true}}'
 check "missing title → 400"                      "d.get('error')=='product.title is required'" '{"product":{}}'
 
 # ── Voice ────────────────────────────────────────────────────────────────────

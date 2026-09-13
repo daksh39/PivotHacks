@@ -15,6 +15,18 @@
 const SYSTEM = `You are a sustainability analyst. Given a product someone is about to buy,
 propose up to 3 concrete lower-carbon alternatives they could buy instead.
 
+Who you are advising: a university student in Canada, living on their own for
+the first time. All prices and budgets are Canadian dollars (CAD); only suggest
+products sold on Amazon.ca. That changes what "best" means:
+- Limited budget: favour affordable picks; a cheaper option that is nearly as
+  green beats a premium one.
+- Limited experience: recommend simple, reliable, widely reviewed products,
+  nothing that needs setup knowledge or specialist parts.
+- Busy schedule: low maintenance, easy to buy today, no research required.
+- Unfamiliar environment and small spaces: compact, fits a dorm or first
+  apartment, easy to move at the end of the year.
+- Keep "why" practical and plain, as advice to someone doing this for the first time.
+
 Prefer, in order:
 1. The same product class with materially better use-phase energy (ENERGY STAR
    certified, lower annual kWh, higher efficiency rating).
@@ -31,7 +43,7 @@ Rules:
   Otherwise null. Do not guess. A null is a correct answer.
 - If the product has no meaningful lower-carbon alternative, return an empty list.
 
-Reply with JSON only: {"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"...","typicalPriceUsd":0,"fitsContext":"..."}]}`;
+Reply with JSON only: {"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"...","typicalPriceCad":0,"fitsContext":"..."}]}`;
 
 /* A spoken request is someone asking for help finding a thing, not someone
  * already holding one — an empty answer leaves them with nothing. So in voice
@@ -48,17 +60,13 @@ The person asked for this out loud, so they are looking for something to buy.
   the category.
 - If there are real lower-carbon options, set "scarcityReason" to null.
 
-Reply with JSON only: {"scarcityReason":null,"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"...","typicalPriceUsd":0,"fitsContext":"..."}]}`;
+Reply with JSON only: {"scarcityReason":null,"alternatives":[{"title":"...","why":"...","co2SavingKgPerYear":null,"searchQuery":"...","typicalPriceCad":0,"fitsContext":"..."}]}`;
 
-const SEARCH_URL = {
-  amazon: (q) => `https://www.amazon.com/s?k=${encodeURIComponent(q)}`,
-  bestbuy: (q) => `https://www.bestbuy.com/site/searchpage.jsp?st=${encodeURIComponent(q)}`,
-};
-
-function searchUrlFor(sourceUrl, query) {
-  const host = String(sourceUrl || '');
-  if (host.includes('bestbuy')) return SEARCH_URL.bestbuy(query);
-  return SEARCH_URL.amazon(query);
+/* Verte serves Canadian students: every link goes to Amazon.ca, whatever
+ * retailer the page came from. The extension then swaps the search for the
+ * exact product (src/lib/amazonLinks.js). */
+function searchUrlFor(_sourceUrl, query) {
+  return `https://www.amazon.ca/s?k=${encodeURIComponent(query)}`;
 }
 
 /* Buyer context must CHANGE the pick, not decorate it. These are constraints,
@@ -66,7 +74,7 @@ function searchUrlFor(sourceUrl, query) {
 function contextRules(context) {
   if (!context) return '';
   const rules = [];
-  if (context.budget) rules.push(`- Budget: every pick must typically cost at most $${context.budget}. Prefer the lowest-carbon option within budget over a greener one outside it.`);
+  if (context.budget) rules.push(`- Budget: every pick must typically cost at most CA$${context.budget} (Canadian dollars) on Amazon.ca. Prefer the lowest-carbon option within budget over a greener one outside it.`);
   if (context.deadline) rules.push(`- Needed ${context.deadline}: prefer widely stocked models with fast delivery; avoid niche or back-ordered brands.`);
   if (context.noCar) rules.push('- No car: prefer compact, lightweight items, or ones delivered to the door. Avoid bulky pick-up-only items.');
   if (context.country) rules.push(`- Location ${context.country}: only suggest models sold in ${context.country}, in local retail.`);
@@ -75,7 +83,7 @@ function contextRules(context) {
 
 Buyer context (these change which option is best):
 ${rules.join('\n')}
-- typicalPriceUsd: the usual retail price in USD as a number.
+- typicalPriceCad: the usual Amazon.ca price in Canadian dollars, as a number.
 - fitsContext: ONE short phrase saying how this pick fits the context above.`;
 }
 
@@ -93,7 +101,7 @@ async function alternativesFor(product, guidance, context = null) {
     product.spoken
       ? `The person said out loud what they want to buy: "${product.title}". Work out the product they mean first.`
       : `Product: ${product.title}`,
-    product.price ? `Price: ${product.currency || 'USD'} ${product.price}` : '',
+    product.price ? `Price: CA$${product.price}` : '',
     guidance ? `Category: ${guidance.category}` : '',
     guidance && guidance.embodiedCo2Kg
       ? `Published manufacturing footprint for this category: ~${guidance.embodiedCo2Kg} kg CO2e`
@@ -130,15 +138,15 @@ async function alternativesFor(product, guidance, context = null) {
       .filter((a) => a && typeof a.title === 'string' && a.title.trim())
       // The model is asked to stay in budget; this makes sure it did.
       .filter((a) => {
-        const price = Number(a.typicalPriceUsd);
+        const price = Number(a.typicalPriceCad);
         return !(context && context.budget && Number.isFinite(price) && price > context.budget);
       })
       .slice(0, 3)
       .map((a) => {
         const saving = Number(a.co2SavingKgPerYear);
-        const price = Number(a.typicalPriceUsd);
+        const price = Number(a.typicalPriceCad);
         return {
-          typicalPriceUsd: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
+          typicalPriceCad: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
           fitsContext: context && a.fitsContext ? String(a.fitsContext).trim().slice(0, 80) : null,
           source: 'ai',
           title: String(a.title).trim().slice(0, 90),
@@ -164,4 +172,4 @@ async function alternativesFor(product, guidance, context = null) {
   }
 }
 
-module.exports = { alternativesFor };
+module.exports = { alternativesFor, searchUrlFor };

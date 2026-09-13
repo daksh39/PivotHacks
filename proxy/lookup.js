@@ -14,7 +14,8 @@
 
 const { classifyDeep } = require('./categories');
 const { guidanceFor } = require('./guidance');
-const { alternativesFor } = require('./alternatives');
+const { alternativesFor, searchUrlFor } = require('./alternatives');
+const { isEssentialsRequest, essentialsFor } = require('./essentials');
 const { extractContext, hasContext, contextTags, namesProduct } = require('./context');
 const { isSourced } = require('./carbon');
 
@@ -34,6 +35,20 @@ function rank(options) {
  * @returns {Promise<object>} VerteResult — always, for any product with a title
  */
 async function lookup(product, listings = []) {
+  // "Give me university essentials" — the whole starter kit, one pick each,
+  // with any context in the same sentence applied to every item.
+  if (product.spoken && isEssentialsRequest(product.title)) {
+    const parsed = extractContext(product.title, null);
+    const context = hasContext(parsed) ? parsed : null;
+    return {
+      kind: 'essentials',
+      product: { ...product, category: 'essentials' },
+      essentials: await essentialsFor(context, searchUrlFor),
+      context,
+      contextTags: contextTags(context),
+    };
+  }
+
   // "I don't have a car" is context, not a product. Recommending something
   // anyway means the model invents what to buy — so ask instead.
   if (product.spoken && !namesProduct(product.title)) {
