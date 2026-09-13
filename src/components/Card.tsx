@@ -20,6 +20,7 @@ import { impactLine } from '../impactLine'
 import { Verdict } from './Verdict'
 import { Empty } from './Empty'
 import { Greener } from './Greener'
+import { VoiceContext } from './VoiceContext'
 import { Leaf } from './Skeleton'
 
 /** "Tomorrow" reads better than "1 day" and is what they actually care about. */
@@ -42,12 +43,14 @@ function blockedReason(o: UsedOption, result: VerteResult): string | null {
 
 type Props = {
   result: VerteResult
+  /** Re-rank from a spoken context. Voice must change the answer, not a label. */
+  onContext?: (context: Partial<VerteResult['context']>) => void
   onDismiss?: () => void
   /** Start expanded — the dev preview page uses this. */
   defaultExpanded?: boolean
 }
 
-export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
+export function Card({ result, onDismiss, onContext, defaultExpanded = false }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded)
 
 
@@ -210,6 +213,8 @@ export function Card({ result, onDismiss, defaultExpanded = false }: Props) {
           * the has-listings branch, so the card that most needed the argument
           * was the one card that carried none of it. */}
         <Greener options={greener} />
+
+        {onContext && <VoiceContext onHeard={onContext} />}
 
         {impact && (
           <div className="verte__impact">

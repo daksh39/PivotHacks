@@ -9,8 +9,8 @@ import { StrictMode } from 'react'
 import { buildResult } from '../assemble'
 import { classify } from '../categories'
 import { guidanceFor } from '../guidance'
-import type { ProductContext } from '../types'
-import { loadContext } from '../context'
+import type { BuyerContext, ProductContext } from '../types'
+import { loadContext, saveContext } from '../context'
 import { Card } from '../components/Card'
 import { extractProduct, looksLikeProductPage, readBreadcrumbs } from './extract'
 import { trace } from './trace'
@@ -68,26 +68,42 @@ async function run(): Promise<void> {
 
   const root = mountCard()
 
-  root.render(
-    <StrictMode>
-      <Card
-        result={result}
-        onDismiss={() => {
-          dismissed.add(product.sourceUrl)
-          unmountCard()
-        }}
-      />
-    </StrictMode>,
-  )
+  const show = (shown: typeof result) =>
+    root.render(
+      <StrictMode>
+        <Card
+          result={shown}
+          onDismiss={() => {
+            dismissed.add(product.sourceUrl)
+            unmountCard()
+          }}
+          onContext={(spoken) => {
+            /* Voice must change the ANSWER, not a label. Rebuild the result
+             * with the spoken context and re-render in place, so the
+             * recommendation visibly re-ranks without a reload. Persisted too,
+             * so the next product inherits what was said. */
+            void (async () => {
+              const merged = { ...shown.context, ...spoken }
+              await saveContext(merged)
+              const next = await buildCard(product, spoken)
+              if (next) show(next)
+            })()
+          }}
+        />
+      </StrictMode>,
+    )
+
+  show(result)
 }
 
-async function buildCard(product: ProductContext) {
+async function buildCard(product: ProductContext, override?: Partial<BuyerContext>) {
   /* Everything below is local. The category table is static, ranking is a pure
    * function, and the listings were read out of this very page. Routing any of
    * it through a localhost service meant the extension showed nothing whenever
    * that service was not running — which is most of the time, on most
    * machines, including every machine we would demo on. */
-  const context = await loadContext()
+  const stored = await loadContext()
+  const context: BuyerContext = { ...stored, ...override }
 
   /* Listings must never take the card down with them. A retailer changing its
    * markup, or a slow response, is not a reason to show the user nothing. */

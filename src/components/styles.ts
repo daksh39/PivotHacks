@@ -318,6 +318,40 @@ export const cardStyles = /* css */ `
   overflow-wrap: anywhere;
 }
 
+/* --- voice --------------------------------------------------------------- */
+
+.verte__voice { margin-top: 14px; padding-top: 12px; border-top: 1px solid ${color.shade}44; }
+.verte__voice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: ${radius.pill};
+  border: 1px solid ${color.shade};
+  background: ${color.tint};
+  color: ${color.accentText};
+  cursor: pointer;
+}
+.verte__voice-btn:hover { background: ${color.moss}; }
+.verte__voice-btn:disabled { cursor: default; opacity: 0.75; }
+.verte__voice-btn:focus-visible { outline: 2px solid ${color.accentText}; outline-offset: 2px; }
+
+/* What we heard, quoted back. Showing it is how the user knows a
+ * misunderstanding was theirs to correct rather than the card being broken. */
+.verte__voice-said {
+  margin-top: 7px;
+  font-size: 12.5px;
+  font-style: italic;
+  color: ${color.ink};
+  overflow-wrap: anywhere;
+}
+.verte__voice-note { margin-top: 3px; font-size: 12px; font-weight: 600; color: ${color.accentText}; }
+.verte__voice-miss { margin-top: 3px; font-size: 12px; color: ${verdictColor.avoid.text}; }
+
 .verte__carbon { font-size: 13.5px; color: ${color.ink}; }
 .verte__carbon-eq { color: ${color.inkSoft}; }
 

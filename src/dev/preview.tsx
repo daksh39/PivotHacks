@@ -81,6 +81,15 @@ function Preview() {
         alignItems: 'flex-start',
       }}
     >
+      <Panel label="VOICE — say a budget or deadline">
+        <Card
+          result={FIXTURE_HEADPHONES}
+          defaultExpanded
+          onDismiss={() => {}}
+          onContext={(spoken) => console.log('[verte] spoken context', spoken)}
+        />
+      </Panel>
+
       <Panel label="THE DEMO — every figure cited">
         <Card result={FIXTURE_MONITOR} defaultExpanded onDismiss={() => {}} />
       </Panel>
