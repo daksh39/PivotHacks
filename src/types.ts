@@ -28,6 +28,23 @@ export type UsedOption = {
   condition: string;
   /** Campus listings only. */
   distanceMi?: number;
+  /**
+   * Days until the buyer can physically have it.
+   * Campus pickup is 0 or 1. eBay is the shipping estimate.
+   * This is what makes urgency able to change the ranking.
+   */
+  daysToHand: number;
+};
+
+/**
+ * The buyer's situation. This changes which option we recommend, not just
+ * how the list is labelled.
+ */
+export type BuyerContext = {
+  /** Days from now the item is actually needed. null means no deadline. */
+  needInDays: number | null;
+  /** Without a car, bulky items cannot realistically be collected. */
+  hasCar: boolean;
 };
 
 /** safe: buy it used. check: buy used but inspect first. avoid: buy new. */
@@ -42,13 +59,33 @@ export type CategoryGuidance = {
   embodiedCo2Kg: number;
   co2Source: string;
   note: string;
+  /** Needs a car to collect. Drives the no-car penalty on local pickup. */
+  bulky: boolean;
 };
+
+/** Why this option was recommended over the cheaper one. */
+export type RecommendationReason =
+  | "cheapest"
+  | "cheapest-in-time"
+  | "only-option-in-time"
+  | "cheaper-option-needs-car"
+  | "nothing-arrives-in-time";
 
 /** The one object the UI renders. */
 export type VerteResult = {
   product: ProductContext;
   guidance: CategoryGuidance;
+  /** Ranked. options[0] is the recommendation. */
   options: UsedOption[];
+  /** The context that produced this ranking. */
+  context: BuyerContext;
+  /** Why options[0] won. The card states this in words. */
+  reason: RecommendationReason;
+  /**
+   * Set when context demoted a cheaper option, so the card can show what
+   * was given up and why. Null when the cheapest option simply won.
+   */
+  passedOver: { option: UsedOption; why: string } | null;
   savingsUsd: number | null;
   co2AvoidedKg: number | null;
 };
@@ -56,6 +93,7 @@ export type VerteResult = {
 /** Request body for POST /lookup. */
 export type LookupRequest = {
   product: ProductContext;
+  context: BuyerContext;
 };
 
 /**
