@@ -54,11 +54,17 @@ app.post('/lookup', async (req, res) => {
    * against exactly what ships. */
   if (MOCK) {
     const base = mockFor(category)
+
+    /* The fixtures are synthetic, so quote them in whatever currency the page
+     * is in. Without this, a demo on amazon.ca (CAD) drops every USD fixture
+     * through the currency guard and shows an empty card — the guard doing
+     * its job, on data that was never real to begin with. */
+    const fixtures = base.options.map((option) => ({ ...option, currency: product.currency }))
     /* Built through assemble() like every other response. A second path here
      * meant mock mode skipped the currency guard and happily reported a CAD
      * saving against USD fixtures — the exact bug assemble() exists to stop.
      * One place builds a VerteResult. Keep it that way. */
-    res.json(assemble({ ...product, category }, base.guidance, base.options, ctx))
+    res.json(assemble({ ...product, category }, base.guidance, fixtures, ctx))
     return
   }
 
