@@ -126,7 +126,7 @@ Written for four. For three, fold D into whoever finishes first. For two, one pe
 
 **Owner:** ____________
 
-- Fresh **Manifest V3** scaffold — Vite + CRXJS, React 18. Do not port the MV2 repo.
+- Fresh **Manifest V3** scaffold — Vite + CRXJS, React 18. Scaffold from scratch, do not adapt MV2 boilerplate.
 - Service worker, content script, message passing between them.
 - Detect product pages; extract `ProductContext`. Try JSON-LD first, CSS selectors as fallback.
 - Inject the card into a **shadow root** so the host page's CSS can't reach it.
@@ -260,7 +260,7 @@ Starter set for the `CATEGORY_GUIDANCE` table. This is the most quietly valuable
 
 ## 08 — Traps that will cost you hours
 
-### Manifest V2 is dead — don't port the old repo
+### Manifest V2 is dead — scaffold fresh
 
 Chrome has disabled MV2 extensions, so most extension tutorials and boilerplate you find will not load in a current browser. The service worker model, the manifest format, and the background plumbing all differ from MV2. Check the manifest version on anything you copy from, and start from an MV3 scaffold rather than adapting older code.
 

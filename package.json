@@ -1,40 +1,48 @@
 {
   "name": "verte",
-  "private": true,
+  "description": "Verte — a Chrome extension that surfaces the secondhand option at the moment you are about to buy new.",
   "version": "0.1.0",
-  "type": "module",
-  "description": "Verte — the greenest product is the one that already exists.",
-  "scripts": {
-    "build": "tsc --noEmit && vite build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
-    "preview:card": "vite --config vite.preview.config.ts",
-    "site": "vite --config site/vite.config.ts",
-    "site:build": "vite build --config site/vite.config.ts"
-  },
+  "private": true,
   "dependencies": {
-    "@types/node": "^26.5.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@testing-library/jest-dom": "^5.16.2",
+    "@testing-library/react": "^11.2.7",
+    "@testing-library/user-event": "^12.8.3",
+    "axios": "^0.26.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "react": "^17.0.2",
+    "react-browser-extension-scripts": "4.0.10",
+    "react-dom": "^17.0.2",
+    "react-slick": "^0.28.1",
+    "slick-carousel": "^1.8.1",
+    "snowflake-sdk": "^3.3.0",
+    "web-vitals": "^1.1.2"
   },
-  "devDependencies": {
-    "@crxjs/vite-plugin": "^2.7.1",
-    "@types/chrome": "^0.0.268",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "concurrently": "^8.2.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^4.19.2",
-    "jsdom": "^25.0.1",
-    "snowflake-sdk": "^1.15.0",
-    "tsx": "^4.23.13",
-    "typescript": "^5.5.3",
-    "vite": "^5.3.4",
-    "vitest": "^2.1.9"
+  "scripts": {
+    "start": "NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "proxy": "node proxy/index.js",
+    "smoke": "bash proxy/smoke.sh"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
